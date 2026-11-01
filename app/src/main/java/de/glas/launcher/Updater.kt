@@ -15,14 +15,17 @@ object Updater {
     /** The newer version on GitHub, or null if there is none. Blocking; throws when GitHub can't be reached. */
     fun check(ctx: Context, repo: String): Update? {
         val release = PluginStore.latestRelease(repo)
-        val version = release.tag.trimStart('v', 'V')
-        if (release.apks.none { it.first.startsWith("GlasLauncher", true) }) return null
+        val apk = release.apks.firstOrNull { it.first.startsWith("GlasLauncher", true) } ?: return null
+        // The version from the tag (v2.26, 2.26, GlasLauncher2.26 …) or else from the APK name
+        val version = versionIn(release.tag) ?: versionIn(apk.first) ?: return null
         return if (newer(version, installedVersion(ctx))) Update(version) else null
     }
 
     fun install(ctx: Context, repo: String) = PluginStore.installRelease(ctx, "Glas Launcher", repo) { apks ->
         apks.firstOrNull { it.first.startsWith("GlasLauncher", true) }
     }
+
+    private fun versionIn(text: String) = Regex("""\d+(\.\d+)+""").find(text)?.value
 
     /** Compares versions like 2.25 and 2.3 part by part as numbers (2.25 is newer than 2.3). */
     fun newer(candidate: String, current: String): Boolean {
