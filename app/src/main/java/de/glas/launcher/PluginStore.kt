@@ -62,15 +62,21 @@ object PluginStore {
     fun resumePending(ctx: Context) {
         val action = pending ?: return
         pending = null
-        if (Build.VERSION.SDK_INT < 26 || ctx.packageManager.canRequestPackageInstalls()) action(ctx)
-        else ctx.toast(tr("Ohne die Erlaubnis, Apps zu installieren, geht das leider nicht"))
+        // Try even if Android says no: on some TVs the answer is wrong, and the installer asks again if needed
+        action(ctx)
     }
 
     /** Downloads one APK of [repo]'s newest release, chosen by [pick], and opens Android's installer. */
     fun installRelease(ctx: Context, label: String, repo: String, pick: (List<Pair<String, String>>) -> Pair<String, String>?) {
-        // Before Android 8 this is one system-wide switch ("unknown sources") that the installer asks about itself
-        if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls()) {
-            // Carry on by itself once the permission is given and the user comes back
+        // Some TVs (TCL) show the app as allowed to install apps while Android still reports it isn't.
+        // So the permission screen comes only once; after that the download goes ahead and Android's
+        // installer checks the permission itself.
+        val prefs = ctx.getSharedPreferences("glas", Context.MODE_PRIVATE)
+        if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls() &&
+            !prefs.getBoolean("install.asked", false)
+        ) {
+            prefs.edit().putBoolean("install.asked", true).apply()
+            // Carry on by itself once the user comes back
             pending = { c -> installRelease(c, label, repo, pick) }
             ctx.toast(tr("Erlaube dem Glas Launcher, Apps zu installieren, und drücke dann Zurück."))
             runCatching {
