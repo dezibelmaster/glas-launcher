@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Background extension for the Glas Launcher: no screen of its own, only a list of videos -->
+    <application
+        android:label="Glas Natur-Videos"
+        android:icon="@drawable/icon">
+
+        <provider
+            android:name=".VideoProvider"
+            android:authorities="de.glas.launcher.videos"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="de.glas.launcher.WALLPAPER_PROVIDER" />
+            </intent-filter>
+        </provider>
+    </application>
+</manifest>

@@ -1,0 +1,11 @@
+Wetterfotos: Wikimedia Commons, alle unter CC0 (gemeinfrei).
+
+clear_day.jpg  https://commons.wikimedia.org/wiki/File:Sky_Forest_Clouds.jpg
+partly_day.jpg  https://commons.wikimedia.org/wiki/File:Overcast_sky_over_Snowdonia_(Unsplash).jpg
+overcast_day.jpg  https://commons.wikimedia.org/wiki/File:Cloudy_Sky_Background.jpg
+fog_day.jpg  https://commons.wikimedia.org/wiki/File:Foggy_green_forest_(Unsplash).jpg
+rain_day.jpg  https://commons.wikimedia.org/wiki/File:Rain_clouds_over_Bramble_Bay,_Sandgate_Pier_IMGP5273.jpg
+snow_day.jpg  https://commons.wikimedia.org/wiki/File:Forest_trees_in_the_snow_(Unsplash).jpg
+storm_day.jpg  https://commons.wikimedia.org/wiki/File:Thunderstorm_from_Spandauer-See-Brücke_2019-06-11_01.jpg
+clear_night.jpg  https://commons.wikimedia.org/wiki/File:Stars_and_Milky_Way_over_Åbyfjorden_1.jpg
+partly_night.jpg  https://commons.wikimedia.org/wiki/File:Moon_and_clouds_over_Brofjorden_5.jpg
