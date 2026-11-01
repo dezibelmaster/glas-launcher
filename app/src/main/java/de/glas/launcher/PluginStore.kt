@@ -55,11 +55,24 @@ object PluginStore {
         return Release(release.optString("tag_name"), apks)
     }
 
+    /** An install that waits for the permission to install apps. */
+    private var pending: ((Context) -> Unit)? = null
+
+    /** Called when a screen comes back: continues a waiting install if the permission is there now. */
+    fun resumePending(ctx: Context) {
+        val action = pending ?: return
+        pending = null
+        if (Build.VERSION.SDK_INT < 26 || ctx.packageManager.canRequestPackageInstalls()) action(ctx)
+        else ctx.toast(tr("Ohne die Erlaubnis, Apps zu installieren, geht das leider nicht"))
+    }
+
     /** Downloads one APK of [repo]'s newest release, chosen by [pick], and opens Android's installer. */
     fun installRelease(ctx: Context, label: String, repo: String, pick: (List<Pair<String, String>>) -> Pair<String, String>?) {
         // Before Android 8 this is one system-wide switch ("unknown sources") that the installer asks about itself
         if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls()) {
-            ctx.toast(tr("Erlaube dem Glas Launcher zuerst, Apps zu installieren, und wähle es dann noch einmal."))
+            // Carry on by itself once the permission is given and the user comes back
+            pending = { c -> installRelease(c, label, repo, pick) }
+            ctx.toast(tr("Erlaube dem Glas Launcher, Apps zu installieren, und drücke dann Zurück."))
             runCatching {
                 ctx.startActivity(
                     Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))

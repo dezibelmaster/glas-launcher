@@ -42,6 +42,7 @@ class SettingsActivity : Activity() {
     override fun onResume() {
         super.onResume()
         render()
+        PluginStore.resumePending(this)
     }
 
     private fun render() {
