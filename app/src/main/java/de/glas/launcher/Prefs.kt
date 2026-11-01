@@ -13,6 +13,11 @@ class Prefs(context: Context) {
         get() = sp.getString("dock", null)?.split('\n')?.filter { it.isNotBlank() }
         set(v) = sp.edit().apply { if (v == null) remove("dock") else putString("dock", v.joinToString("\n")) }.apply()
 
+    /** Language code like "en"; null follows the TV's language. */
+    var language: String?
+        get() = sp.getString("language", null)
+        set(v) = sp.edit().apply { if (v == null) remove("language") else putString("language", v) }.commit().let {}
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

@@ -81,7 +81,7 @@ class VideoBackdrop(
                 if (released) return@post
                 playlist = list
                 if (list.isEmpty()) {
-                    context.toast("Kein Video gefunden")
+                    context.toast(tr("Kein Video gefunden"))
                     return@post
                 }
                 val startAt = list.indexOfFirst { it.uri == start }
@@ -132,12 +132,12 @@ class VideoBackdrop(
         onChange?.invoke()
         val item = playlist[index]
         if (!cache) return start(item.uri)
-        if (!MediaCache.isCached(context, item.uri)) context.toast("„${item.title}“ wird geladen …")
+        if (!MediaCache.isCached(context, item.uri)) context.toast(tr("„{0}“ wird geladen …", item.title))
         val wanted = index
         MediaCache.fetch(context, item.uri) { local ->
             // Ignore a download that finished after the user moved on
             if (released || wanted != index) return@fetch
-            if (local == null) return@fetch failed("Das Video lässt sich nicht laden")
+            if (local == null) return@fetch failed(tr("Das Video lässt sich nicht laden"))
             start(local)
             // Fetch the next one now, so it is ready when this one ends
             if (playlist.size > 1 && !isPinned) MediaCache.fetch(context, playlist[step(index, playlist.size, forward = true)].uri) {}
@@ -165,12 +165,12 @@ class VideoBackdrop(
                 }
                 setOnCompletionListener { if (playlist.size > 1 && !isPinned) next() }
                 setOnErrorListener { _, _, _ ->
-                    failed("Das Video lässt sich nicht abspielen")
+                    failed(tr("Das Video lässt sich nicht abspielen"))
                     true
                 }
                 prepareAsync()
             } catch (e: Exception) {
-                failed("Das Video lässt sich nicht öffnen")
+                failed(tr("Das Video lässt sich nicht öffnen"))
             }
         }
     }

@@ -101,14 +101,14 @@ class WeatherActivity : Activity() {
     }
 
     private fun load() {
-        showMessage("Wetter für ${place.name} wird geladen …")
+        showMessage(tr("Wetter für {0} wird geladen …", place.name))
         val p = place
         Thread {
             val result = runCatching { WeatherApi.forecast(p) }
             runOnUiThread {
                 if (p.key != place.key) return@runOnUiThread
                 val f = result.getOrNull()
-                if (f == null) showMessage("Keine Verbindung zum Wetterdienst") else show(f)
+                if (f == null) showMessage(tr("Keine Verbindung zum Wetterdienst")) else show(f)
             }
         }.start()
     }
@@ -131,7 +131,7 @@ class WeatherActivity : Activity() {
 
     private fun show(f: WeatherApi.Forecast) {
         clearCards()
-        stand.text = "${place.name} · Stand ${clock.format(Date(f.now.time))}"
+        stand.text = tr("{0} · Stand {1}", place.name, clock.format(Date(f.now.time)))
         if (place.key == prefs.mainPlace.key) backdrop.setWeather(WeatherApi.skyFor(f.now.code), f.now.isDay)
 
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
@@ -145,11 +145,11 @@ class WeatherActivity : Activity() {
         val today = f.days.firstOrNull()
         val small = listOf(
             windCard(f),
-            infoCard("💧  Feuchtigkeit", "${f.humidity} %", "Luftdruck ${f.pressure} hPa"),
-            infoCard("☀  UV-Index", uvLabel(today?.uv ?: 0.0), "Höchstwert heute ${"%.0f".format(today?.uv ?: 0.0)}"),
-            infoCard("🍃  Luftqualität", aqiLabel(f.aqi), f.aqi?.let { "Europäischer Index $it" } ?: "keine Daten"),
+            infoCard(tr("💧  Feuchtigkeit"), "${f.humidity} %", tr("Luftdruck {0} hPa", f.pressure)),
+            infoCard(tr("☀  UV-Index"), uvLabel(today?.uv ?: 0.0), tr("Höchstwert heute {0}", "%.0f".format(today?.uv ?: 0.0))),
+            infoCard(tr("🍃  Luftqualität"), aqiLabel(f.aqi), f.aqi?.let { tr("Europäischer Index {0}", it) } ?: tr("keine Daten")),
             pollenCard(f),
-            infoCard("🌅  Sonne", "${today?.sunrise ?: "–"}  ·  ${today?.sunset ?: "–"}", "Aufgang · Untergang"),
+            infoCard(tr("🌅  Sonne"), "${today?.sunrise ?: "–"}  ·  ${today?.sunset ?: "–"}", tr("Aufgang · Untergang")),
         )
         for (rowItems in small.chunked(3)) {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
@@ -187,11 +187,11 @@ class WeatherActivity : Activity() {
         })
         addView(row)
         addView(label(WeatherApi.describe(f.now.code), 20f, Color.WHITE))
-        addView(label("↑ ${f.now.max}°  ↓ ${f.now.min}°  ·  Gefühlt wie ${f.feelsLike}°", 14f).apply { setPadding(0, dp(4), 0, 0) })
+        addView(label(tr("↑ {0}°  ↓ {1}°  ·  Gefühlt wie {2}°", f.now.max, f.now.min, f.feelsLike), 14f).apply { setPadding(0, dp(4), 0, 0) })
     }
 
     private fun hourlyCard(f: WeatherApi.Forecast) = card().apply {
-        addView(label("Nächste 12 Stunden"))
+        addView(label(tr("Nächste 12 Stunden")))
         val cols = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
         for (h in f.hours) {
             val col = LinearLayout(context).apply {
@@ -211,15 +211,15 @@ class WeatherActivity : Activity() {
     }
 
     private fun dailyCard(f: WeatherApi.Forecast) = card().apply {
-        addView(label("7 Tage"))
-        val weekday = SimpleDateFormat("EE", Locale.GERMANY)
+        addView(label(tr("7 Tage")))
+        val weekday = SimpleDateFormat("EE", I18n.locale)
         val iso = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         f.days.forEachIndexed { i, d ->
             val row = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
-            val name = if (i == 0) "Heute" else runCatching { weekday.format(iso.parse(d.date)!!) }.getOrDefault(d.date)
+            val name = if (i == 0) tr("Heute") else runCatching { weekday.format(iso.parse(d.date)!!) }.getOrDefault(d.date)
             row.addView(label(name, 15f, Color.WHITE), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1.2f))
             row.addView(label("💧${d.rain}%", 12f), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
             row.addView(WeatherIcon(context).apply { set(WeatherApi.skyFor(d.code), true) }, LinearLayout.LayoutParams(dp(24), dp(24)))
@@ -235,24 +235,24 @@ class WeatherActivity : Activity() {
     }
 
     private fun windCard(f: WeatherApi.Forecast) = card().apply {
-        addView(label("〰  Wind"))
+        addView(label(tr("〰  Wind")))
         val row = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         // The arrow points where the wind blows to
         row.addView(label("↑", 26f, Color.WHITE).apply { rotation = (f.windDir + 180f) % 360f })
-        row.addView(label("${f.windKmh} km/h", 22f, Color.WHITE).apply { setPadding(dp(10), 0, 0, 0) })
+        row.addView(label(tr("{0} km/h", f.windKmh), 22f, Color.WHITE).apply { setPadding(dp(10), 0, 0, 0) })
         addView(row, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-        addView(label("aus ${compass(f.windDir)} · ${windLabel(f.windKmh)}", 12f))
+        addView(label(tr("aus {0} · {1}", compass(f.windDir), windLabel(f.windKmh)), 12f))
     }
 
     private fun pollenCard(f: WeatherApi.Forecast) = card().apply {
-        addView(label("🌾  Pollen"))
+        addView(label(tr("🌾  Pollen")))
         val known = f.pollen.filterValues { it != null }
         if (known.isEmpty()) {
-            addView(label("keine Daten", 18f, Color.WHITE).apply { setPadding(0, dp(6), 0, 0) }, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
-            addView(label("außerhalb der Saison oder Region", 12f))
+            addView(label(tr("keine Daten"), 18f, Color.WHITE).apply { setPadding(0, dp(6), 0, 0) }, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
+            addView(label(tr("außerhalb der Saison oder Region"), 12f))
             return@apply
         }
         for ((name, v) in known) {
@@ -265,41 +265,41 @@ class WeatherActivity : Activity() {
 
     // ---- Wording ----
 
-    private fun compass(deg: Int) = listOf("Nord", "Nordost", "Ost", "Südost", "Süd", "Südwest", "West", "Nordwest")[((deg + 22) % 360) / 45]
+    private fun compass(deg: Int) = listOf(tr("Nord"), tr("Nordost"), tr("Ost"), tr("Südost"), tr("Süd"), tr("Südwest"), tr("West"), tr("Nordwest"))[((deg + 22) % 360) / 45]
 
     private fun windLabel(kmh: Int) = when {
-        kmh < 2 -> "windstill"
-        kmh < 12 -> "leichte Brise"
-        kmh < 29 -> "mäßiger Wind"
-        kmh < 50 -> "frischer bis starker Wind"
-        kmh < 75 -> "stürmisch"
-        else -> "Sturm"
+        kmh < 2 -> tr("windstill")
+        kmh < 12 -> tr("leichte Brise")
+        kmh < 29 -> tr("mäßiger Wind")
+        kmh < 50 -> tr("frischer bis starker Wind")
+        kmh < 75 -> tr("stürmisch")
+        else -> tr("Sturm")
     }
 
     private fun uvLabel(uv: Double) = when {
-        uv < 3 -> "Niedrig"
-        uv < 6 -> "Mäßig"
-        uv < 8 -> "Hoch"
-        uv < 11 -> "Sehr hoch"
-        else -> "Extrem"
+        uv < 3 -> tr("Niedrig")
+        uv < 6 -> tr("Mäßig")
+        uv < 8 -> tr("Hoch")
+        uv < 11 -> tr("Sehr hoch")
+        else -> tr("Extrem")
     }
 
     private fun aqiLabel(aqi: Int?) = when {
         aqi == null -> "–"
-        aqi <= 20 -> "Sehr gut"
-        aqi <= 40 -> "Gut"
-        aqi <= 60 -> "Mäßig"
-        aqi <= 80 -> "Schlecht"
-        aqi <= 100 -> "Sehr schlecht"
-        else -> "Extrem schlecht"
+        aqi <= 20 -> tr("Sehr gut")
+        aqi <= 40 -> tr("Gut")
+        aqi <= 60 -> tr("Mäßig")
+        aqi <= 80 -> tr("Schlecht")
+        aqi <= 100 -> tr("Sehr schlecht")
+        else -> tr("Extrem schlecht")
     }
 
     /** Grains per m³ in rough levels; good enough for a glance. */
     private fun pollenLabel(v: Double) = when {
-        v < 1 -> "keine"
-        v < 15 -> "gering"
-        v < 50 -> "mittel"
-        else -> "hoch"
+        v < 1 -> tr("keine")
+        v < 15 -> tr("gering")
+        v < 50 -> tr("mittel")
+        else -> tr("hoch")
     }
 }
 

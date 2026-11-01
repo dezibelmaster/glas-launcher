@@ -64,7 +64,7 @@ class PluginBackdrop(
                     if (items.isEmpty()) {
                         // Often the network is not back yet right after switching on: ask again shortly
                         main.postDelayed({ if (!released && items.isEmpty()) refresh() }, 20_000)
-                        if (Network.isOnline(context)) context.toast("Das Plugin liefert gerade keine Hintergründe. Prüfe seine Einstellungen.")
+                        if (Network.isOnline(context)) context.toast(tr("Das Plugin liefert gerade keine Hintergründe. Prüfe seine Einstellungen."))
                     }
                 } else {
                     items = list
@@ -110,7 +110,7 @@ class PluginBackdrop(
     }
 
     private fun label(w: Wallpaper, i: Int) =
-        listOfNotNull(w.title, w.author).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "Hintergrund ${i + 1}" }
+        listOfNotNull(w.title, w.author).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { tr("Hintergrund {0}", i + 1) }
 
     private fun show(i: Int) {
         index = i

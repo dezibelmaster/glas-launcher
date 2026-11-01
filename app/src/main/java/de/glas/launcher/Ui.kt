@@ -26,7 +26,7 @@ object Ui {
     val thin: Typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
     val light: Typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
 
-    val glassNames = listOf("Hell", "Mittel", "Dunkel")
+    val glassNames get() = listOf(tr("Hell"), tr("Mittel"), tr("Dunkel"))
 
     /** Dark glass tint for a strength from the settings; [extra] makes it a bit more or less opaque. */
     fun glassTint(level: Int, extra: Int = 0): Int {

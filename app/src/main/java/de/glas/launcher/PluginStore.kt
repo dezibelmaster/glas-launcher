@@ -23,11 +23,11 @@ import java.net.URL
 object PluginStore {
     class Entry(val name: String, val about: String, val repo: String, val pkg: String)
 
-    val catalog = listOf(
-        Entry("Overflight", "Luftaufnahmen von Apple, vom Projectivy-Entwickler", "spocky/projectivy-plugin-wallpaper-overflight", "tv.projectivy.plugin.wallpaperprovider.overflight"),
-        Entry("Bing-Foto des Tages", "Tägliche Fotos von Bing, vom Projectivy-Entwickler", "spocky/projectivy-plugin-wallpaper-bingwallpaper", "tv.projectivy.plugin.wallpaperprovider.photooftheday"),
-        Entry("Aerial Views", "Luftaufnahmen aus aller Welt, auch als Bildschirmschoner", "theothernt/AerialViews", "com.neilturner.aerialviews"),
-        Entry("Jellyfin Wallpapers", "Film-Hintergründe von deinem Jellyfin-Server", "Mikescher/projectivity-jellyfin-wallpaper", "com.blackforestbytes.projectivy.jellyfinwallpaper"),
+    val catalog get() = listOf(
+        Entry("Overflight", tr("Luftaufnahmen von Apple, vom Projectivy-Entwickler"), "spocky/projectivy-plugin-wallpaper-overflight", "tv.projectivy.plugin.wallpaperprovider.overflight"),
+        Entry(tr("Bing-Foto des Tages"), tr("Tägliche Fotos von Bing, vom Projectivy-Entwickler"), "spocky/projectivy-plugin-wallpaper-bingwallpaper", "tv.projectivy.plugin.wallpaperprovider.photooftheday"),
+        Entry("Aerial Views", tr("Luftaufnahmen aus aller Welt, auch als Bildschirmschoner"), "theothernt/AerialViews", "com.neilturner.aerialviews"),
+        Entry("Jellyfin Wallpapers", tr("Film-Hintergründe von deinem Jellyfin-Server"), "Mikescher/projectivity-jellyfin-wallpaper", "com.blackforestbytes.projectivy.jellyfinwallpaper"),
     )
 
     private val main = Handler(Looper.getMainLooper())
@@ -59,7 +59,7 @@ object PluginStore {
     fun installRelease(ctx: Context, label: String, repo: String, pick: (List<Pair<String, String>>) -> Pair<String, String>?) {
         // Before Android 8 this is one system-wide switch ("unknown sources") that the installer asks about itself
         if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls()) {
-            ctx.toast("Erlaube dem Glas Launcher zuerst, Apps zu installieren, und wähle es dann noch einmal.")
+            ctx.toast(tr("Erlaube dem Glas Launcher zuerst, Apps zu installieren, und wähle es dann noch einmal."))
             runCatching {
                 ctx.startActivity(
                     Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
@@ -68,16 +68,16 @@ object PluginStore {
             }
             return
         }
-        ctx.toast("$label wird heruntergeladen …")
+        ctx.toast(tr("{0} wird heruntergeladen …", label))
         Thread {
             val result = runCatching {
-                val apk = pick(latestRelease(repo).apks) ?: throw IllegalStateException("$label bietet gerade keine APK-Datei an")
+                val apk = pick(latestRelease(repo).apks) ?: throw IllegalStateException(tr("{0} bietet gerade keine APK-Datei an", label))
                 download(ctx, apk.second, repo.substringAfter('/') + ".apk")
             }
             main.post {
                 val file = result.getOrNull()
                 if (file == null) {
-                    ctx.toast(result.exceptionOrNull()?.message ?: "$label ließ sich nicht herunterladen")
+                    ctx.toast(result.exceptionOrNull()?.message ?: tr("{0} ließ sich nicht herunterladen", label))
                     return@post
                 }
                 val uri = Uri.parse("content://${ctx.packageName}.apk/${file.name}")
@@ -87,7 +87,7 @@ object PluginStore {
                             .setDataAndType(uri, "application/vnd.android.package-archive")
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION),
                     )
-                }.onFailure { ctx.toast("Der Installer lässt sich nicht öffnen") }
+                }.onFailure { ctx.toast(tr("Der Installer lässt sich nicht öffnen")) }
             }
         }.start()
     }
@@ -127,10 +127,10 @@ object PluginStore {
                 return conn
             } else {
                 conn.disconnect()
-                throw IllegalStateException("GitHub antwortet mit Fehler $code")
+                throw IllegalStateException(tr("GitHub antwortet mit Fehler {0}", code))
             }
         }
-        throw IllegalStateException("Zu viele Weiterleitungen")
+        throw IllegalStateException(tr("Zu viele Weiterleitungen"))
     }
 }
 
@@ -141,7 +141,7 @@ class ApkProvider : ContentProvider() {
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
         val dir = File(context!!.cacheDir, "apk")
         val file = File(dir, uri.lastPathSegment ?: "")
-        require(file.parentFile == dir && file.exists()) { "Unbekannte Datei" }
+        require(file.parentFile == dir && file.exists()) { tr("Unbekannte Datei") }
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     }
 

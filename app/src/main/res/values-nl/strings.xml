@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_label">Glas Launcher-instellingen</string>
+    <string name="weather_label">Weer</string>
+    <string name="home_redirect_label">Glas Launcher: Home-knop omleiden</string>
+    <string name="home_redirect_description">Opent Glas Launcher in plaats van de Google TV- of Fire TV-interface wanneer je op de Home-knop drukt. Er wordt geen inhoud gelezen.</string>
+</resources>

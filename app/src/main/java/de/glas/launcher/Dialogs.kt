@@ -128,18 +128,18 @@ object Pin {
     /** Runs [onOk] right away if no PIN is set, otherwise after the right PIN. */
     fun verify(ctx: Context, prefs: Prefs, title: String, onOk: () -> Unit) {
         val expected = prefs.pinHash ?: return onOk()
-        ask(ctx, title) { if (hash(it) == expected) onOk() else ctx.toast("Falscher PIN") }
+        ask(ctx, title) { if (hash(it) == expected) onOk() else ctx.toast(tr("Falscher PIN")) }
     }
 
     fun create(ctx: Context, prefs: Prefs, onDone: () -> Unit) {
-        ask(ctx, "Neuen PIN festlegen") { first ->
-            ask(ctx, "PIN wiederholen") { second ->
+        ask(ctx, tr("Neuen PIN festlegen")) { first ->
+            ask(ctx, tr("PIN wiederholen")) { second ->
                 if (first == second) {
                     prefs.pinHash = hash(first)
-                    ctx.toast("PIN gespeichert")
+                    ctx.toast(tr("PIN gespeichert"))
                     onDone()
                 } else {
-                    ctx.toast("Die PINs stimmen nicht überein")
+                    ctx.toast(tr("Die PINs stimmen nicht überein"))
                 }
             }
         }
@@ -175,7 +175,7 @@ object TextPrompt {
                 setPadding(0, 0, 0, ctx.dp(14))
             })
             addView(field, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-            addView(Ui.row(ctx, "Suchen") { submit() }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = ctx.dp(10) })
+            addView(Ui.row(ctx, tr("Suchen")) { submit() }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = ctx.dp(10) })
         }
         dialog.setContentView(column)
         dialog.window?.setBackgroundDrawable(Ui.panel(ctx))

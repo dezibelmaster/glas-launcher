@@ -39,11 +39,7 @@ object WeatherApi {
 
     /** Blocking; call from a background thread. */
     fun fetch(place: Place): WeatherNow {
-        val url = "https://api.open-meteo.com/v1/forecast" +
-            "?latitude=${place.lat}&longitude=${place.lon}" +
-            "&current=temperature_2m,weather_code,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high" +
-            "&daily=temperature_2m_max,temperature_2m_min" +
-            "&forecast_days=1&timezone=auto"
+        val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto"
         val json = JSONObject(get(url))
         val current = json.getJSONObject("current")
         val daily = json.getJSONObject("daily")
@@ -79,13 +75,7 @@ object WeatherApi {
 
     /** Full forecast for the weather view: now, the next 12 hours, 7 days, air quality and pollen. Blocking. */
     fun forecast(place: Place): Forecast {
-        val url = "https://api.open-meteo.com/v1/forecast" +
-            "?latitude=${place.lat}&longitude=${place.lon}" +
-            "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day," +
-            "wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover_low,cloud_cover_mid,cloud_cover_high" +
-            "&hourly=temperature_2m,weather_code,precipitation_probability,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high" +
-            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max" +
-            "&forecast_days=7&timezone=auto"
+        val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover_low,cloud_cover_mid,cloud_cover_high&hourly=temperature_2m,weather_code,precipitation_probability,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max&forecast_days=7&timezone=auto"
         val json = JSONObject(get(url))
         val c = json.getJSONObject("current")
         val daily = json.getJSONObject("daily")
@@ -135,8 +125,7 @@ object WeatherApi {
         )
         // Air quality and pollen come from a separate service; the view works without them
         val air = runCatching {
-            JSONObject(get("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}" +
-                "&current=european_aqi,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto")).getJSONObject("current")
+            JSONObject(get("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=european_aqi,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto")).getJSONObject("current")
         }.getOrNull()
         fun pollen(key: String) = air?.optDouble(key)?.takeIf { !it.isNaN() }
         return Forecast(
@@ -149,7 +138,7 @@ object WeatherApi {
             hours = hours,
             days = days,
             aqi = air?.optInt("european_aqi", -1)?.takeIf { it >= 0 },
-            pollen = linkedMapOf("Birke" to pollen("birch_pollen"), "Gräser" to pollen("grass_pollen"), "Beifuß" to pollen("mugwort_pollen")),
+            pollen = linkedMapOf(tr("Birke") to pollen("birch_pollen"), tr("Gräser") to pollen("grass_pollen"), tr("Beifuß") to pollen("mugwort_pollen")),
         )
     }
 
@@ -188,31 +177,32 @@ object WeatherApi {
                 val alerts = json.optJSONArray("alerts")
                 (0 until (alerts?.length() ?: 0)).map { i ->
                     val a = alerts!!.getJSONObject(i)
-                    val event = a.optString("event_de").ifBlank { a.optString("headline_de") }
-                    Warning(prettify(event), a.optString("description_de"), true)
+                    // Bright Sky has the DWD texts in German and English
+                    val l = if (I18n.lang == "de") "de" else "en"
+                    val event = a.optString("event_$l").ifBlank { a.optString("headline_$l") }
+                    Warning(prettify(event), a.optString("description_$l"), true)
                 }
             }
         }.getOrNull()
         if (official != null) return official
 
-        val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}" +
-            "&hourly=weather_code,wind_gusts_10m,temperature_2m,precipitation&forecast_hours=12&timezone=auto"
+        val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&hourly=weather_code,wind_gusts_10m,temperature_2m,precipitation&forecast_hours=12&timezone=auto"
         val hourly = runCatching { JSONObject(get(url)).getJSONObject("hourly") }.getOrNull() ?: return emptyList()
         val n = hourly.getJSONArray("time").length()
         val codes = (0 until n).map { hourly.getJSONArray("weather_code").optInt(it) }
         val gust = (0 until n).maxOfOrNull { hourly.getJSONArray("wind_gusts_10m").optDouble(it, 0.0) } ?: 0.0
         val icy = (0 until n).any { hourly.getJSONArray("precipitation").optDouble(it, 0.0) > 0 && hourly.getJSONArray("temperature_2m").optDouble(it, 9.0) <= .5 }
-        val note = "In den nächsten 12 Stunden erwartet, berechnet aus der Vorhersage."
+        val note = tr("In den nächsten 12 Stunden erwartet, berechnet aus der Vorhersage.")
         return buildList {
-            if (codes.any { it in 95..99 }) add(Warning("Gewitter", note, false))
+            if (codes.any { it in 95..99 }) add(Warning(tr("Gewitter"), note, false))
             when {
-                gust >= 100 -> add(Warning("Orkanartige Böen bis ${gust.roundToInt()} km/h", note, false))
-                gust >= 75 -> add(Warning("Sturmböen bis ${gust.roundToInt()} km/h", note, false))
-                gust >= 60 -> add(Warning("Windböen bis ${gust.roundToInt()} km/h", note, false))
+                gust >= 100 -> add(Warning(tr("Orkanartige Böen bis {0} km/h", gust.roundToInt()), note, false))
+                gust >= 75 -> add(Warning(tr("Sturmböen bis {0} km/h", gust.roundToInt()), note, false))
+                gust >= 60 -> add(Warning(tr("Windböen bis {0} km/h", gust.roundToInt()), note, false))
             }
-            if (icy || codes.any { it == 66 || it == 67 }) add(Warning("Glätte", note, false))
-            if (codes.any { it == 65 || it == 82 }) add(Warning("Starkregen", note, false))
-            if (codes.any { it == 75 || it == 86 }) add(Warning("Starker Schneefall", note, false))
+            if (icy || codes.any { it == 66 || it == 67 }) add(Warning(tr("Glätte"), note, false))
+            if (codes.any { it == 65 || it == 82 }) add(Warning(tr("Starkregen"), note, false))
+            if (codes.any { it == 75 || it == 86 }) add(Warning(tr("Starker Schneefall"), note, false))
         }
     }
 
@@ -222,7 +212,7 @@ object WeatherApi {
 
     /** Finds places by name via the Open-Meteo geocoding service. Blocking. */
     fun search(name: String): List<Place> {
-        val url = "https://geocoding-api.open-meteo.com/v1/search?count=10&language=de&format=json&name=" +
+        val url = "https://geocoding-api.open-meteo.com/v1/search?count=10&language=${I18n.lang}&format=json&name=" +
             URLEncoder.encode(name.trim(), "UTF-8")
         val results = JSONObject(get(url)).optJSONArray("results") ?: return emptyList()
         return (0 until results.length()).map { i ->
@@ -263,17 +253,17 @@ object WeatherApi {
 
     /** German label for a WMO weather code. */
     fun describe(code: Int): String = when (code) {
-        0 -> "Klar"
-        1 -> "Überwiegend klar"
-        2 -> "Leicht bewölkt"
-        3 -> "Bedeckt"
-        45, 48 -> "Nebel"
-        in 51..57 -> "Nieselregen"
-        in 61..67 -> "Regen"
-        in 71..77 -> "Schneefall"
-        in 80..82 -> "Regenschauer"
-        85, 86 -> "Schneeschauer"
-        in 95..99 -> "Gewitter"
+        0 -> tr("Klar")
+        1 -> tr("Überwiegend klar")
+        2 -> tr("Leicht bewölkt")
+        3 -> tr("Bedeckt")
+        45, 48 -> tr("Nebel")
+        in 51..57 -> tr("Nieselregen")
+        in 61..67 -> tr("Regen")
+        in 71..77 -> tr("Schneefall")
+        in 80..82 -> tr("Regenschauer")
+        85, 86 -> tr("Schneeschauer")
+        in 95..99 -> tr("Gewitter")
         else -> "–"
     }
 

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_redirect_description">Öffnet beim Drücken der Home-Taste den Glas Launcher statt der Google-TV- oder Fire-TV-Oberfläche. Es werden keine Inhalte gelesen.</string>
+    <string name="settings_label">Glas Launcher Einstellungen</string>
+    <string name="weather_label">Wetter</string>
     <string name="home_redirect_label">Glas Launcher: Home-Taste umleiten</string>
+    <string name="home_redirect_description">Öffnet beim Drücken der Home-Taste den Glas Launcher statt der Google-TV- oder Fire-TV-Oberfläche. Es werden keine Inhalte gelesen.</string>
 </resources>

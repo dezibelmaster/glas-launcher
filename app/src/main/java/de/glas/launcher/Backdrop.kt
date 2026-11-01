@@ -119,7 +119,7 @@ object Backdrops {
             }
             "video" -> {
                 val uri = p.videoUri
-                VideoBackdrop(ctx) { listOfNotNull(uri?.let { MediaItem(it, Uri.parse(it).lastPathSegment ?: "Video") }) }
+                VideoBackdrop(ctx) { listOfNotNull(uri?.let { MediaItem(it, Uri.parse(it).lastPathSegment ?: tr("Video")) }) }
             }
             "extension" -> extension(ctx, p)
             "plugin" -> {

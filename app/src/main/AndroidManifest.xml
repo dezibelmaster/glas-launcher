@@ -37,6 +37,7 @@
     </queries>
 
     <application
+        android:name=".GlasApp"
         android:label="Glas Launcher"
         android:icon="@drawable/icon"
         android:banner="@drawable/banner"
@@ -65,12 +66,12 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
-            android:label="Glas Launcher Einstellungen" />
+            android:label="@string/settings_label" />
 
         <activity
             android:name=".WeatherActivity"
             android:exported="false"
-            android:label="Wetter" />
+            android:label="@string/weather_label" />
 
         <activity
             android:name=".ScreensaverActivity"

@@ -28,7 +28,7 @@ class MainActivity : Activity() {
     private lateinit var prefs: Prefs
     private val handler = Handler(Looper.getMainLooper())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.GERMANY)
-    private val dateFormat = SimpleDateFormat("EEEE, d. MMMM", Locale.GERMANY)
+    private val dateFormat = I18n.dateFormat("EEEEdMMMM")
 
     private lateinit var root: FrameLayout
     private lateinit var backdrop: Backdrop
@@ -61,7 +61,7 @@ class MainActivity : Activity() {
     private lateinit var statusTime: TextView
     private lateinit var corner: LinearLayout
     private lateinit var cornerTime: TextView
-    private val statusDateFormat = SimpleDateFormat("EE d. MMM", Locale.GERMANY)
+    private val statusDateFormat = I18n.dateFormat("EEdMMM")
 
     /** What makes up the home screen: the status bar or the large clock with weather card, plus the dock. */
     private val home: List<View>
@@ -108,6 +108,8 @@ class MainActivity : Activity() {
     }
 
     private val idle = Runnable { startActivity(Intent(this, ScreensaverActivity::class.java)) }
+
+    private val builtLanguage = I18n.lang
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -159,7 +161,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), 0, 0, 0)
         }
-        cond = Ui.text(this, 16f).apply { text = "Wetter lädt …" }
+        cond = Ui.text(this, 16f).apply { text = tr("Wetter lädt …") }
         extra = Ui.text(this, 13f, color = Ui.MUTED)
         meta.addView(cond)
         meta.addView(extra)
@@ -228,9 +230,9 @@ class MainActivity : Activity() {
         val column = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            addView(Ui.text(this@MainActivity, 22f).apply { text = "Alle Apps" })
+            addView(Ui.text(this@MainActivity, 22f).apply { text = tr("Alle Apps") })
             addView(Ui.text(this@MainActivity, 13f, color = Ui.MUTED).apply {
-                text = "OK gedrückt halten oder Menü-Taste: zum Dock hinzufügen oder mit PIN sperren"
+                text = tr("OK gedrückt halten oder Menü-Taste: zum Dock hinzufügen oder mit PIN sperren")
                 setPadding(0, dp(4), 0, 0)
             })
             addView(scroll, LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT))
@@ -275,9 +277,9 @@ class MainActivity : Activity() {
             setPadding(dp(24), dp(24), dp(24), dp(16))
             background = Ui.outline(this@MainActivity, dp(26f))
             visibility = View.GONE
-            addView(Ui.text(this@MainActivity, 22f).apply { text = "Hintergrund wählen" })
+            addView(Ui.text(this@MainActivity, 22f).apply { text = tr("Hintergrund wählen") })
             addView(Ui.text(this@MainActivity, 13f, color = Ui.MUTED).apply {
-                text = "Markieren zeigt eine Vorschau. OK übernimmt, Zurück bricht ab.\nOK gedrückt halten oder Menü-Taste: ★ Favorit."
+                text = tr("Markieren zeigt eine Vorschau. OK übernimmt, Zurück bricht ab.\nOK gedrückt halten oder Menü-Taste: ★ Favorit.")
                 setPadding(0, dp(4), 0, dp(12))
             })
             addView(ScrollView(this@MainActivity).apply { addView(pickerList) }, LinearLayout.LayoutParams(MATCH_PARENT, 0, 1f))
@@ -307,6 +309,8 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        // A new language in the settings: build the home screen again in it
+        if (builtLanguage != I18n.lang) { recreate(); return }
         applyBackdrop()
         cardGlass.tint = Ui.glassTint(prefs.glass, -0x18)
         statusGlass.tint = Ui.glassTint(prefs.glass)
@@ -522,12 +526,12 @@ class MainActivity : Activity() {
             pickerList.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(4) })
         }
 
-        modeRow("Zufällig wechseln", ROW_ALL)
+        modeRow(tr("Zufällig wechseln"), ROW_ALL)
         if (favorites.isNotEmpty()) {
-            modeRow("Nur Favoriten wechseln", ROW_FAVORITES)
-            heading("Favoriten")
+            modeRow(tr("Nur Favoriten wechseln"), ROW_FAVORITES)
+            heading(tr("Favoriten"))
             favorites.forEach { itemRow(it) }
-            heading("Alle")
+            heading(tr("Alle"))
         }
         titles.indices.forEach { itemRow(it) }
 
@@ -606,13 +610,13 @@ class MainActivity : Activity() {
             shownPlace = place.key
             haveWeather = false
             temp.text = "–"
-            cond.text = "Wetter lädt …"
+            cond.text = tr("Wetter lädt …")
             extra.text = place.name
         }
         if (w == null) {
             if (!haveWeather) {
-                cond.text = "Kein Wetter"
-                extra.text = "${place.name} · keine Verbindung"
+                cond.text = tr("Kein Wetter")
+                extra.text = tr("{0} · keine Verbindung", place.name)
             }
             return
         }
@@ -621,7 +625,7 @@ class MainActivity : Activity() {
         statusWeather.set(WeatherApi.skyFor(w.code), w.isDay)
         temp.text = "${w.temp}°"
         cond.text = WeatherApi.describe(w.code)
-        extra.text = "${place.name} · H ${w.max}° T ${w.min}° · Stand ${timeFormat.format(Date(w.time))}"
+        extra.text = tr("{0} · H {1}° T {2}° · Stand {3}", place.name, w.max, w.min, timeFormat.format(Date(w.time)))
         backdrop.setWeather(WeatherApi.skyFor(w.code), w.isDay)
     }
 
@@ -648,7 +652,7 @@ class MainActivity : Activity() {
     }
 
     /** Detailed weather view, opened from the weather in the status bar or the weather card. */
-    private fun weatherDetails() = start(Intent(this, WeatherActivity::class.java), "Wetter")
+    private fun weatherDetails() = start(Intent(this, WeatherActivity::class.java), tr("Wetter"))
 
     private fun openNetworkSettings() {
         val tries = listOf(
@@ -659,13 +663,13 @@ class MainActivity : Activity() {
         for (action in tries) {
             if (runCatching { startActivity(Intent(action)) }.isSuccess) return
         }
-        toast("Die Netzwerk-Einstellungen lassen sich nicht öffnen")
+        toast(tr("Die Netzwerk-Einstellungen lassen sich nicht öffnen"))
     }
 
     private fun openTvSettings() {
         val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
-        if (prefs.protectSettings) Pin.verify(this, prefs, "Einstellungen sind gesperrt") { start(intent, "Einstellungen") }
-        else start(intent, "Einstellungen")
+        if (prefs.protectSettings) Pin.verify(this, prefs, tr("Einstellungen sind gesperrt")) { start(intent, tr("Einstellungen")) }
+        else start(intent, tr("Einstellungen"))
     }
 
     /** One line per further place below the main weather, e.g. "Palma  24°  Klar". */
@@ -690,8 +694,8 @@ class MainActivity : Activity() {
         val byComponent = apps.associateBy { it.component }
         val entries = ids.mapNotNull { byComponent[it] }
         for (app in entries) dock.addView(appTile(app, inDock = true), dockSlot())
-        dock.addView(tile("Alle Apps", null, "⋯", locked = prefs.lockAllApps, onClick = { openDrawer() }, onMenu = { allAppsMenu() }), dockSlot())
-        dock.addView(tile("Einstellungen", null, "⚙", locked = prefs.protectSettings, onClick = { openSettings() }, onMenu = null), dockSlot())
+        dock.addView(tile(tr("Alle Apps"), null, "⋯", locked = prefs.lockAllApps, onClick = { openDrawer() }, onMenu = { allAppsMenu() }), dockSlot())
+        dock.addView(tile(tr("Einstellungen"), null, "⚙", locked = prefs.protectSettings, onClick = { openSettings() }, onMenu = null), dockSlot())
         val index = entries.indexOfFirst { it.component == focus }.coerceAtLeast(0)
         if (drawer.visibility != View.VISIBLE) dock.getChildAt(index)?.requestFocus()
     }
@@ -700,17 +704,17 @@ class MainActivity : Activity() {
         val ids = prefs.dock.orEmpty().toMutableList()
         val i = ids.indexOf(app.component)
         val items = mutableListOf<GlassMenu.Item>()
-        if (i > 0) items += GlassMenu.Item("Nach links") {
+        if (i > 0) items += GlassMenu.Item(tr("Nach links")) {
             ids.add(i - 1, ids.removeAt(i))
             prefs.dock = ids
             buildDock(app.component)
         }
-        if (i in 0 until ids.size - 1) items += GlassMenu.Item("Nach rechts") {
+        if (i in 0 until ids.size - 1) items += GlassMenu.Item(tr("Nach rechts")) {
             ids.add(i + 1, ids.removeAt(i))
             prefs.dock = ids
             buildDock(app.component)
         }
-        items += GlassMenu.Item("Aus dem Dock entfernen") {
+        items += GlassMenu.Item(tr("Aus dem Dock entfernen")) {
             prefs.dock = ids - app.component
             buildDock(ids.getOrNull(i + 1))
         }
@@ -722,7 +726,7 @@ class MainActivity : Activity() {
     // ---- All apps ----
 
     private fun openDrawer() {
-        if (prefs.lockAllApps) Pin.verify(this, prefs, "„Alle Apps“ ist gesperrt") { showDrawer() } else showDrawer()
+        if (prefs.lockAllApps) Pin.verify(this, prefs, tr("„Alle Apps“ ist gesperrt")) { showDrawer() } else showDrawer()
     }
 
     private fun showDrawer() {
@@ -757,15 +761,15 @@ class MainActivity : Activity() {
     private fun drawerMenu(app: AppEntry) {
         val ids = prefs.dock.orEmpty()
         val dockItem = if (app.component in ids) {
-            GlassMenu.Item("Aus dem Dock entfernen") {
+            GlassMenu.Item(tr("Aus dem Dock entfernen")) {
                 prefs.dock = ids - app.component
                 buildDock()
             }
         } else {
-            GlassMenu.Item("Zum Dock hinzufügen") {
+            GlassMenu.Item(tr("Zum Dock hinzufügen")) {
                 prefs.dock = ids + app.component
                 buildDock()
-                toast("${app.label} ist jetzt im Dock")
+                toast(tr("{0} ist jetzt im Dock", app.label))
             }
         }
         GlassMenu.show(this, app.label, listOf(dockItem, lockItem(app) { fillDrawer(app.component) }, timeItem(app) { fillDrawer(app.component) }))
@@ -774,15 +778,15 @@ class MainActivity : Activity() {
     // ---- Parental lock ----
 
     private fun timeItem(app: AppEntry, after: () -> Unit) =
-        GlassMenu.Item("Zeitfenster: ${TimeLimits.label(prefs.timeWindows[app.pkg])} …") {
+        GlassMenu.Item(tr("Zeitfenster: {0} …", TimeLimits.label(prefs.timeWindows[app.pkg]))) {
             TimeLimits.choose(this, prefs, app.label, app.pkg, after)
         }
 
     private fun lockItem(app: AppEntry, after: () -> Unit): GlassMenu.Item {
         val locked = app.pkg in prefs.locked
-        return GlassMenu.Item(if (locked) "PIN-Sperre aufheben" else "Mit PIN sperren") {
+        return GlassMenu.Item(if (locked) tr("PIN-Sperre aufheben") else tr("Mit PIN sperren")) {
             when {
-                locked -> Pin.verify(this, prefs, "PIN eingeben") {
+                locked -> Pin.verify(this, prefs, tr("PIN eingeben")) {
                     prefs.locked = prefs.locked - app.pkg
                     after()
                 }
@@ -790,7 +794,7 @@ class MainActivity : Activity() {
                     prefs.locked = prefs.locked + app.pkg
                     after()
                 }
-                else -> Pin.verify(this, prefs, "PIN eingeben") {
+                else -> Pin.verify(this, prefs, tr("PIN eingeben")) {
                     prefs.locked = prefs.locked + app.pkg
                     after()
                 }
@@ -800,22 +804,22 @@ class MainActivity : Activity() {
 
     private fun allAppsMenu() {
         val locked = prefs.lockAllApps
-        GlassMenu.show(this, "Alle Apps", listOf(GlassMenu.Item(if (locked) "PIN-Sperre aufheben" else "Mit PIN sperren") {
+        GlassMenu.show(this, tr("Alle Apps"), listOf(GlassMenu.Item(if (locked) tr("PIN-Sperre aufheben") else tr("Mit PIN sperren")) {
             val apply: () -> Unit = {
                 prefs.lockAllApps = !locked
                 buildDock()
                 dock.getChildAt(dock.childCount - 2)?.requestFocus()
             }
-            if (prefs.pinHash == null) Pin.create(this, prefs, apply) else Pin.verify(this, prefs, "PIN eingeben", apply)
+            if (prefs.pinHash == null) Pin.create(this, prefs, apply) else Pin.verify(this, prefs, tr("PIN eingeben"), apply)
         }))
     }
 
     private fun launch(app: AppEntry) {
         val window = prefs.timeWindows[app.pkg]
         when {
-            app.pkg in prefs.locked -> Pin.verify(this, prefs, "${app.label} ist gesperrt") { start(app.launch, app.label) }
+            app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { start(app.launch, app.label) }
             window != null && !TimeLimits.allowedNow(window) ->
-                Pin.verify(this, prefs, "${app.label} ist nur ${TimeLimits.label(window)} erlaubt") { start(app.launch, app.label) }
+                Pin.verify(this, prefs, tr("{0} ist nur {1} erlaubt", app.label, TimeLimits.label(window))) { start(app.launch, app.label) }
             else -> start(app.launch, app.label)
         }
     }
@@ -845,8 +849,8 @@ class MainActivity : Activity() {
 
     private fun showWarnings() {
         val first = warnings.firstOrNull() ?: return
-        val source = if (first.official) "Quelle: Deutscher Wetterdienst" else "Berechnet aus der Vorhersage von Open-Meteo"
-        GlassMenu.show(this, "Wetterwarnung · ${prefs.mainPlace.name}", warnings.map { w -> GlassMenu.Item("⚠  ${w.title}") {} },
+        val source = if (first.official) tr("Quelle: Deutscher Wetterdienst") else tr("Berechnet aus der Vorhersage von Open-Meteo")
+        GlassMenu.show(this, tr("Wetterwarnung · {0}", prefs.mainPlace.name), warnings.map { w -> GlassMenu.Item("⚠  ${w.title}") {} },
             footer = (first.detail.take(400).ifBlank { "" } + "\n\n" + source).trim())
     }
 
@@ -861,21 +865,21 @@ class MainActivity : Activity() {
         updateChecked = System.currentTimeMillis()
         Thread {
             val update = runCatching { Updater.check(this, repo) }.getOrNull() ?: return@Thread
-            runOnUiThread { toast("Glas Launcher ${update.version} ist verfügbar. Installieren unter Einstellungen → Updates.") }
+            runOnUiThread { toast(tr("Glas Launcher {0} ist verfügbar. Installieren unter Einstellungen → Updates.", update.version)) }
         }.start()
     }
 
     private fun openSettings() {
         val intent = Intent(this, SettingsActivity::class.java)
-        if (prefs.protectSettings) Pin.verify(this, prefs, "Einstellungen sind gesperrt") { start(intent, "Einstellungen") }
-        else start(intent, "Einstellungen")
+        if (prefs.protectSettings) Pin.verify(this, prefs, tr("Einstellungen sind gesperrt")) { start(intent, tr("Einstellungen")) }
+        else start(intent, tr("Einstellungen"))
     }
 
     private fun start(intent: Intent, label: String) {
         try {
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            toast("$label lässt sich nicht öffnen")
+            toast(tr("{0} lässt sich nicht öffnen", label))
         }
     }
 

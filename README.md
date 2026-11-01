@@ -19,6 +19,7 @@ Aktuelle Versionen: **Glas Launcher 2.24**, **Glas Natur-Videos 1.2**.
   Bildschirmschoner freigeben.
 - **Sichern:** alle Einstellungen in eine Datei sichern und wiederherstellen, auch auf einem anderen Fernseher.
 - **Updates:** sucht täglich in einem GitHub-Projekt nach einer neuen Version und installiert sie.
+- **Sprachen:** Deutsch, English, Français, Español, Italiano, Nederlands. Automatisch wie der Fernseher oder fest gewählt.
 - **Hintergründe:** Wetter realistisch (Fotos), realistisch animiert (gezeichnete Wolken, Regen, Schnee, Blitze),
   modern (gezeichnet) oder abstrakt (Farbverläufe), eigenes Bild,
   eigenes Video, Erweiterungen wie „Glas Natur-Videos“ und Projectivy-Plugins.
@@ -51,6 +52,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 
 ## Einstellungen
 
+- **Sprache:** Automatisch (Sprache des Fernsehers, sonst Englisch) oder eine feste Sprache
 - **Aussehen:** Hintergrund, Milchglas, *Oben anzeigen* (Statusleiste oder große Uhr mit Wetterkarte),
   eigene Bilder und Videos löschen, heruntergeladene Videos löschen
 - **Wetter:** Orte suchen und hinzufügen, Hauptort festlegen (bestimmt den Hintergrund), Orte entfernen
@@ -72,7 +74,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.25.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.26.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -81,7 +83,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.25` anlegen und `GlasLauncher-2.25.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.26` anlegen und `GlasLauncher-2.26.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 ## Installieren oder aktualisieren
@@ -105,7 +107,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.25.apk
+adb install -r GlasLauncher-2.26.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -247,6 +249,14 @@ Wechsel-Intervall (1 bis 60 Minuten) und Einstellungen des Plugins.
 Ist das WLAN beim Einschalten noch nicht verbunden, wartet der Launcher darauf und startet das Hintergrundvideo dann
 von selbst. Bei anderen Fehlern versucht er es bis zu viermal (nach 3, 6, 9 und 12 Sekunden). Plugins, die noch keine
 Liste liefern, werden nach 20 Sekunden erneut gefragt.
+
+## Übersetzungen
+
+Die Texte stehen auf Deutsch im Code und laufen durch `tr("…")`. Die Übersetzungen liegen in
+`app/src/main/assets/i18n/<sprache>.json` und ordnen jedem deutschen Text den übersetzten zu; Platzhalter
+heißen `{0}`, `{1}`. Fehlt ein Eintrag, erscheint der deutsche Text. Eine neue Sprache braucht eine solche Datei
+und einen Eintrag in `I18n.languages`. Amtliche Unwetterwarnungen gibt der Deutsche Wetterdienst nur auf Deutsch
+und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
 
 ## Quellen
 

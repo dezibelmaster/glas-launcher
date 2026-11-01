@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_label">Impostazioni di Glas Launcher</string>
+    <string name="weather_label">Meteo</string>
+    <string name="home_redirect_label">Glas Launcher: reindirizza il tasto Home</string>
+    <string name="home_redirect_description">Apre Glas Launcher al posto dell\'interfaccia Google TV o Fire TV quando si preme il tasto Home. Nessun contenuto viene letto.</string>
+</resources>

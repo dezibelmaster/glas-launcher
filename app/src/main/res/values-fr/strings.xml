@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_label">Paramètres de Glas Launcher</string>
+    <string name="weather_label">Météo</string>
+    <string name="home_redirect_label">Glas Launcher : rediriger le bouton Accueil</string>
+    <string name="home_redirect_description">Ouvre Glas Launcher au lieu de l\'interface Google TV ou Fire TV lorsque vous appuyez sur le bouton Accueil. Aucun contenu n\'est lu.</string>
+</resources>

@@ -28,7 +28,7 @@ class ScreensaverView(context: Context) : FrameLayout(context) {
     private val weather = Ui.text(context, 20f)
     private val main = Handler(Looper.getMainLooper())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.GERMANY)
-    private val dateFormat = SimpleDateFormat("EEEE, d. MMMM", Locale.GERMANY)
+    private val dateFormat = I18n.dateFormat("EEEEdMMMM")
     private var ticks = 0
 
     private val tick = object : Runnable {

@@ -7,7 +7,7 @@ import java.util.Calendar
 object TimeLimits {
     private val presets = listOf(null, "06:00-18:00", "06:00-19:00", "06:00-20:00", "06:00-21:00", "14:00-20:00")
 
-    fun label(window: String?) = window?.let { "${it.substringBefore('-')} bis ${it.substringAfter('-')} Uhr" } ?: "immer erlaubt"
+    fun label(window: String?) = window?.let { tr("{0} bis {1} Uhr", it.substringBefore('-'), it.substringAfter('-')) } ?: tr("immer erlaubt")
 
     fun allowedNow(window: String): Boolean {
         fun minutes(t: String) = t.substringBefore(':').toInt() * 60 + t.substringAfter(':').toInt()
@@ -19,14 +19,14 @@ object TimeLimits {
     fun choose(ctx: Context, prefs: Prefs, label: String, pkg: String, after: () -> Unit) {
         val pick = {
             val current = prefs.timeWindows[pkg]
-            GlassMenu.show(ctx, "Zeitfenster für $label", presets.map { w ->
+            GlassMenu.show(ctx, tr("Zeitfenster für {0}", label), presets.map { w ->
                 GlassMenu.Item(label(w) + if (w == current) "  ✓" else "") {
                     prefs.timeWindows = if (w == null) prefs.timeWindows - pkg else prefs.timeWindows + (pkg to w)
                     after()
                 }
             }, focus = presets.indexOf(current).coerceAtLeast(0),
-                footer = "Außerhalb des Zeitfensters lässt sich die App nur mit dem PIN öffnen.")
+                footer = tr("Außerhalb des Zeitfensters lässt sich die App nur mit dem PIN öffnen."))
         }
-        if (prefs.pinHash == null) Pin.create(ctx, prefs, pick) else Pin.verify(ctx, prefs, "PIN eingeben", pick)
+        if (prefs.pinHash == null) Pin.create(ctx, prefs, pick) else Pin.verify(ctx, prefs, tr("PIN eingeben"), pick)
     }
 }
