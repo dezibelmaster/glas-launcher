@@ -86,6 +86,13 @@ werden damit signiert, so lassen sich Updates von jedem Rechner aus über die al
 **Updates über GitHub:** Ein Release mit dem Tag `v2.29` anlegen und `GlasLauncher-2.29.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
+**TCL-Fernseher:** Dort zeigt *Installieren unbekannter Apps* den Glas Launcher manchmal als „Zugelassen“, obwohl
+Android die Erlaubnis nicht erteilt hat. Abhilfe einmalig per Bugjaeger-Shell bzw. `adb shell`:
+
+```
+appops set de.glas.launcher REQUEST_INSTALL_PACKAGES allow
+```
+
 ## Installieren oder aktualisieren
 
 Einmalig am Fernseher:
