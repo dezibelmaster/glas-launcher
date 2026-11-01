@@ -575,11 +575,13 @@ class MainActivity : Activity() {
                 prefs.favoritesOnly = false
                 backdrop.select(row.index, pin = true)
                 if (prefs.background == "extension") backdrop.uriAt(row.index)?.let { prefs.extUri = it; prefs.extType = "video" }
+                if (prefs.background == "video") backdrop.uriAt(row.index)?.let { prefs.videoUri = it }
             }
             else -> {
                 prefs.favoritesOnly = row.mode == ROW_FAVORITES
                 backdrop.unpin()
                 if (prefs.background == "extension") prefs.extUri = null
+                if (prefs.background == "video") prefs.videoUri = null
                 // Switching through favourites: start with one of them
                 if (row.mode == ROW_FAVORITES && !isFavorite(backdrop.current)) backdrop.next()
             }

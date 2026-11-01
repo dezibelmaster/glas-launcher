@@ -192,7 +192,7 @@ class SettingsActivity : Activity() {
 
     private fun backgroundLabel() = when (prefs.background) {
         "image" -> tr("Eigenes Bild")
-        "video" -> tr("Eigenes Video")
+        "video" -> if (prefs.videoUri == null) tr("Eigene Videos · alle") else tr("Eigenes Video")
         "extension" -> if (prefs.extUri == null) tr("Erweiterung · alle Videos") else tr("Erweiterung")
         "plugin" -> ProjectivyPlugins.find(this, prefs.plugin)?.name ?: tr("Plugin nicht mehr installiert")
         else -> when (prefs.weatherStyle) {
@@ -332,7 +332,12 @@ class SettingsActivity : Activity() {
             )
             return@withPermission
         }
-        GlassMenu.show(this, if (video) tr("Video wählen") else tr("Bild wählen"), items.map { item ->
+        val all = if (video && items.size > 1) listOf(GlassMenu.Item(tr("Alle eigenen Videos abwechselnd")) {
+            prefs.videoUri = null
+            prefs.background = "video"
+            render()
+        }) else emptyList()
+        GlassMenu.show(this, if (video) tr("Video wählen") else tr("Bild wählen"), all + items.map { item ->
             GlassMenu.Item(item.name) {
                 if (video) {
                     prefs.videoUri = item.uri

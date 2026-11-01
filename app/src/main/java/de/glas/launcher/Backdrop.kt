@@ -117,10 +117,7 @@ object Backdrops {
                 val uri = p.imageUri
                 SceneBackdrop(ctx, PhotoScene(ctx, withFx = false, key = { _, _ -> "image" }) { _, _ -> PhotoLoader.fromUri(ctx, uri) })
             }
-            "video" -> {
-                val uri = p.videoUri
-                VideoBackdrop(ctx) { listOfNotNull(uri?.let { MediaItem(it, Uri.parse(it).lastPathSegment ?: tr("Video")) }) }
-            }
+            "video" -> ownVideos(ctx, p.videoUri)
             "extension" -> extension(ctx, p)
             "plugin" -> {
                 val plugin = ProjectivyPlugins.find(ctx, p.plugin)
@@ -137,6 +134,25 @@ object Backdrops {
         val w = p.cachedWeather(p.mainPlace)
         if (w != null) backdrop.setWeather(WeatherApi.skyFor(w.code), w.isDay) else backdrop.setWeather(Sky.PARTLY, true)
         return backdrop
+    }
+
+    /**
+     * The user's own videos, so they can be browsed and marked as favourites like a plugin's:
+     * [chosen] loops, or with null all of them play one after another in random order.
+     */
+    private fun ownVideos(ctx: Context, chosen: String?) = VideoBackdrop(ctx, start = chosen) {
+        val found = Media.list(ctx, video = true).map { MediaItem(it.uri, it.name.substringBeforeLast('.')) }
+        when {
+            chosen == null -> found.shuffled()
+            found.any { it.uri == chosen } -> found
+            else -> {
+                // The same file may be listed under another address (file:// or content://)
+                val name = Uri.parse(chosen).lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.')
+                val i = found.indexOfFirst { it.title == name }
+                if (i >= 0) found.toMutableList().apply { set(i, MediaItem(chosen, found[i].title)) }
+                else listOf(MediaItem(chosen, name ?: tr("Video"))) + found
+            }
+        }
     }
 
     /** Wallpaper from an extension app: one picture, one video, or all its videos in random order. */

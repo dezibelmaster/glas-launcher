@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.31**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.32**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -39,7 +39,7 @@ Aktuelle Versionen: **Glas Launcher 2.31**, **Glas Natur-Videos 1.2**.
 - **Sprachen:** Deutsch, English, Français, Español, Italiano, Nederlands. Automatisch wie der Fernseher oder fest gewählt.
 - **Hintergründe:** Wetter realistisch (Fotos), realistisch animiert (gezeichnete Wolken, Regen, Schnee, Blitze),
   modern (gezeichnet) oder abstrakt (Farbverläufe), eigenes Bild,
-  eigenes Video, Erweiterungen wie „Glas Natur-Videos“ und Projectivy-Plugins.
+  eigene Videos (einzeln oder abwechselnd, mit Schnellauswahl und Favoriten), Erweiterungen wie „Glas Natur-Videos“ und Projectivy-Plugins.
 - **Hintergrund-Leiste:** weiterschalten und mit Live-Vorschau auswählen.
 - **Milchglas:** hell, mittel oder dunkel; über Videos einstellbar, wie oft es das Bild übernimmt (Standbild bis 15× pro Sekunde).
 - **Bildschirmschoner:** große Uhr mit Datum und Wetter, wandert gegen Einbrennen.
@@ -91,7 +91,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.31.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.32.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,7 +100,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.31` anlegen und `GlasLauncher-2.31.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.32` anlegen und `GlasLauncher-2.32.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **TCL-Fernseher:** Dort zeigt *Installieren unbekannter Apps* den Glas Launcher manchmal als „Zugelassen“, obwohl
@@ -131,7 +131,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.31.apk
+adb install -r GlasLauncher-2.32.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -199,6 +199,11 @@ Dateien auf den Fernseher kopieren, dann in den Einstellungen unter *Hintergrund
 adb push urlaub.jpg /sdcard/Pictures/
 adb push aquarium.mp4 /sdcard/Movies/
 ```
+
+**Mehrere eigene Videos:** Unter *Hintergrund → Eigenes Video …* gibt es „Alle eigenen Videos abwechselnd“. Wie bei
+den Plugins schaltest du dann im Dock **nach oben** mit ◀ / ▶ weiter oder wählst mit Live-Vorschau. Videos lassen sich
+dort mit **OK gedrückt halten** oder der **Menü-Taste** als Favorit (★) markieren, und „Nur Favoriten wechseln“ spielt
+nur diese ab. Auch bei einem einzelnen gewählten Video stehen die anderen in der Schnellauswahl bereit.
 
 **Videoformat:** Am flüssigsten laufen Videos in 1080p mit 25 oder 30 Bildern pro Sekunde, ohne HDR, als MP4 (H.264
 oder HEVC). Bei 4K, 60 Bildern pro Sekunde oder HDR zeigt der Launcher beim Auswählen einen Hinweis.
