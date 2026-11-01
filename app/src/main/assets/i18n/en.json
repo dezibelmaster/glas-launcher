@@ -52,6 +52,7 @@
  "{0} wird heruntergeladen …": "Downloading {0} …",
  "{0} bietet gerade keine APK-Datei an": "{0} does not offer an APK file right now",
  "{0} ließ sich nicht herunterladen": "{0} could not be downloaded",
+ "Heruntergeladen ({0}). Der Installer öffnet sich …": "Downloaded ({0}). Opening the installer …",
  "Der Installer lässt sich nicht öffnen": "The installer cannot be opened",
  "GitHub antwortet mit Fehler {0}": "GitHub responds with error {0}",
  "Zu viele Weiterleitungen": "Too many redirects",

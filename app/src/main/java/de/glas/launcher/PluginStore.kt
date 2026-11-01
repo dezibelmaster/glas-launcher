@@ -90,17 +90,20 @@ object PluginStore {
             main.post {
                 val file = result.getOrNull()
                 if (file == null) {
-                    ctx.toast(result.exceptionOrNull()?.message ?: tr("{0} ließ sich nicht herunterladen", label))
+                    // Say what went wrong, so a failure on the TV can be told apart
+                    val e = result.exceptionOrNull()
+                    ctx.toast(tr("{0} ließ sich nicht herunterladen", label) + (e?.let { " (${it.message ?: it.javaClass.simpleName})" } ?: ""))
                     return@post
                 }
+                ctx.toast(tr("Heruntergeladen ({0}). Der Installer öffnet sich …", Memory.mb(file.length())))
                 val uri = Uri.parse("content://${ctx.packageName}.apk/${file.name}")
-                runCatching {
-                    ctx.startActivity(
-                        Intent(Intent.ACTION_VIEW)
-                            .setDataAndType(uri, "application/vnd.android.package-archive")
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION),
-                    )
-                }.onFailure { ctx.toast(tr("Der Installer lässt sich nicht öffnen")) }
+                fun installer(action: String) = Intent(action)
+                    .setDataAndType(uri, "application/vnd.android.package-archive")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                @Suppress("DEPRECATION")
+                runCatching { ctx.startActivity(installer(Intent.ACTION_VIEW)) }
+                    .recoverCatching { ctx.startActivity(installer(Intent.ACTION_INSTALL_PACKAGE)) }
+                    .onFailure { ctx.toast(tr("Der Installer lässt sich nicht öffnen") + " (${it.javaClass.simpleName})") }
             }
         }.start()
     }

@@ -52,6 +52,7 @@
  "{0} wird heruntergeladen …": "Téléchargement de {0} …",
  "{0} bietet gerade keine APK-Datei an": "{0} ne propose pas de fichier APK pour le moment",
  "{0} ließ sich nicht herunterladen": "Impossible de télécharger {0}",
+ "Heruntergeladen ({0}). Der Installer öffnet sich …": "Téléchargé ({0}). Ouverture du programme d'installation …",
  "Der Installer lässt sich nicht öffnen": "Impossible d'ouvrir le programme d'installation",
  "GitHub antwortet mit Fehler {0}": "GitHub répond avec l'erreur {0}",
  "Zu viele Weiterleitungen": "Trop de redirections",

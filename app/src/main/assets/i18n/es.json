@@ -52,6 +52,7 @@
  "{0} wird heruntergeladen …": "Descargando {0} …",
  "{0} bietet gerade keine APK-Datei an": "{0} no ofrece ningún archivo APK en este momento",
  "{0} ließ sich nicht herunterladen": "No se pudo descargar {0}",
+ "Heruntergeladen ({0}). Der Installer öffnet sich …": "Descargado ({0}). Abriendo el instalador …",
  "Der Installer lässt sich nicht öffnen": "No se puede abrir el instalador",
  "GitHub antwortet mit Fehler {0}": "GitHub responde con el error {0}",
  "Zu viele Weiterleitungen": "Demasiadas redirecciones",

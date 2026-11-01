@@ -52,6 +52,7 @@
  "{0} wird heruntergeladen …": "{0} wordt gedownload …",
  "{0} bietet gerade keine APK-Datei an": "{0} biedt op dit moment geen APK-bestand aan",
  "{0} ließ sich nicht herunterladen": "{0} kon niet worden gedownload",
+ "Heruntergeladen ({0}). Der Installer öffnet sich …": "Gedownload ({0}). Het installatieprogramma wordt geopend …",
  "Der Installer lässt sich nicht öffnen": "Het installatieprogramma kan niet worden geopend",
  "GitHub antwortet mit Fehler {0}": "GitHub antwoordt met fout {0}",
  "Zu viele Weiterleitungen": "Te veel doorverwijzingen",

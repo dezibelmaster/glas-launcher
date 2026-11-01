@@ -52,6 +52,7 @@
  "{0} wird heruntergeladen …": "Download di {0} …",
  "{0} bietet gerade keine APK-Datei an": "{0} al momento non offre un file APK",
  "{0} ließ sich nicht herunterladen": "Impossibile scaricare {0}",
+ "Heruntergeladen ({0}). Der Installer öffnet sich …": "Scaricato ({0}). Apertura del programma di installazione …",
  "Der Installer lässt sich nicht öffnen": "Impossibile aprire il programma di installazione",
  "GitHub antwortet mit Fehler {0}": "GitHub risponde con l'errore {0}",
  "Zu viele Weiterleitungen": "Troppi reindirizzamenti",
