@@ -111,6 +111,9 @@ object Media {
         return if (ms > 0) frames / (ms / 1000f) else 0f
     }
 
+    private fun exists(ctx: Context, uri: Uri) =
+        runCatching { ctx.contentResolver.openFileDescriptor(uri, "r")?.use { true } ?: false }.getOrDefault(false)
+
     fun list(ctx: Context, video: Boolean): List<Item> {
         val found = LinkedHashMap<String, Item>()
         val collection = if (video) MediaStore.Video.Media.EXTERNAL_CONTENT_URI else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -122,7 +125,10 @@ object Media {
             )?.use { c ->
                 while (c.moveToNext()) {
                     val name = c.getString(1) ?: continue
-                    found.putIfAbsent(name, Item(name, ContentUris.withAppendedId(collection, c.getLong(0)).toString()))
+                    val uri = ContentUris.withAppendedId(collection, c.getLong(0))
+                    // The media index can still list files deleted outside the launcher
+                    if (!exists(ctx, uri)) continue
+                    found.putIfAbsent(name, Item(name, uri.toString()))
                 }
             }
         }

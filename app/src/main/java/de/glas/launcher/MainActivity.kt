@@ -312,6 +312,8 @@ class MainActivity : Activity() {
         // A new language in the settings: build the home screen again in it
         if (builtLanguage != I18n.lang) { recreate(); return }
         applyBackdrop()
+        // Own videos may have been deleted or added in the meantime
+        if (prefs.background == "video") (backdrop as? VideoBackdrop)?.refresh()
         cardGlass.tint = Ui.glassTint(prefs.glass, -0x18)
         statusGlass.tint = Ui.glassTint(prefs.glass)
         // Only the chosen top style is part of the home screen

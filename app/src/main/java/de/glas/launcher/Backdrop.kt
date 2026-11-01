@@ -145,12 +145,14 @@ object Backdrops {
         when {
             chosen == null -> found.shuffled()
             found.any { it.uri == chosen } -> found
+            // Without access to the video list only the chosen file can play
+            found.isEmpty() -> listOf(MediaItem(chosen, Uri.parse(chosen).lastPathSegment ?: tr("Video")))
             else -> {
                 // The same file may be listed under another address (file:// or content://)
                 val name = Uri.parse(chosen).lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.')
                 val i = found.indexOfFirst { it.title == name }
-                if (i >= 0) found.toMutableList().apply { set(i, MediaItem(chosen, found[i].title)) }
-                else listOf(MediaItem(chosen, name ?: tr("Video"))) + found
+                // A chosen file that is gone no longer shows up; then all others play
+                if (i >= 0) found.toMutableList().apply { set(i, MediaItem(chosen, found[i].title)) } else found
             }
         }
     }

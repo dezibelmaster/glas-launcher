@@ -108,6 +108,32 @@ class VideoBackdrop(
 
     override fun uriAt(index: Int) = playlist.getOrNull(index)?.uri
 
+    /**
+     * Reads the videos again, e.g. after some were deleted or added. What is playing goes on
+     * if it is still there; otherwise the next one starts.
+     */
+    fun refresh() {
+        if (playlist.isEmpty()) return
+        Thread {
+            val list = runCatching { sources() }.getOrNull() ?: return@Thread
+            main.post {
+                if (released || list.isEmpty()) return@post
+                if (list.map { it.uri }.toSet() == playlist.map { it.uri }.toSet()) return@post
+                val keep = list.indexOfFirst { it.uri == uriAt(index) }
+                playlist = list
+                if (keep >= 0) {
+                    index = keep
+                    player?.isLooping = isPinned || list.size == 1
+                } else {
+                    isPinned = false
+                    index = 0
+                    play()
+                }
+                onChange?.invoke()
+            }
+        }.start()
+    }
+
     override fun unpin() {
         isPinned = false
         player?.isLooping = playlist.size == 1
