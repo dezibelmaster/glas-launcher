@@ -96,6 +96,7 @@
  "Im Launcher starten nach": "Avvia nel launcher dopo",
  "Jetzt anzeigen": "Mostra ora",
  "System-Bildschirmschoner öffnen": "Apri il salvaschermo di sistema",
+ "Damit der Glas-Bildschirmschoner auch in anderen Apps erscheint, am Computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream": "Per mostrare il salvaschermo Glas anche nelle altre app, da un computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream",
  "Leistung": "Prestazioni",
  "Arbeitsspeicher frei": "Memoria libera",
  "{0} von {1}": "{0} su {1}",

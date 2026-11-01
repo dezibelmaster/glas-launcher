@@ -96,6 +96,7 @@
  "Im Launcher starten nach": "Démarrer dans le launcher après",
  "Jetzt anzeigen": "Afficher maintenant",
  "System-Bildschirmschoner öffnen": "Ouvrir l'économiseur d'écran du système",
+ "Damit der Glas-Bildschirmschoner auch in anderen Apps erscheint, am Computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream": "Pour que l'économiseur d'écran Glas apparaisse aussi dans les autres applis, depuis un ordinateur :\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream",
  "Leistung": "Performances",
  "Arbeitsspeicher frei": "Mémoire libre",
  "{0} von {1}": "{0} sur {1}",

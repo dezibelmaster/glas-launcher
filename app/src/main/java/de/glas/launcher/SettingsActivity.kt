@@ -113,7 +113,7 @@ class SettingsActivity : Activity() {
         row(tr("Jetzt anzeigen")) { startActivity(Intent(this, ScreensaverActivity::class.java)) }
         row(tr("System-Bildschirmschoner öffnen")) { open(Intent(Settings.ACTION_DREAM_SETTINGS)) }
         note(
-            "Damit der Glas-Bildschirmschoner auch in anderen Apps erscheint, am Computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream",
+            tr("Damit der Glas-Bildschirmschoner auch in anderen Apps erscheint, am Computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream"),
         )
 
         section(tr("Leistung"))

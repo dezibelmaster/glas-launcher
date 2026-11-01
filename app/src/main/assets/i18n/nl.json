@@ -96,6 +96,7 @@
  "Im Launcher starten nach": "Starten in de launcher na",
  "Jetzt anzeigen": "Nu tonen",
  "System-Bildschirmschoner öffnen": "Systeemschermbeveiliging openen",
+ "Damit der Glas-Bildschirmschoner auch in anderen Apps erscheint, am Computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream": "Om de Glas-schermbeveiliging ook in andere apps te tonen, via een computer:\nadb shell settings put secure screensaver_components de.glas.launcher/.ClockDream",
  "Leistung": "Prestaties",
  "Arbeitsspeicher frei": "Vrij geheugen",
  "{0} von {1}": "{0} van {1}",
