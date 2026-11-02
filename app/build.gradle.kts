@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.launcher"
         minSdk = 25
         targetSdk = 35
-        versionCode = 36
-        versionName = "2.34"
+        versionCode = 37
+        versionName = "2.35"
     }
 
     // One fixed key for every build, so updates install over earlier versions
@@ -46,6 +46,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    // Talks to the TV's own debugging port, to switch the Google TV home screen on and off
+    implementation("dev.mobile:dadb:1.2.10")
 }
 
 // APK named with its version, e.g. GlasLauncher-2.25.apk

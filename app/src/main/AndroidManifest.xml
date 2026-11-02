@@ -21,6 +21,9 @@
 
     <!-- Needed on Android 11+ to see the other installed TV apps -->
     <queries>
+        <!-- The Google TV home screen, to show whether it is switched on -->
+        <package android:name="com.google.android.apps.tv.launcherx" />
+        <package android:name="com.google.android.tungsten.setupwraith" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LEANBACK_LAUNCHER" />

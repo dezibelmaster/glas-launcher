@@ -104,8 +104,11 @@ class SettingsActivity : Activity() {
         row(tr("Status"), homeStatus()) {}
         row(tr("Als Standard festlegen")) { makeDefault() }
         row(tr("Home-Taste umleiten"), if (redirectOn()) tr("An") else tr("Aus")) { open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+        if (GoogleTv.available(this)) {
+            row(tr("Google-TV-Oberfläche"), if (GoogleTv.isOn(this)) tr("An") else tr("Aus")) { switchGoogleTv() }
+        }
         note(
-            tr("Google TV bietet keine Auswahl für den Startbildschirm. Zwei Wege:\n1. Home-Taste umleiten: In den Bedienungshilfen „Glas Launcher“ einschalten. Kommt eine Meldung „Eingeschränkte Einstellung“, zuerst unter Apps → Glas Launcher → ⋮ „Eingeschränkte Einstellungen zulassen“ wählen.\n2. Google-Oberfläche abschalten (am zuverlässigsten), am Computer:\nadb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx"),
+            tr("Google TV bietet keine Auswahl für den Startbildschirm. Zwei Wege:\n1. Home-Taste umleiten: In den Bedienungshilfen „Glas Launcher“ einschalten. Kommt eine Meldung „Eingeschränkte Einstellung“, zuerst unter Apps → Glas Launcher → ⋮ „Eingeschränkte Einstellungen zulassen“ wählen.\n2. Google-Oberfläche abschalten (am zuverlässigsten): oben „Google-TV-Oberfläche“ auf Aus stellen, oder am Computer:\nadb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx"),
         )
 
         section(tr("Bildschirmschoner"))
@@ -577,6 +580,31 @@ class SettingsActivity : Activity() {
     }
 
     // ---- Screensaver ----
+
+    private fun switchGoogleTv() = withPin {
+        val on = GoogleTv.isOn(this)
+        GlassMenu.show(this, tr("Google-TV-Oberfläche"), listOf(
+            GlassMenu.Item(if (on) tr("Ausschalten") else tr("Einschalten")) {
+                toast(tr("Einen Moment …"))
+                Thread {
+                    val result = GoogleTv.switch(this, !on)
+                    runOnUiThread {
+                        if (isDestroyed) return@runOnUiThread
+                        when (result) {
+                            GoogleTv.Result.Done -> toast(if (on) tr("Google-TV-Oberfläche ist aus") else tr("Google-TV-Oberfläche ist wieder an"))
+                            GoogleTv.Result.NoDebugging -> GlassMenu.show(this, tr("Debugging ist aus"), listOf(GlassMenu.Item(tr("Verstanden")) {}),
+                                footer = tr("Schalte unter Einstellungen → System → Entwickleroptionen das USB-Debugging ein (wie für Bugjaeger) und versuche es dann noch einmal."))
+                            GoogleTv.Result.NotAllowed -> GlassMenu.show(this, tr("Nicht bestätigt"), listOf(GlassMenu.Item(tr("Verstanden")) {}),
+                                footer = tr("Der Fernseher fragt beim ersten Mal „USB-Debugging zulassen?“. Wähle „Immer zulassen“ und „Zulassen“ und versuche es dann noch einmal."))
+                            is GoogleTv.Result.Failed -> toast(tr("Das hat nicht geklappt ({0})", result.reason))
+                        }
+                        render()
+                    }
+                }.start()
+            },
+            GlassMenu.Item(tr("Abbrechen")) {},
+        ), footer = tr("Beim ersten Mal fragt der Fernseher „USB-Debugging zulassen?“. Wähle dort „Immer zulassen“ und „Zulassen“. Dafür muss das USB-Debugging in den Entwickleroptionen an sein, wie für Bugjaeger."))
+    }
 
     private fun idleLabel(min: Int) = if (min == 0) tr("Aus") else tr("{0} Minuten", min)
 

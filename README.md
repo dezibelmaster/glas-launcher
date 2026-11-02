@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.34**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.35**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -91,7 +91,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.34.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.35.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,7 +100,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.34` anlegen und `GlasLauncher-2.34.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.35` anlegen und `GlasLauncher-2.35.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **TCL-Fernseher:** Dort zeigt *Installieren unbekannter Apps* den Glas Launcher manchmal als „Zugelassen“, obwohl
@@ -131,7 +131,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.34.apk
+adb install -r GlasLauncher-2.35.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -142,7 +142,14 @@ Google TV bietet keine Auswahl für den Startbildschirm. Es gibt zwei Wege.
 **A) Google-Oberfläche abschalten (empfohlen)**
 
 Danach startet der Fernseher direkt im Glas Launcher, auch nach einem Neustart.
-In der Bugjaeger-Shell (ohne `adb shell`) oder am Computer:
+
+**Direkt im Launcher (ab 2.35):** *Einstellungen → Startbildschirm → Google-TV-Oberfläche* → Ausschalten bzw.
+Einschalten. Der Launcher verbindet sich dafür mit dem Debugging-Zugang des Fernsehers selbst (127.0.0.1:5555, wie
+Bugjaeger), mit der Bibliothek [dadb](https://github.com/mobile-dev-inc/dadb) (Apache-2.0). Voraussetzung: USB-Debugging
+in den Entwickleroptionen ist an. Beim ersten Mal fragt der Fernseher „USB-Debugging zulassen?“ → „Immer zulassen“ und
+„Zulassen“ wählen.
+
+**Von Hand:** In der Bugjaeger-Shell (ohne `adb shell`) oder am Computer:
 
 ```
 adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx
