@@ -22,7 +22,7 @@ import android.widget.TextView
 import java.util.Date
 
 /**
- * Start screen of Glas Kids. In kids mode it opens YouTube Kids after two seconds, says so when another app
+ * Start screen of Glas Kids. In kids mode it opens YouTube Kids (or YouTube with its kids profile) after two seconds, says so when another app
  * was blocked, and shows "time is up" when the viewing time is used up. Parents get in by holding OK or the
  * Menu button and entering the PIN.
  */
@@ -108,12 +108,12 @@ class HomeActivity : Activity() {
         countdown = null
         val why = reason
         reason = null
-        val kids = Apps.youTubeKids(this)
+        val kids = Apps.target(this)
         hint.visibility = if (prefs.enabled) View.VISIBLE else View.GONE
         showRemaining()
         when {
             !prefs.enabled -> renderOff()
-            kids == null -> renderMessage(tr("YouTube Kids fehlt"), tr("Bitte YouTube Kids auf dem Fernseher installieren."), listOf(tr("Eltern") to { openParent() }))
+            kids == null -> renderMessage(tr("YouTube fehlt"), tr("Bitte YouTube auf dem Fernseher installieren."), listOf(tr("Eltern") to { openParent() }))
             ScreenTime.state(prefs) != ScreenTime.State.OK -> renderTimeUp()
             why == REASON_BLOCKED -> renderBlocked()
             else -> renderStart(kids)
@@ -210,8 +210,8 @@ class HomeActivity : Activity() {
     private fun renderBlocked() {
         panel(
             tr("Das geht hier nicht"),
-            tr("Im Kindermodus gibt es nur YouTube Kids."),
-            listOf(tr("Zurück zu YouTube Kids") to { startYouTubeKids() }),
+            tr("Im Kindermodus gibt es nur {0}.", Apps.targetName(this)),
+            listOf(tr("Zurück zu {0}", Apps.targetName(this)) to { startYouTubeKids() }),
             tr("Geht in 3 Sekunden von selbst zurück"),
         )
         if (!parentOpen) handler.postDelayed(openKids, 3_000)
@@ -241,7 +241,7 @@ class HomeActivity : Activity() {
         )
         panel(
             "Glas Kids",
-            tr("Der Kindermodus ist aus. Wenn er läuft, lässt der Fernseher nur YouTube Kids zu.") +
+            tr("Der Kindermodus ist aus. Wenn er läuft, lässt der Fernseher nur {0} zu.", Apps.targetName(this)) +
                 if (guard) "" else "\n\n" + tr("Zuerst muss der Wächter in den Bedienungshilfen eingeschaltet werden."),
             buttons,
         )
@@ -285,8 +285,8 @@ class HomeActivity : Activity() {
     private fun startYouTubeKids() {
         handler.removeCallbacks(openKids)
         if (prefs.enabled && ScreenTime.state(prefs) != ScreenTime.State.OK) return render()
-        val pkg = Apps.youTubeKids(this)
-        if (pkg == null || !Apps.launch(this, pkg)) toast(tr("YouTube Kids lässt sich nicht öffnen"))
+        val pkg = Apps.target(this)
+        if (pkg == null || !Apps.launch(this, pkg)) toast(tr("{0} lässt sich nicht öffnen", Apps.targetName(this)))
     }
 
     private fun startKidsMode() {

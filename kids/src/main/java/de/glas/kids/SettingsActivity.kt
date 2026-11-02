@@ -73,7 +73,7 @@ class SettingsActivity : Activity() {
         }
         row(tr("Fernsehzeit pro Tag"), ScreenTime.dailyLabel(prefs.dailyMinutes)) {
             choose(tr("Fernsehzeit pro Tag"), ScreenTime.dailyPresets, prefs.dailyMinutes, ScreenTime::dailyLabel,
-                tr("Gezählt wird nur, solange YouTube Kids läuft.")) { prefs.dailyMinutes = it; refresh(2) }
+                tr("Gezählt wird nur, solange {0} läuft.", Apps.targetName(this))) { prefs.dailyMinutes = it; refresh(2) }
         }
         row(tr("Erlaubte Uhrzeit"), ScreenTime.windowLabel(prefs.window)) {
             choose(tr("Erlaubte Uhrzeit"), ScreenTime.windowPresets, prefs.window, ScreenTime::windowLabel,
@@ -123,7 +123,7 @@ class SettingsActivity : Activity() {
                 prefs.extraApps = if (app.pkg in allowed) allowed - app.pkg else allowed + app.pkg
                 chooseApps()
             }
-        }, footer = tr("Erlaubte Apps erscheinen im Kindermodus klein unter YouTube Kids. Ihre Zeit zählt zur Fernsehzeit.")).also {
+        }, footer = tr("Erlaubte Apps erscheinen im Kindermodus klein unter {0}. Ihre Zeit zählt zur Fernsehzeit.", Apps.targetName(this))).also {
             it.setOnDismissListener { build(6) }
         }
     }

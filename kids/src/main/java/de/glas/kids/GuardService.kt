@@ -18,8 +18,8 @@ import android.view.accessibility.AccessibilityEvent
 
 /**
  * The guard of kids mode. Switched on once under Accessibility, it sees every app that comes to the front.
- * In kids mode anything other than YouTube Kids (and the apps the parents allowed) sends the TV back to
- * Glas Kids, which then returns to YouTube Kids. It also counts the viewing time and ends it when it is used up.
+ * In kids mode anything other than YouTube Kids or YouTube (and the apps the parents allowed) sends the TV back to
+ * Glas Kids, which then returns to it. It also counts the viewing time and ends it when it is used up.
  */
 class GuardService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
@@ -69,9 +69,22 @@ class GuardService : AccessibilityService() {
     private fun isActivity(pkg: String, cls: String) =
         runCatching { packageManager.getActivityInfo(ComponentName(pkg, cls), 0) }.isSuccess
 
-    private fun countsAsWatching(pkg: String?) = pkg != null && (Apps.isYouTubeKids(pkg) || pkg in prefs.extraApps)
+    /** The app of kids mode, looked up again now and then in case YouTube Kids gets installed or removed. */
+    private var target: String? = null
+    private var targetCheckedAt = 0L
 
-    /** Adds the time since the last call to today's viewing time, if YouTube Kids was in front and the screen on. */
+    private fun target(): String? {
+        val now = SystemClock.elapsedRealtime()
+        if (targetCheckedAt == 0L || now - targetCheckedAt > 60_000) {
+            target = Apps.target(this)
+            targetCheckedAt = now
+        }
+        return target
+    }
+
+    private fun countsAsWatching(pkg: String?) = pkg != null && (pkg == target() || pkg in prefs.extraApps)
+
+    /** Adds the time since the last call to today's viewing time, if the kids mode app was in front and the screen on. */
     private fun count() {
         val now = SystemClock.elapsedRealtime()
         val delta = now - lastCount
@@ -110,7 +123,7 @@ class GuardService : AccessibilityService() {
         )
     }
 
-    /** "5 Min. left" in the bottom right corner for ten seconds, over YouTube Kids. */
+    /** "5 Min. left" in the bottom right corner for ten seconds, over YouTube. */
     private fun showRemaining(ms: Long) {
         hideRemaining()
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager

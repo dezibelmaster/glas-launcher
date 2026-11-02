@@ -5,10 +5,19 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 
-/** YouTube Kids and the other installed apps. */
+/** The app kids mode is about (YouTube Kids or YouTube), and the other installed apps. */
 object Apps {
-    /** YouTube Kids for TVs first, then the phone and tablet version. */
-    val YOUTUBE_KIDS = listOf("com.google.android.youtube.tvkids", "com.google.android.apps.youtube.kids")
+    /**
+     * Apps for kids mode, best first. YouTube Kids if it is installed; on Google TV it is no longer offered,
+     * there the kids profiles live in the normal YouTube app.
+     */
+    val TARGETS = listOf(
+        "com.google.android.youtube.tvkids",
+        "com.google.android.apps.youtube.kids",
+        "com.google.android.youtube.tv",
+        "com.amazon.firetv.youtube",
+        "com.google.android.youtube",
+    )
 
     /** Home screens: when one of these appears the Home button was pressed, which is not a forbidden app. */
     val HOME_SCREENS = setOf(
@@ -20,16 +29,18 @@ object Apps {
     )
 
     /**
-     * Google sign-in and account screens. YouTube Kids opens them for profiles and parent settings;
+     * Google sign-in and account screens. YouTube opens them for profiles and parent settings;
      * they don't lead to other apps.
      */
     val SYSTEM_ALLOWED = setOf("com.google.android.gms", "com.google.android.gsf")
 
     class App(val pkg: String, val label: String)
 
-    fun youTubeKids(ctx: Context): String? = YOUTUBE_KIDS.firstOrNull { installed(ctx, it) }
+    /** The installed app kids mode opens and allows. */
+    fun target(ctx: Context): String? = TARGETS.firstOrNull { installed(ctx, it) && launchIntent(ctx, it) != null }
 
-    fun isYouTubeKids(pkg: String) = pkg in YOUTUBE_KIDS
+    /** Name for the texts, e.g. "YouTube Kids" or "YouTube". */
+    fun targetName(ctx: Context) = target(ctx)?.let { label(ctx, it) } ?: "YouTube"
 
     private fun installed(ctx: Context, pkg: String) = runCatching { ctx.packageManager.getApplicationInfo(pkg, 0) }.isSuccess
 
@@ -54,7 +65,7 @@ object Apps {
         pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
     }.getOrDefault(pkg)
 
-    /** Apps that can be opened from the TV's app list, without Glas Kids and YouTube Kids. */
+    /** Apps that can be opened from the TV's app list, without Glas Kids and the kids mode app. */
     fun launchable(ctx: Context): List<App> {
         val pm = ctx.packageManager
         val found = linkedSetOf<String>()
@@ -62,7 +73,8 @@ object Apps {
             pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(cat), PackageManager.MATCH_ALL)
                 .forEach { found += it.activityInfo.packageName }
         }
-        return found.filter { it != ctx.packageName && !isYouTubeKids(it) }
+        val target = target(ctx)
+        return found.filter { it != ctx.packageName && it != target }
             .map { App(it, label(ctx, it)) }
             .sortedBy { it.label.lowercase() }
     }

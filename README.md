@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.34**, **Glas Natur-Videos 1.2**, **Glas Kids 1.0**.
+Aktuelle Versionen: **Glas Launcher 2.34**, **Glas Natur-Videos 1.2**, **Glas Kids 1.1**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -114,7 +114,8 @@ appops set de.glas.launcher REQUEST_INSTALL_PACKAGES allow
 ## Glas Kids: Fernseher nur mit YouTube Kids
 
 Eigene App neben dem Launcher. Im **Kindermodus** lässt der Fernseher nur YouTube Kids zu (und Apps, die die Eltern
-zusätzlich erlauben). Öffnet sich etwas anderes, etwa über die Netflix-Taste, die Sprachsuche, die Home-Taste oder die
+zusätzlich erlauben). Auf Google TV gibt es keine eigene YouTube-Kids-App mehr, die Kinderprofile stecken in der
+normalen YouTube-App. Dann lässt Glas Kids die normale YouTube-App zu; ist YouTube Kids installiert, nur diese. Öffnet sich etwas anderes, etwa über die Netflix-Taste, die Sprachsuche, die Home-Taste oder die
 Einstellungen, erscheint kurz „Das geht hier nicht“ und der Fernseher kehrt zu YouTube Kids zurück.
 
 - **Start:** Beim Einschalten und bei der Home-Taste erscheint der Glas-Kids-Startbildschirm, nach 2 Sekunden öffnet sich
@@ -129,9 +130,11 @@ Einstellungen, erscheint kurz „Das geht hier nicht“ und der Fernseher kehrt 
 
 **Einrichten**
 
-1. YouTube Kids auf dem Fernseher installieren und einrichten (Anmeldung, Kinderprofil, Altersstufe), **bevor** der
-   Kindermodus läuft. Welche Videos es dort gibt, regeln die Einstellungen von YouTube Kids.
-2. `GlasKids-1.0.apk` installieren (wie unten beschrieben) und Glas Kids öffnen.
+1. In YouTube auf dem Fernseher das Kinderprofil einrichten (Anmeldung, Kinderprofil, Altersstufe), **bevor** der
+   Kindermodus läuft, und das Kinderprofil auswählen. Welche Videos es dort gibt, regelt YouTube. Glas Kids kann nicht
+   sehen, welches Profil in YouTube aktiv ist: Wechselt das Kind dort zu einem Erwachsenen-Profil, verhindert Glas Kids
+   das nicht. Daher in YouTube prüfen, ob das Verlassen des Kinderprofils nach einem Code der Eltern fragt.
+2. `GlasKids-1.1.apk` installieren (wie unten beschrieben) und Glas Kids öffnen.
 3. Den **Wächter** einschalten: *Einstellungen → System → Bedienungshilfen* → „Glas Kids: Kindermodus“. Erscheint
    „Eingeschränkte Einstellung“: *Einstellungen → Apps → Glas Kids* → ⋮ → „Eingeschränkte Einstellungen zulassen“,
    danach erneut einschalten. Per adb geht es auch; ist die Home-Taste-Umleitung des Launchers schon an, beide angeben:
@@ -170,7 +173,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 adb connect 192.168.178.173
 adb install -r GlasLauncher-2.34.apk
 adb install -r GlasNaturVideos-1.2.apk
-adb install -r GlasKids-1.0.apk
+adb install -r GlasKids-1.1.apk
 ```
 
 ## Startbildschirm festlegen

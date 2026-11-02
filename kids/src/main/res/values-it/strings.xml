@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="guard_label">Glas Kids: modalità bambini</string>
-    <string name="guard_description">In modalità bambini è consentito solo YouTube Kids. Se si apre un\'altra app, il televisore torna a YouTube Kids. Conta anche il tempo davanti alla TV.</string>
+    <string name="guard_description">In modalità bambini è consentito solo YouTube Kids o YouTube. Se si apre un\'altra app, il televisore ci torna. Conta anche il tempo davanti alla TV.</string>
 </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="guard_label">Glas Kids: kids mode</string>
-    <string name="guard_description">In kids mode, only YouTube Kids is allowed. If another app opens, the TV returns to YouTube Kids. Also counts the viewing time.</string>
+    <string name="guard_description">In kids mode, only YouTube Kids or YouTube is allowed. If another app opens, the TV returns to it. Also counts the viewing time.</string>
 </resources>
