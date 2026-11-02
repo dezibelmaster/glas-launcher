@@ -1,0 +1,31 @@
+name: Claw Akku-Licht exe
+
+on:
+  push:
+    paths:
+      - "msi-claw-akku-licht/**"
+      - ".github/workflows/claw-akku-licht.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: msi-claw-akku-licht
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pakete installieren
+        run: python -m pip install -r requirements.txt pyinstaller
+      - name: Selbsttest
+        run: python -c "import claw_akku_licht, hid, psutil, pystray; print('ok')"
+      - name: exe bauen
+        run: python -m PyInstaller --noconfirm --onefile --windowed --name ClawAkkuLicht claw_akku_licht.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ClawAkkuLicht
+          path: msi-claw-akku-licht/dist/ClawAkkuLicht.exe
+          retention-days: 90
