@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.34**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.34**, **Glas Natur-Videos 1.2**, **Glas Kids 1.0**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -93,6 +93,7 @@ gradle assembleDebug
 
 - Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.34.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
+- Kindermodus: `kids/build/outputs/apk/debug/GlasKids-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
 
@@ -109,6 +110,42 @@ Android die Erlaubnis nicht erteilt hat. Abhilfe einmalig per Bugjaeger-Shell bz
 ```
 appops set de.glas.launcher REQUEST_INSTALL_PACKAGES allow
 ```
+
+## Glas Kids: Fernseher nur mit YouTube Kids
+
+Eigene App neben dem Launcher. Im **Kindermodus** lässt der Fernseher nur YouTube Kids zu (und Apps, die die Eltern
+zusätzlich erlauben). Öffnet sich etwas anderes, etwa über die Netflix-Taste, die Sprachsuche, die Home-Taste oder die
+Einstellungen, erscheint kurz „Das geht hier nicht“ und der Fernseher kehrt zu YouTube Kids zurück.
+
+- **Start:** Beim Einschalten und bei der Home-Taste erscheint der Glas-Kids-Startbildschirm, nach 2 Sekunden öffnet sich
+  YouTube Kids von selbst.
+- **Fernsehzeit:** Zeit pro Tag (30 Min. bis 3 Std. oder unbegrenzt) und erlaubte Uhrzeiten (z. B. 07:00 bis 19:30 Uhr).
+  Gezählt wird nur, solange YouTube Kids bei eingeschaltetem Bildschirm läuft. Auf Wunsch blendet Glas Kids 5 oder
+  10 Minuten vor Schluss die Restzeit ein. Danach erscheint „Fernsehzeit ist vorbei“.
+- **Eltern:** Auf dem Startbildschirm **OK gedrückt halten** oder **Menü-Taste**, dann PIN. Danach: 15 Min., 30 Min. oder
+  1 Std. freigeben, Einstellungen, Kindermodus beenden. Dreimal falscher PIN sperrt die Eingabe für 1 Minute.
+- **Einstellungen:** Kindermodus, Wächter, Fernsehzeit pro Tag, erlaubte Uhrzeit, Restzeit einblenden, heute geschaut
+  (zurücksetzbar), zusätzlich erlaubte Apps (erscheinen klein unter YouTube Kids), PIN ändern, Sprache.
+
+**Einrichten**
+
+1. YouTube Kids auf dem Fernseher installieren und einrichten (Anmeldung, Kinderprofil, Altersstufe), **bevor** der
+   Kindermodus läuft. Welche Videos es dort gibt, regeln die Einstellungen von YouTube Kids.
+2. `GlasKids-1.0.apk` installieren (wie unten beschrieben) und Glas Kids öffnen.
+3. Den **Wächter** einschalten: *Einstellungen → System → Bedienungshilfen* → „Glas Kids: Kindermodus“. Erscheint
+   „Eingeschränkte Einstellung“: *Einstellungen → Apps → Glas Kids* → ⋮ → „Eingeschränkte Einstellungen zulassen“,
+   danach erneut einschalten. Per adb geht es auch; ist die Home-Taste-Umleitung des Launchers schon an, beide angeben:
+
+   ```
+   adb shell settings put secure enabled_accessibility_services de.glas.launcher/.HomeRedirectService:de.glas.kids/.GuardService
+   adb shell settings put secure accessibility_enabled 1
+   ```
+
+4. In Glas Kids „Kindermodus starten“, beim ersten Mal einen Eltern-PIN festlegen.
+
+**Grenzen:** Ausschalten oder Stecker ziehen lässt sich nicht verhindern; nach dem Einschalten ist der Kindermodus sofort
+wieder da. Eingangswechsel (HDMI, Antenne) über eine eigene Taste der Fernbedienung laufen bei manchen Fernsehern am
+Android-System vorbei. Google-Anmeldefenster sind erlaubt, weil YouTube Kids sie für Profile und Elterneinstellungen braucht.
 
 ## Installieren oder aktualisieren
 
@@ -133,6 +170,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 adb connect 192.168.178.173
 adb install -r GlasLauncher-2.34.apk
 adb install -r GlasNaturVideos-1.2.apk
+adb install -r GlasKids-1.0.apk
 ```
 
 ## Startbildschirm festlegen

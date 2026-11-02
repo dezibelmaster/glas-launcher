@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guard_label">Glas Kids: modo infantil</string>
+    <string name="guard_description">En el modo infantil solo se permite YouTube Kids. Si se abre otra aplicación, el televisor vuelve a YouTube Kids. También cuenta el tiempo de pantalla.</string>
+</resources>

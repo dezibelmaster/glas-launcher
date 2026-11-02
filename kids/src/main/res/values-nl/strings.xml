@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guard_label">Glas Kids: kindermodus</string>
+    <string name="guard_description">In de kindermodus is alleen YouTube Kids toegestaan. Opent er een andere app, dan gaat de tv terug naar YouTube Kids. Telt ook de kijktijd.</string>
+</resources>
