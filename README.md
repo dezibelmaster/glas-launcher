@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.35**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.36**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -79,7 +79,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
   Freigeben beendet Apps, die im Hintergrund ruhen; Android räumt auch selbst auf.
 - **Sichern:** Einstellungen sichern nach `Download/GlasLauncher-Einstellungen.json` und wiederherstellen. Für einen anderen
   Fernseher die Datei nach `/sdcard/Android/data/de.glas.launcher/files/` kopieren (z. B. mit Bugjaeger).
-- **Updates:** installierte Version, Update-Quelle (`Name/Projekt` auf GitHub), jetzt nach Updates suchen
+- **Updates:** installierte Version, „Neu in Version …“ mit früheren Versionen, Update-Quelle (`Name/Projekt` auf GitHub), jetzt nach Updates suchen
 - **Startbildschirm:** Status, als Standard festlegen, Home-Taste umleiten
 - **Bildschirmschoner:** Uhrzeit, Datum und Wetter einzeln ein- und ausschalten (alles aus zeigt nur den Hintergrund), Zeit bis zum Start im Launcher, jetzt anzeigen, System-Bildschirmschoner
 - **Fernseher:** Fernseher-Einstellungen öffnen
@@ -91,7 +91,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.35.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.36.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,8 +100,11 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.35` anlegen und `GlasLauncher-2.35.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.36` anlegen und `GlasLauncher-2.36.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
+
+**Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
+*Einstellungen → Updates → Neu in Version …*. Der Text eines GitHub-Releases wird vor dem Installieren angezeigt.
 
 **TCL-Fernseher:** Dort zeigt *Installieren unbekannter Apps* den Glas Launcher manchmal als „Zugelassen“, obwohl
 Android die Erlaubnis nicht erteilt hat. Abhilfe einmalig per Bugjaeger-Shell bzw. `adb shell`:
@@ -131,7 +134,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.35.apk
+adb install -r GlasLauncher-2.36.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 

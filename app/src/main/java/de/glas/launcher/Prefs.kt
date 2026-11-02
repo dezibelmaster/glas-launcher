@@ -29,6 +29,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("saverWeather", true)
         set(v) = sp.edit().putBoolean("saverWeather", v).apply()
 
+    /** Version the launcher last ran as, to point out what is new after an update. */
+    var seenVersion: String?
+        get() = sp.getString("seenVersion", null)
+        set(v) = sp.edit().putString("seenVersion", v).apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

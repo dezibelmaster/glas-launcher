@@ -44,7 +44,7 @@ object PluginStore {
     }
 
     /** Newest release on GitHub: its tag and APK files as name to download address. Blocking. */
-    class Release(val tag: String, val apks: List<Pair<String, String>>)
+    class Release(val tag: String, val apks: List<Pair<String, String>>, val notes: String = "")
 
     fun latestRelease(repo: String): Release {
         val release = JSONObject(get("https://api.github.com/repos/$repo/releases/latest"))
@@ -52,7 +52,7 @@ object PluginStore {
         val apks = (0 until assets.length()).map { assets.getJSONObject(it) }
             .filter { it.getString("name").endsWith(".apk", true) }
             .map { it.getString("name") to it.getString("browser_download_url") }
-        return Release(release.optString("tag_name"), apks)
+        return Release(release.optString("tag_name"), apks, release.optString("body").trim())
     }
 
     /** An install that waits for the permission to install apps. */

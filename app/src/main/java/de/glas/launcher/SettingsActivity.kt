@@ -143,6 +143,9 @@ class SettingsActivity : Activity() {
 
         section(tr("Updates"))
         row(tr("Installierte Version"), Updater.installedVersion(this)) {}
+        Changelog.of(this, Updater.installedVersion(this))?.let { entry ->
+            row(tr("Neu in Version {0}", entry.version)) { Changelog.show(this, entry, more = true) }
+        }
         row(tr("Update-Quelle (GitHub)"), prefs.updateRepo ?: tr("nicht festgelegt")) { chooseUpdateRepo() }
         row(tr("Jetzt nach Updates suchen")) { checkUpdate() }
         note(tr("Ist eine Quelle festgelegt, sucht Glas Launcher einmal am Tag nach einer neuen Version und zeigt einen Hinweis."))
@@ -528,7 +531,11 @@ class SettingsActivity : Activity() {
                     else -> GlassMenu.show(this, tr("Version {0} ist da", update.version), listOf(
                         GlassMenu.Item(tr("Jetzt installieren")) { Updater.install(this, repo) },
                         GlassMenu.Item(tr("Später")) {},
-                    ), footer = tr("Deine Einstellungen bleiben beim Update erhalten."))
+                    ), footer = listOf(
+                        // What the release says it brings, as written on GitHub
+                        update.notes.replace("\r", "").take(600).ifBlank { null },
+                        tr("Deine Einstellungen bleiben beim Update erhalten."),
+                    ).filterNotNull().joinToString("\n\n"))
                 }
             }
         }.start()

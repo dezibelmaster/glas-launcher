@@ -305,6 +305,20 @@ class MainActivity : Activity() {
             if (bar.visibility == View.VISIBLE && now != null && !isInside(now, bar)) hideBar(focusDock = false)
         }
         setContentView(root)
+        pointOutWhatsNew()
+    }
+
+    /** After an update, once: says where to see what is new. */
+    private fun pointOutWhatsNew() {
+        val version = Updater.installedVersion(this)
+        val seen = prefs.seenVersion
+        if (seen == version) return
+        prefs.seenVersion = version
+        val info = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull() ?: return
+        val updated = seen != null || info.lastUpdateTime > info.firstInstallTime
+        if (updated && Changelog.of(this, version) != null) {
+            toast(tr("Glas Launcher {0} ist installiert. Was neu ist: Einstellungen → Updates", version))
+        }
     }
 
     override fun onStart() {

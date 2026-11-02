@@ -7,7 +7,7 @@ import android.content.Context
  * Einstellungen → Updates, and installs it. Releases carry an APK named GlasLauncher-x.y.apk.
  */
 object Updater {
-    class Update(val version: String)
+    class Update(val version: String, val notes: String)
 
     fun installedVersion(ctx: Context): String =
         runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull() ?: "0"
@@ -18,7 +18,7 @@ object Updater {
         val apk = release.apks.firstOrNull { it.first.startsWith("GlasLauncher", true) } ?: return null
         // The version from the tag (v2.26, 2.26, GlasLauncher2.26 …) or else from the APK name
         val version = versionIn(release.tag) ?: versionIn(apk.first) ?: return null
-        return if (newer(version, installedVersion(ctx))) Update(version) else null
+        return if (newer(version, installedVersion(ctx))) Update(version, release.notes) else null
     }
 
     fun install(ctx: Context, repo: String) = PluginStore.installRelease(ctx, "Glas Launcher", repo) { apks ->
