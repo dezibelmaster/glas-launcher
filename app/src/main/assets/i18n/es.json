@@ -258,6 +258,7 @@
  "Das Video lässt sich nicht öffnen": "No se puede abrir el vídeo",
  "Wetter für {0} wird geladen …": "Cargando el tiempo de {0} …",
  "Keine Verbindung zum Wetterdienst": "Sin conexión con el servicio meteorológico",
+ "Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.": "Sin conexión con el servicio meteorológico ({0}). Se muestran los últimos datos.",
  "{0} · Stand {1}": "{0} · a las {1}",
  "💧  Feuchtigkeit": "💧  Humedad",
  "Luftdruck {0} hPa": "Presión {0} hPa",

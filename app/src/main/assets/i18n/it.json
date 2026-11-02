@@ -258,6 +258,7 @@
  "Das Video lässt sich nicht öffnen": "Impossibile aprire il video",
  "Wetter für {0} wird geladen …": "Caricamento meteo per {0} …",
  "Keine Verbindung zum Wetterdienst": "Nessuna connessione al servizio meteo",
+ "Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.": "Nessuna connessione al servizio meteo ({0}). Vengono mostrati gli ultimi dati.",
  "{0} · Stand {1}": "{0} · alle {1}",
  "💧  Feuchtigkeit": "💧  Umidità",
  "Luftdruck {0} hPa": "Pressione {0} hPa",

@@ -258,6 +258,7 @@
  "Das Video lässt sich nicht öffnen": "De video kan niet worden geopend",
  "Wetter für {0} wird geladen …": "Weer voor {0} wordt geladen …",
  "Keine Verbindung zum Wetterdienst": "Geen verbinding met de weerdienst",
+ "Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.": "Geen verbinding met de weerdienst ({0}). De laatste gegevens worden getoond.",
  "{0} · Stand {1}": "{0} · stand {1}",
  "💧  Feuchtigkeit": "💧  Luchtvochtigheid",
  "Luftdruck {0} hPa": "Luchtdruk {0} hPa",

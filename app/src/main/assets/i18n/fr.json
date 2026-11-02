@@ -258,6 +258,7 @@
  "Das Video lässt sich nicht öffnen": "Impossible d'ouvrir la vidéo",
  "Wetter für {0} wird geladen …": "Chargement de la météo pour {0} …",
  "Keine Verbindung zum Wetterdienst": "Pas de connexion au service météo",
+ "Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.": "Pas de connexion au service météo ({0}). Les dernières données sont affichées.",
  "{0} · Stand {1}": "{0} · à {1}",
  "💧  Feuchtigkeit": "💧  Humidité",
  "Luftdruck {0} hPa": "Pression {0} hPa",

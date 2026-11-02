@@ -1,58 +1,245 @@
 [
- {"version": "2.36", "notes": {
-  "de": ["Übersicht „Neu in dieser Version“ unter Einstellungen → Updates", "Vor dem Installieren eines Updates steht da, was es Neues bringt"],
-  "en": ["“What's new in this version” overview under Settings → Updates", "Before installing an update, you see what it brings"],
-  "fr": ["Aperçu « Nouveautés de cette version » sous Paramètres → Mises à jour", "Avant d'installer une mise à jour, vous voyez ce qu'elle apporte"],
-  "es": ["Resumen «Novedades de esta versión» en Ajustes → Actualizaciones", "Antes de instalar una actualización ves qué trae de nuevo"],
-  "it": ["Riepilogo «Novità di questa versione» in Impostazioni → Aggiornamenti", "Prima di installare un aggiornamento vedi cosa porta di nuovo"],
-  "nl": ["Overzicht ‘Nieuw in deze versie’ onder Instellingen → Updates", "Voor het installeren van een update zie je wat er nieuw is"]}},
- {"version": "2.35", "notes": {
-  "de": ["Google-TV-Oberfläche direkt im Launcher ein- und ausschalten (Einstellungen → Startbildschirm)"],
-  "en": ["Switch the Google TV interface on and off right in the launcher (Settings → Home screen)"],
-  "fr": ["Activer et désactiver l'interface Google TV directement dans le launcher (Paramètres → Écran d'accueil)"],
-  "es": ["Activar y desactivar la interfaz de Google TV directamente en el launcher (Ajustes → Pantalla de inicio)"],
-  "it": ["Attivare e disattivare l'interfaccia Google TV direttamente nel launcher (Impostazioni → Schermata Home)"],
-  "nl": ["De Google TV-interface direct in de launcher in- en uitschakelen (Instellingen → Startscherm)"]}},
- {"version": "2.34", "notes": {
-  "de": ["Uhrzeit, Datum und Wetter im Bildschirmschoner einzeln abschaltbar"],
-  "en": ["Time, date and weather can each be turned off in the screensaver"],
-  "fr": ["L'heure, la date et la météo de l'économiseur d'écran peuvent être désactivées séparément"],
-  "es": ["La hora, la fecha y el tiempo del salvapantallas se pueden desactivar por separado"],
-  "it": ["Ora, data e meteo del salvaschermo disattivabili singolarmente"],
-  "nl": ["Tijd, datum en weer in de schermbeveiliging afzonderlijk uit te schakelen"]}},
- {"version": "2.33", "notes": {
-  "de": ["Schnellauswahl zeigt gelöschte Videos nicht mehr an und erkennt neue"],
-  "en": ["Quick selection no longer shows deleted videos and picks up new ones"],
-  "fr": ["La sélection rapide n'affiche plus les vidéos supprimées et détecte les nouvelles"],
-  "es": ["La selección rápida ya no muestra vídeos borrados y detecta los nuevos"],
-  "it": ["La selezione rapida non mostra più i video eliminati e rileva quelli nuovi"],
-  "nl": ["Snelkeuze toont geen verwijderde video's meer en herkent nieuwe"]}},
- {"version": "2.32", "notes": {
-  "de": ["Eigene Videos: alle abwechselnd abspielen, Schnellauswahl mit Vorschau und Favoriten"],
-  "en": ["Own videos: play all in turn, quick selection with preview and favourites"],
-  "fr": ["Vidéos personnelles : lecture en alternance, sélection rapide avec aperçu et favoris"],
-  "es": ["Vídeos propios: reproducir todos alternando, selección rápida con vista previa y favoritos"],
-  "it": ["Video personali: riproduzione a rotazione, selezione rapida con anteprima e preferiti"],
-  "nl": ["Eigen video's: allemaal afwisselend afspelen, snelkeuze met voorbeeld en favorieten"]}},
- {"version": "2.31", "notes": {
-  "de": ["Neues Logo und Banner"],
-  "en": ["New logo and banner"],
-  "fr": ["Nouveau logo et nouvelle bannière"],
-  "es": ["Nuevo logotipo y banner"],
-  "it": ["Nuovo logo e banner"],
-  "nl": ["Nieuw logo en nieuwe banner"]}},
- {"version": "2.26", "notes": {
-  "de": ["Sprachen: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Niederländisch"],
-  "en": ["Languages: German, English, French, Spanish, Italian, Dutch"],
-  "fr": ["Langues : allemand, anglais, français, espagnol, italien, néerlandais"],
-  "es": ["Idiomas: alemán, inglés, francés, español, italiano, neerlandés"],
-  "it": ["Lingue: tedesco, inglese, francese, spagnolo, italiano, olandese"],
-  "nl": ["Talen: Duits, Engels, Frans, Spaans, Italiaans, Nederlands"]}},
- {"version": "2.25", "notes": {
-  "de": ["Einstellungen sichern und wiederherstellen", "Updates direkt am Fernseher", "Unwetterwarnungen", "Zeitfenster für die Kindersicherung", "Arbeitsspeicher anzeigen und freigeben"],
-  "en": ["Back up and restore settings", "Updates right on the TV", "Severe weather warnings", "Time windows for parental controls", "Show and free up memory"],
-  "fr": ["Sauvegarder et restaurer les paramètres", "Mises à jour directement sur le téléviseur", "Alertes météo", "Plages horaires pour le contrôle parental", "Afficher et libérer la mémoire"],
-  "es": ["Guardar y restaurar ajustes", "Actualizaciones directamente en el televisor", "Avisos meteorológicos", "Franjas horarias para el control parental", "Mostrar y liberar memoria"],
-  "it": ["Salvare e ripristinare le impostazioni", "Aggiornamenti direttamente sul televisore", "Allerte meteo", "Fasce orarie per il controllo genitori", "Mostrare e liberare la memoria"],
-  "nl": ["Instellingen opslaan en herstellen", "Updates direct op de tv", "Weerwaarschuwingen", "Tijdvensters voor ouderlijk toezicht", "Geheugen tonen en vrijmaken"]}}
+ {
+  "version": "2.37",
+  "notes": {
+   "de": [
+    "Wetteransicht versucht es bei Verbindungsproblemen mehrmals und zeigt sonst den letzten Stand",
+    "Bei einem Fehler steht der Grund dabei"
+   ],
+   "en": [
+    "The weather view retries on connection problems and otherwise shows the last data",
+    "On an error, the reason is shown"
+   ],
+   "fr": [
+    "La vue météo réessaie en cas de problème de connexion et affiche sinon les dernières données",
+    "En cas d'erreur, la raison est indiquée"
+   ],
+   "es": [
+    "La vista del tiempo reintenta si hay problemas de conexión y si no muestra los últimos datos",
+    "Si hay un error, se muestra el motivo"
+   ],
+   "it": [
+    "La vista meteo riprova in caso di problemi di connessione e altrimenti mostra gli ultimi dati",
+    "In caso di errore viene indicato il motivo"
+   ],
+   "nl": [
+    "De weerweergave probeert het bij verbindingsproblemen opnieuw en toont anders de laatste gegevens",
+    "Bij een fout staat de reden erbij"
+   ]
+  }
+ },
+ {
+  "version": "2.36",
+  "notes": {
+   "de": [
+    "Übersicht „Neu in dieser Version“ unter Einstellungen → Updates",
+    "Vor dem Installieren eines Updates steht da, was es Neues bringt"
+   ],
+   "en": [
+    "“What's new in this version” overview under Settings → Updates",
+    "Before installing an update, you see what it brings"
+   ],
+   "fr": [
+    "Aperçu « Nouveautés de cette version » sous Paramètres → Mises à jour",
+    "Avant d'installer une mise à jour, vous voyez ce qu'elle apporte"
+   ],
+   "es": [
+    "Resumen «Novedades de esta versión» en Ajustes → Actualizaciones",
+    "Antes de instalar una actualización ves qué trae de nuevo"
+   ],
+   "it": [
+    "Riepilogo «Novità di questa versione» in Impostazioni → Aggiornamenti",
+    "Prima di installare un aggiornamento vedi cosa porta di nuovo"
+   ],
+   "nl": [
+    "Overzicht ‘Nieuw in deze versie’ onder Instellingen → Updates",
+    "Voor het installeren van een update zie je wat er nieuw is"
+   ]
+  }
+ },
+ {
+  "version": "2.35",
+  "notes": {
+   "de": [
+    "Google-TV-Oberfläche direkt im Launcher ein- und ausschalten (Einstellungen → Startbildschirm)"
+   ],
+   "en": [
+    "Switch the Google TV interface on and off right in the launcher (Settings → Home screen)"
+   ],
+   "fr": [
+    "Activer et désactiver l'interface Google TV directement dans le launcher (Paramètres → Écran d'accueil)"
+   ],
+   "es": [
+    "Activar y desactivar la interfaz de Google TV directamente en el launcher (Ajustes → Pantalla de inicio)"
+   ],
+   "it": [
+    "Attivare e disattivare l'interfaccia Google TV direttamente nel launcher (Impostazioni → Schermata Home)"
+   ],
+   "nl": [
+    "De Google TV-interface direct in de launcher in- en uitschakelen (Instellingen → Startscherm)"
+   ]
+  }
+ },
+ {
+  "version": "2.34",
+  "notes": {
+   "de": [
+    "Uhrzeit, Datum und Wetter im Bildschirmschoner einzeln abschaltbar"
+   ],
+   "en": [
+    "Time, date and weather can each be turned off in the screensaver"
+   ],
+   "fr": [
+    "L'heure, la date et la météo de l'économiseur d'écran peuvent être désactivées séparément"
+   ],
+   "es": [
+    "La hora, la fecha y el tiempo del salvapantallas se pueden desactivar por separado"
+   ],
+   "it": [
+    "Ora, data e meteo del salvaschermo disattivabili singolarmente"
+   ],
+   "nl": [
+    "Tijd, datum en weer in de schermbeveiliging afzonderlijk uit te schakelen"
+   ]
+  }
+ },
+ {
+  "version": "2.33",
+  "notes": {
+   "de": [
+    "Schnellauswahl zeigt gelöschte Videos nicht mehr an und erkennt neue"
+   ],
+   "en": [
+    "Quick selection no longer shows deleted videos and picks up new ones"
+   ],
+   "fr": [
+    "La sélection rapide n'affiche plus les vidéos supprimées et détecte les nouvelles"
+   ],
+   "es": [
+    "La selección rápida ya no muestra vídeos borrados y detecta los nuevos"
+   ],
+   "it": [
+    "La selezione rapida non mostra più i video eliminati e rileva quelli nuovi"
+   ],
+   "nl": [
+    "Snelkeuze toont geen verwijderde video's meer en herkent nieuwe"
+   ]
+  }
+ },
+ {
+  "version": "2.32",
+  "notes": {
+   "de": [
+    "Eigene Videos: alle abwechselnd abspielen, Schnellauswahl mit Vorschau und Favoriten"
+   ],
+   "en": [
+    "Own videos: play all in turn, quick selection with preview and favourites"
+   ],
+   "fr": [
+    "Vidéos personnelles : lecture en alternance, sélection rapide avec aperçu et favoris"
+   ],
+   "es": [
+    "Vídeos propios: reproducir todos alternando, selección rápida con vista previa y favoritos"
+   ],
+   "it": [
+    "Video personali: riproduzione a rotazione, selezione rapida con anteprima e preferiti"
+   ],
+   "nl": [
+    "Eigen video's: allemaal afwisselend afspelen, snelkeuze met voorbeeld en favorieten"
+   ]
+  }
+ },
+ {
+  "version": "2.31",
+  "notes": {
+   "de": [
+    "Neues Logo und Banner"
+   ],
+   "en": [
+    "New logo and banner"
+   ],
+   "fr": [
+    "Nouveau logo et nouvelle bannière"
+   ],
+   "es": [
+    "Nuevo logotipo y banner"
+   ],
+   "it": [
+    "Nuovo logo e banner"
+   ],
+   "nl": [
+    "Nieuw logo en nieuwe banner"
+   ]
+  }
+ },
+ {
+  "version": "2.26",
+  "notes": {
+   "de": [
+    "Sprachen: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Niederländisch"
+   ],
+   "en": [
+    "Languages: German, English, French, Spanish, Italian, Dutch"
+   ],
+   "fr": [
+    "Langues : allemand, anglais, français, espagnol, italien, néerlandais"
+   ],
+   "es": [
+    "Idiomas: alemán, inglés, francés, español, italiano, neerlandés"
+   ],
+   "it": [
+    "Lingue: tedesco, inglese, francese, spagnolo, italiano, olandese"
+   ],
+   "nl": [
+    "Talen: Duits, Engels, Frans, Spaans, Italiaans, Nederlands"
+   ]
+  }
+ },
+ {
+  "version": "2.25",
+  "notes": {
+   "de": [
+    "Einstellungen sichern und wiederherstellen",
+    "Updates direkt am Fernseher",
+    "Unwetterwarnungen",
+    "Zeitfenster für die Kindersicherung",
+    "Arbeitsspeicher anzeigen und freigeben"
+   ],
+   "en": [
+    "Back up and restore settings",
+    "Updates right on the TV",
+    "Severe weather warnings",
+    "Time windows for parental controls",
+    "Show and free up memory"
+   ],
+   "fr": [
+    "Sauvegarder et restaurer les paramètres",
+    "Mises à jour directement sur le téléviseur",
+    "Alertes météo",
+    "Plages horaires pour le contrôle parental",
+    "Afficher et libérer la mémoire"
+   ],
+   "es": [
+    "Guardar y restaurar ajustes",
+    "Actualizaciones directamente en el televisor",
+    "Avisos meteorológicos",
+    "Franjas horarias para el control parental",
+    "Mostrar y liberar memoria"
+   ],
+   "it": [
+    "Salvare e ripristinare le impostazioni",
+    "Aggiornamenti direttamente sul televisore",
+    "Allerte meteo",
+    "Fasce orarie per il controllo genitori",
+    "Mostrare e liberare la memoria"
+   ],
+   "nl": [
+    "Instellingen opslaan en herstellen",
+    "Updates direct op de tv",
+    "Weerwaarschuwingen",
+    "Tijdvensters voor ouderlijk toezicht",
+    "Geheugen tonen en vrijmaken"
+   ]
+  }
+ }
 ]

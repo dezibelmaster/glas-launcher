@@ -258,6 +258,7 @@
  "Das Video lässt sich nicht öffnen": "The video cannot be opened",
  "Wetter für {0} wird geladen …": "Loading weather for {0} …",
  "Keine Verbindung zum Wetterdienst": "No connection to the weather service",
+ "Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.": "No connection to the weather service ({0}). Showing the last data.",
  "{0} · Stand {1}": "{0} · as of {1}",
  "💧  Feuchtigkeit": "💧  Humidity",
  "Luftdruck {0} hPa": "Pressure {0} hPa",

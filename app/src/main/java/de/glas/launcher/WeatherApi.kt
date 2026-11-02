@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import org.json.JSONObject
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -74,9 +75,38 @@ object WeatherApi {
     )
 
     /** Full forecast for the weather view: now, the next 12 hours, 7 days, air quality and pollen. Blocking. */
-    fun forecast(place: Place): Forecast {
-        val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover_low,cloud_cover_mid,cloud_cover_high&hourly=temperature_2m,weather_code,precipitation_probability,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max&forecast_days=7&timezone=auto"
-        val json = JSONObject(get(url))
+    class Loaded(val forecast: Forecast, val offline: Boolean, val error: String?)
+
+    /**
+     * The forecast, tried three times; if the weather service can't be reached, the last one
+     * received for [place] with its time. Throws only if there is neither.
+     */
+    fun forecast(ctx: Context, place: Place): Loaded {
+        val file = File(ctx.cacheDir, "forecast-" + place.key.replace(',', '_') + ".json")
+        var error: Exception? = null
+        for (attempt in 0 until 3) {
+            try {
+                val text = get(forecastUrl(place))
+                val f = parseForecast(text, place, System.currentTimeMillis())
+                runCatching { file.writeText(text) }
+                return Loaded(f, offline = false, error = null)
+            } catch (e: Exception) {
+                error = e
+                if (attempt < 2) Thread.sleep(2_000L * (attempt + 1))
+            }
+        }
+        val reason = error?.let { it.message ?: it.javaClass.simpleName }
+        if (file.exists()) {
+            runCatching { parseForecast(file.readText(), place, file.lastModified(), withAir = false) }.getOrNull()
+                ?.let { return Loaded(it, offline = true, error = reason) }
+        }
+        throw error ?: IllegalStateException()
+    }
+
+    private fun forecastUrl(place: Place) = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,surface_pressure,cloud_cover_low,cloud_cover_mid,cloud_cover_high&hourly=temperature_2m,weather_code,precipitation_probability,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max&forecast_days=7&timezone=auto"
+
+    private fun parseForecast(text: String, place: Place, time: Long, withAir: Boolean = true): Forecast {
+        val json = JSONObject(text)
         val c = json.getJSONObject("current")
         val daily = json.getJSONObject("daily")
         val hourly = json.getJSONObject("hourly")
@@ -116,15 +146,16 @@ object WeatherApi {
             )
         }
         val now = WeatherNow(
-            temp = c.getDouble("temperature_2m").roundToInt(),
-            code = skyCode(c.getInt("weather_code"), c.optDouble("cloud_cover_low", 0.0), c.optDouble("cloud_cover_mid", 0.0), c.optDouble("cloud_cover_high", 0.0)),
-            isDay = c.getInt("is_day") == 1,
+            // A value can be missing now and then; then the view still opens
+            temp = c.optDouble("temperature_2m", 0.0).let { if (it.isNaN()) 0 else it.roundToInt() },
+            code = skyCode(c.optInt("weather_code", 2), c.optDouble("cloud_cover_low", 0.0), c.optDouble("cloud_cover_mid", 0.0), c.optDouble("cloud_cover_high", 0.0)),
+            isDay = c.optInt("is_day", 1) == 1,
             max = days.firstOrNull()?.max ?: 0,
             min = days.firstOrNull()?.min ?: 0,
-            time = System.currentTimeMillis(),
+            time = time,
         )
         // Air quality and pollen come from a separate service; the view works without them
-        val air = runCatching {
+        val air = if (!withAir) null else runCatching {
             JSONObject(get("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=european_aqi,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto")).getJSONObject("current")
         }.getOrNull()
         fun pollen(key: String) = air?.optDouble(key)?.takeIf { !it.isNaN() }
@@ -224,9 +255,17 @@ object WeatherApi {
 
     private fun get(url: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 10_000
-        conn.readTimeout = 10_000
+        conn.connectTimeout = 15_000
+        conn.readTimeout = 20_000
+        conn.setRequestProperty("User-Agent", "GlasLauncher (Android TV)")
         try {
+            val code = conn.responseCode
+            if (code != 200) {
+                // Open-Meteo says why in a "reason" field
+                val body = runCatching { conn.errorStream?.bufferedReader()?.use { it.readText() } }.getOrNull()
+                val reason = body?.let { runCatching { JSONObject(it).optString("reason") }.getOrNull() }.orEmpty()
+                throw java.io.IOException("HTTP $code" + if (reason.isNotBlank()) ": $reason" else "")
+            }
             return conn.inputStream.bufferedReader().use { it.readText() }
         } finally {
             conn.disconnect()

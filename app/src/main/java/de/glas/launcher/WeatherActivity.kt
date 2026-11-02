@@ -104,11 +104,17 @@ class WeatherActivity : Activity() {
         showMessage(tr("Wetter für {0} wird geladen …", place.name))
         val p = place
         Thread {
-            val result = runCatching { WeatherApi.forecast(p) }
+            val result = runCatching { WeatherApi.forecast(this, p) }
             runOnUiThread {
-                if (p.key != place.key) return@runOnUiThread
-                val f = result.getOrNull()
-                if (f == null) showMessage(tr("Keine Verbindung zum Wetterdienst")) else show(f)
+                if (p.key != place.key || isDestroyed) return@runOnUiThread
+                val loaded = result.getOrNull()
+                if (loaded == null) {
+                    val e = result.exceptionOrNull()
+                    showMessage(tr("Keine Verbindung zum Wetterdienst") + "\n" + (e?.message ?: e?.javaClass?.simpleName ?: ""))
+                    return@runOnUiThread
+                }
+                show(loaded.forecast)
+                if (loaded.offline) toast(tr("Keine Verbindung zum Wetterdienst ({0}). Angezeigt wird der letzte Stand.", loaded.error ?: "?"))
             }
         }.start()
     }
