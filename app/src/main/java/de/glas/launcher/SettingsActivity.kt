@@ -110,6 +110,9 @@ class SettingsActivity : Activity() {
 
         section(tr("Bildschirmschoner"))
         row(tr("Im Launcher starten nach"), idleLabel(prefs.idleMinutes)) { chooseIdle() }
+        row(tr("Uhrzeit anzeigen"), if (prefs.saverClock) tr("An") else tr("Aus")) { prefs.saverClock = !prefs.saverClock; render() }
+        row(tr("Datum anzeigen"), if (prefs.saverDate) tr("An") else tr("Aus")) { prefs.saverDate = !prefs.saverDate; render() }
+        row(tr("Wetter anzeigen"), if (prefs.saverWeather) tr("An") else tr("Aus")) { prefs.saverWeather = !prefs.saverWeather; render() }
         row(tr("Jetzt anzeigen")) { startActivity(Intent(this, ScreensaverActivity::class.java)) }
         row(tr("System-Bildschirmschoner öffnen")) { open(Intent(Settings.ACTION_DREAM_SETTINGS)) }
         note(

@@ -18,6 +18,17 @@ class Prefs(context: Context) {
         get() = sp.getString("language", null)
         set(v) = sp.edit().apply { if (v == null) remove("language") else putString("language", v) }.commit().let {}
 
+    /** What the screensaver shows over the background. */
+    var saverClock: Boolean
+        get() = sp.getBoolean("saverClock", true)
+        set(v) = sp.edit().putBoolean("saverClock", v).apply()
+    var saverDate: Boolean
+        get() = sp.getBoolean("saverDate", true)
+        set(v) = sp.edit().putBoolean("saverDate", v).apply()
+    var saverWeather: Boolean
+        get() = sp.getBoolean("saverWeather", true)
+        set(v) = sp.edit().putBoolean("saverWeather", v).apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

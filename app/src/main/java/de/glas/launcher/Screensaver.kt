@@ -44,13 +44,20 @@ class ScreensaverView(context: Context) : FrameLayout(context) {
     }
 
     init {
+        val prefs = Prefs(context)
         addView(backdrop, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        addView(View(context).apply { setBackgroundColor(0x66000000) }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        clock.visibility = if (prefs.saverClock) View.VISIBLE else View.GONE
+        date.visibility = if (prefs.saverDate) View.VISIBLE else View.GONE
+        weather.visibility = if (prefs.saverWeather) View.VISIBLE else View.GONE
+        // Darken the background only when there is text to read on it
+        if (prefs.saverClock || prefs.saverDate || prefs.saverWeather) {
+            addView(View(context).apply { setBackgroundColor(0x66000000) }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        }
         // Each line spans the box, so centre the text inside it
         for (line in listOf(clock, date, weather)) line.gravity = Gravity.CENTER_HORIZONTAL
         box.addView(clock)
         box.addView(date)
-        box.addView(weather.apply { setPadding(0, context.dp(18), 0, 0) })
+        box.addView(weather.apply { if (prefs.saverClock || prefs.saverDate) setPadding(0, context.dp(18), 0, 0) })
         addView(box, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.CENTER))
     }
 
