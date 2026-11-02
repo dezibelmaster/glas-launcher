@@ -32,14 +32,44 @@ object WeatherApi {
         val cached = prefs.cachedWeather(place)
         if (cached != null && System.currentTimeMillis() - cached.time < MAX_AGE) return done(cached)
         Thread {
-            val fresh = try { fetch(place) } catch (e: Exception) { null }
+            val fresh = try { fetch(context, place) } catch (e: Exception) { null }
             if (fresh != null) prefs.saveWeather(place, fresh)
             Handler(Looper.getMainLooper()).post { done(fresh ?: cached) }
         }.start()
     }
 
-    /** Blocking; call from a background thread. */
-    fun fetch(place: Place): WeatherNow {
+    /** The weather sources in the order to try them: the chosen one first, the others if it fails. */
+    private fun order(ctx: Context): List<String> {
+        val chosen = Prefs(ctx).weatherSource
+        return listOf(chosen) + SOURCES.filter { it != chosen }
+    }
+
+    val SOURCES = listOf("openmeteo", "dwd", "metno")
+
+    fun sourceName(id: String) = when (id) {
+        "dwd" -> tr("Deutscher Wetterdienst")
+        "metno" -> "Met.no (Yr)"
+        else -> tr("Automatisch (Open-Meteo)")
+    }
+
+    /** Current weather from the first source that answers. Blocking; call from a background thread. */
+    fun fetch(ctx: Context, place: Place): WeatherNow {
+        var error: Exception? = null
+        for (source in order(ctx)) {
+            try {
+                return when (source) {
+                    "dwd" -> WeatherSources.brightSky(place).now
+                    "metno" -> WeatherSources.metNo(place).now
+                    else -> fetchOpenMeteo(place)
+                }
+            } catch (e: Exception) {
+                error = e
+            }
+        }
+        throw error ?: IllegalStateException()
+    }
+
+    private fun fetchOpenMeteo(place: Place): WeatherNow {
         val url = "https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code,is_day,cloud_cover_low,cloud_cover_mid,cloud_cover_high&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto"
         val json = JSONObject(get(url))
         val current = json.getJSONObject("current")
@@ -60,7 +90,7 @@ object WeatherApi {
     }
 
     class Hour(val time: String, val temp: Int, val code: Int, val isDay: Boolean, val rain: Int)
-    class Day(val date: String, val code: Int, val max: Int, val min: Int, val rain: Int, val sunrise: String, val sunset: String, val uv: Double)
+    class Day(val date: String, val code: Int, val max: Int, val min: Int, val rain: Int, val sunrise: String, val sunset: String, val uv: Double?)
     class Forecast(
         val now: WeatherNow,
         val feelsLike: Int,
@@ -72,6 +102,8 @@ object WeatherApi {
         val days: List<Day>,
         val aqi: Int?,
         val pollen: Map<String, Double?>,
+        /** Where the weather comes from, e.g. "Open-Meteo". */
+        val source: String = "Open-Meteo",
     )
 
     /** Full forecast for the weather view: now, the next 12 hours, 7 days, air quality and pollen. Blocking. */
@@ -84,15 +116,27 @@ object WeatherApi {
     fun forecast(ctx: Context, place: Place): Loaded {
         val file = File(ctx.cacheDir, "forecast-" + place.key.replace(',', '_') + ".json")
         var error: Exception? = null
-        for (attempt in 0 until 3) {
-            try {
-                val text = get(forecastUrl(place))
-                val f = parseForecast(text, place, System.currentTimeMillis())
-                runCatching { file.writeText(text) }
-                return Loaded(f, offline = false, error = null)
-            } catch (e: Exception) {
-                error = e
-                if (attempt < 2) Thread.sleep(2_000L * (attempt + 1))
+        val sources = order(ctx)
+        for (source in sources) {
+            // The chosen source gets a second chance; the others are only the way out
+            val attempts = if (source == sources.first()) 2 else 1
+            for (attempt in 0 until attempts) {
+                try {
+                    val f = when (source) {
+                        "dwd" -> WeatherSources.brightSky(place)
+                        "metno" -> WeatherSources.metNo(place)
+                        else -> {
+                            val text = get(forecastUrl(place))
+                            parseForecast(text, place, System.currentTimeMillis()).also {
+                                runCatching { file.writeText(text) }
+                            }
+                        }
+                    }
+                    return Loaded(f, offline = false, error = null)
+                } catch (e: Exception) {
+                    error = e
+                    if (attempt < attempts - 1) Thread.sleep(2_000L)
+                }
             }
         }
         val reason = error?.let { it.message ?: it.javaClass.simpleName }
@@ -130,7 +174,7 @@ object WeatherApi {
                 rain = daily.getJSONArray("precipitation_probability_max").optInt(i, 0),
                 sunrise = daily.getJSONArray("sunrise").optString(i).substringAfter('T'),
                 sunset = daily.getJSONArray("sunset").optString(i).substringAfter('T'),
-                uv = daily.getJSONArray("uv_index_max").optDouble(i, 0.0),
+                uv = daily.getJSONArray("uv_index_max").optDouble(i, Double.NaN).takeIf { !it.isNaN() },
             )
         }
         // Hourly values start at midnight; begin with the current hour
@@ -155,10 +199,7 @@ object WeatherApi {
             time = time,
         )
         // Air quality and pollen come from a separate service; the view works without them
-        val air = if (!withAir) null else runCatching {
-            JSONObject(get("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=european_aqi,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto")).getJSONObject("current")
-        }.getOrNull()
-        fun pollen(key: String) = air?.optDouble(key)?.takeIf { !it.isNaN() }
+        val air = if (withAir) airQuality(place) else Air(null, emptyPollen())
         return Forecast(
             now = now,
             feelsLike = c.optDouble("apparent_temperature", 0.0).roundToInt(),
@@ -168,8 +209,24 @@ object WeatherApi {
             pressure = c.optDouble("surface_pressure", 0.0).roundToInt(),
             hours = hours,
             days = days,
-            aqi = air?.optInt("european_aqi", -1)?.takeIf { it >= 0 },
-            pollen = linkedMapOf(tr("Birke") to pollen("birch_pollen"), tr("Gräser") to pollen("grass_pollen"), tr("Beifuß") to pollen("mugwort_pollen")),
+            aqi = air.aqi,
+            pollen = air.pollen,
+        )
+    }
+
+    class Air(val aqi: Int?, val pollen: Map<String, Double?>)
+
+    fun emptyPollen(): Map<String, Double?> = linkedMapOf(tr("Birke") to null, tr("Gräser") to null, tr("Beifuß") to null)
+
+    /** Air quality and pollen come from a separate Open-Meteo service; the view works without them. */
+    fun airQuality(place: Place): Air {
+        val air = runCatching {
+            JSONObject(get("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=european_aqi,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto")).getJSONObject("current")
+        }.getOrNull() ?: return Air(null, emptyPollen())
+        fun pollen(key: String) = air.optDouble(key).takeIf { !it.isNaN() }
+        return Air(
+            air.optInt("european_aqi", -1).takeIf { it >= 0 },
+            linkedMapOf(tr("Birke") to pollen("birch_pollen"), tr("Gräser") to pollen("grass_pollen"), tr("Beifuß") to pollen("mugwort_pollen")),
         )
     }
 
@@ -177,7 +234,7 @@ object WeatherApi {
      * The weather that occurs most often in a day's hours, as a code for its symbol.
      * On a tie the worse weather wins, so a half rainy day still shows rain.
      */
-    private fun prevailing(codes: List<Int>): Int {
+    fun prevailing(codes: List<Int>): Int {
         val counts = codes.groupingBy { skyFor(it) }.eachCount()
         val sky = counts.maxWithOrNull(compareBy<Map.Entry<Sky, Int>> { it.value }.thenBy { it.key.ordinal })?.key ?: Sky.PARTLY
         return when (sky) {
@@ -253,11 +310,12 @@ object WeatherApi {
         }
     }
 
-    private fun get(url: String): String {
+    /** Met.no asks every app to name itself and where to find it. */
+    internal fun get(url: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 15_000
         conn.readTimeout = 20_000
-        conn.setRequestProperty("User-Agent", "GlasLauncher (Android TV)")
+        conn.setRequestProperty("User-Agent", "GlasLauncher/2 github.com/dezibelmaster/glas-launcher")
         try {
             val code = conn.responseCode
             if (code != 200) {

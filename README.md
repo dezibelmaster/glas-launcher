@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.37**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -91,7 +91,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.37.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.38.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,7 +100,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.37` anlegen und `GlasLauncher-2.37.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.38` anlegen und `GlasLauncher-2.38.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
@@ -134,7 +134,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.37.apk
+adb install -r GlasLauncher-2.38.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -239,6 +239,12 @@ Oben lässt sich zwischen den Orten umschalten. Luftqualität und Pollen kommen 
 - Aktualisierung höchstens alle 15 Minuten; die Wetterkarte zeigt „Stand“ mit Uhrzeit.
 - Bei trockenem Wetter rechnet der Launcher den Himmelszustand selbst aus den Wolkenschichten: tiefe Wolken zählen voll,
   mittlere zu 80 %, hohe Schleierwolken nur zu 30 %. So erscheint ein blauer Himmel mit Federwolken nicht als „Bedeckt“.
+
+**Wetterquellen:** *Einstellungen → Wetter → Wetterquelle*: Automatisch (Open-Meteo, empfohlen), Deutscher Wetterdienst
+(über [Bright Sky](https://brightsky.dev), nur Deutschland) oder [Met.no](https://api.met.no) (weltweit). Antwortet die
+gewählte Quelle nicht, springt automatisch eine andere ein; die Wetteransicht zeigt oben rechts die Quelle. Bei DWD
+und Met.no berechnet der Launcher Sonnenauf- und -untergang selbst; Luftqualität und Pollen kommen immer von Open-Meteo,
+der UV-Index fehlt beim DWD.
 
 **Unwetterwarnungen:** in Deutschland amtliche Warnungen des Deutschen Wetterdienstes über
 [Bright Sky](https://brightsky.dev), sonst aus der stündlichen Open-Meteo-Vorhersage der nächsten 12 Stunden

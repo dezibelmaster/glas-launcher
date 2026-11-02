@@ -1,5 +1,40 @@
 [
  {
+  "version": "2.38",
+  "notes": {
+   "de": [
+    "Neue Wetterquellen: Deutscher Wetterdienst und Met.no (Einstellungen → Wetter → Wetterquelle)",
+    "Ist Open-Meteo überlastet, springt automatisch eine andere Quelle ein",
+    "Die Wetteransicht zeigt oben rechts, woher die Daten kommen"
+   ],
+   "en": [
+    "New weather sources: German Weather Service and Met.no (Settings → Weather → Weather source)",
+    "If Open-Meteo is overloaded, another source steps in automatically",
+    "The weather view shows at the top right where the data comes from"
+   ],
+   "fr": [
+    "Nouvelles sources météo : service météo allemand et Met.no (Paramètres → Météo → Source météo)",
+    "Si Open-Meteo est surchargé, une autre source prend le relais automatiquement",
+    "La vue météo indique en haut à droite la provenance des données"
+   ],
+   "es": [
+    "Nuevas fuentes del tiempo: servicio meteorológico alemán y Met.no (Ajustes → Tiempo → Fuente del tiempo)",
+    "Si Open-Meteo está sobrecargado, otra fuente entra automáticamente",
+    "La vista del tiempo muestra arriba a la derecha de dónde vienen los datos"
+   ],
+   "it": [
+    "Nuove fonti meteo: servizio meteorologico tedesco e Met.no (Impostazioni → Meteo → Fonte meteo)",
+    "Se Open-Meteo è sovraccarico, subentra automaticamente un'altra fonte",
+    "La vista meteo mostra in alto a destra da dove arrivano i dati"
+   ],
+   "nl": [
+    "Nieuwe weerbronnen: Duitse weerdienst en Met.no (Instellingen → Weer → Weerbron)",
+    "Is Open-Meteo overbelast, dan springt automatisch een andere bron in",
+    "De weerweergave toont rechtsboven waar de gegevens vandaan komen"
+   ]
+  }
+ },
+ {
   "version": "2.37",
   "notes": {
    "de": [

@@ -34,6 +34,14 @@ class Prefs(context: Context) {
         get() = sp.getString("seenVersion", null)
         set(v) = sp.edit().putString("seenVersion", v).apply()
 
+    /** Where the weather comes from first: "openmeteo", "dwd" or "metno". */
+    var weatherSource: String
+        get() = sp.getString("weatherSource", "openmeteo")!!.takeIf { it in WeatherApi.SOURCES } ?: "openmeteo"
+        set(v) = sp.edit().putString("weatherSource", v).apply()
+
+    /** Forgets the stored weather, so it is fetched again, e.g. from another source. */
+    fun clearWeather() = sp.edit().apply { sp.all.keys.filter { it.startsWith("weather.") }.forEach { remove(it) } }.apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

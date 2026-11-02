@@ -79,6 +79,7 @@ class SettingsActivity : Activity() {
             row(place.name, if (i == 0) tr("Hauptort") else "") { placeMenu(place, i) }
         }
         row(tr("Ort hinzufügen …")) { addPlace() }
+        row(tr("Wetterquelle"), WeatherApi.sourceName(prefs.weatherSource)) { chooseWeatherSource() }
         note(tr("Der Hauptort bestimmt den Wetter-Hintergrund. Weitere Orte erscheinen klein unter der Wetterkarte."))
 
         section(tr("Dock"))
@@ -611,6 +612,23 @@ class SettingsActivity : Activity() {
             },
             GlassMenu.Item(tr("Abbrechen")) {},
         ), footer = tr("Beim ersten Mal fragt der Fernseher „USB-Debugging zulassen?“. Wähle dort „Immer zulassen“ und „Zulassen“. Dafür muss das USB-Debugging in den Entwickleroptionen an sein, wie für Bugjaeger."))
+    }
+
+    private fun chooseWeatherSource() {
+        val ids = WeatherApi.SOURCES
+        val labels = mapOf(
+            "openmeteo" to tr("Automatisch (empfohlen): Open-Meteo, bei Störungen DWD oder Met.no"),
+            "dwd" to tr("Deutscher Wetterdienst: amtlich, nur in Deutschland"),
+            "metno" to tr("Met.no (Yr): norwegischer Wetterdienst, weltweit"),
+        )
+        GlassMenu.show(this, tr("Wetterquelle"), ids.map { id ->
+            GlassMenu.Item(labels.getValue(id) + if (id == prefs.weatherSource) "  ✓" else "") {
+                prefs.weatherSource = id
+                prefs.clearWeather()
+                render()
+            }
+        }, focus = ids.indexOf(prefs.weatherSource).coerceAtLeast(0),
+            footer = tr("Antwortet die gewählte Quelle nicht, nimmt der Launcher automatisch eine der anderen. Woher das Wetter gerade kommt, steht oben rechts in der Wetteransicht. Luftqualität und Pollen kommen immer von Open-Meteo."))
     }
 
     private fun idleLabel(min: Int) = if (min == 0) tr("Aus") else tr("{0} Minuten", min)

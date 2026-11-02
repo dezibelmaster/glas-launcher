@@ -137,7 +137,7 @@ class WeatherActivity : Activity() {
 
     private fun show(f: WeatherApi.Forecast) {
         clearCards()
-        stand.text = tr("{0} · Stand {1}", place.name, clock.format(Date(f.now.time)))
+        stand.text = tr("{0} · Stand {1}", place.name, clock.format(Date(f.now.time))) + " · " + f.source
         if (place.key == prefs.mainPlace.key) backdrop.setWeather(WeatherApi.skyFor(f.now.code), f.now.isDay)
 
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
@@ -152,7 +152,10 @@ class WeatherActivity : Activity() {
         val small = listOf(
             windCard(f),
             infoCard(tr("💧  Feuchtigkeit"), "${f.humidity} %", tr("Luftdruck {0} hPa", f.pressure)),
-            infoCard(tr("☀  UV-Index"), uvLabel(today?.uv ?: 0.0), tr("Höchstwert heute {0}", "%.0f".format(today?.uv ?: 0.0))),
+            today?.uv.let { uv ->
+                if (uv == null) infoCard(tr("☀  UV-Index"), "–", tr("keine Daten"))
+                else infoCard(tr("☀  UV-Index"), uvLabel(uv), tr("Höchstwert heute {0}", "%.0f".format(uv)))
+            },
             infoCard(tr("🍃  Luftqualität"), aqiLabel(f.aqi), f.aqi?.let { tr("Europäischer Index {0}", it) } ?: tr("keine Daten")),
             pollenCard(f),
             infoCard(tr("🌅  Sonne"), "${today?.sunrise ?: "–"}  ·  ${today?.sunset ?: "–"}", tr("Aufgang · Untergang")),
