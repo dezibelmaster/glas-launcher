@@ -68,6 +68,13 @@ object C {
         return colors.last()
     }
 
+    /** Red when the battery is weak, amber when it gets low, green otherwise. */
+    fun battery(level: Int?, low: Boolean) = when {
+        low || (level != null && level <= 20) -> RED
+        level != null && level <= 40 -> AMBER
+        else -> GREEN
+    }
+
     fun raw(raw: Int) = when (raw) {
         Hkr.OFF -> MUTED
         Hkr.ON -> RED
@@ -242,7 +249,8 @@ class Toggle(ctx: Context, var color: Int = C.GREEN) : View(ctx) {
 }
 
 /** Line icons drawn on a 24-unit grid, so they stay sharp at every size and need no image files. */
-class Glyph(private val kind: Kind, color: Int) : Drawable() {
+/** [level] (0..100) fills the battery glyph; -1 draws the usual small fill. */
+class Glyph(private val kind: Kind, color: Int, private val level: Int = -1) : Drawable() {
     enum class Kind {
         RADIATOR, PLUG, BULB, THERMO, DROP, BLIND, HOME, GEAR, REFRESH, PLUS, MINUS, FLAME, WINDOW,
         BATTERY, BOLT, POWER, SPARK, ALERT, MOON, SUN, CLOSE, UP, DOWN, STOP, REMOTE, BELL, CLOCK, ROCKET, CHEVRON
@@ -372,7 +380,8 @@ class Glyph(private val kind: Kind, color: Int) : Drawable() {
             Kind.BATTERY -> {
                 c.drawRoundRect(RectF(2.5f, 7f, 19f, 17f), 2.5f, 2.5f, st)
                 c.drawRoundRect(RectF(20f, 10f, 22f, 14f), 1f, 1f, fill)
-                c.drawRoundRect(RectF(5f, 9.5f, 9.5f, 14.5f), 1f, 1f, fill)
+                val w = if (level < 0) 4.5f else 11.5f * level.coerceIn(0, 100) / 100f
+                if (w > 0f) c.drawRoundRect(RectF(5f, 9.5f, 5f + maxOf(w, 1.2f), 14.5f), 1f, 1f, fill)
             }
             Kind.BOLT -> {
                 val p = Path().apply {

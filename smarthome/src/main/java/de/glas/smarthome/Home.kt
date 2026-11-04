@@ -183,6 +183,11 @@ class Store(ctx: Context) {
         get() = p.getString("filter", "all") ?: "all"
         set(v) = p.edit().putString("filter", v).apply()
 
+    /** "temp" shows temperatures and switches on the cards, "battery" the charge of every battery device. */
+    var view: String
+        get() = p.getString("view", "temp") ?: "temp"
+        set(v) = p.edit().putString("view", v).apply()
+
     val configured get() = host.isNotBlank()
 
     fun logout() = p.edit().remove("host").remove("user").remove("password").putBoolean("demo", false).apply()

@@ -41,6 +41,9 @@ class MainActivity : Activity() {
     private lateinit var scenesScroll: HorizontalScrollView
     private lateinit var chips: LinearLayout
     private lateinit var chipsScroll: HorizontalScrollView
+    private lateinit var modes: LinearLayout
+    private lateinit var gridNote: TextView
+    private var view = "temp"
     private lateinit var grid: LinearLayout
     private lateinit var welcome: View
     private var spin: ObjectAnimator? = null
@@ -62,6 +65,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         store = Store(this)
         filter = store.filter
+        view = store.view
         edgeToEdge()
         build()
         Home.onError = { Toast.makeText(this, it, Toast.LENGTH_LONG).show() }
@@ -153,13 +157,20 @@ class MainActivity : Activity() {
         }
         content.addView(scenesScroll, lp().margins(t = dp(10)))
 
+        // Switch between temperatures and battery levels on the cards
+        modes = row()
+        content.addView(modes, lp(WRAP, WRAP).margins(t = dp(22)))
+
         chips = row()
         chipsScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
             addView(chips)
         }
-        content.addView(chipsScroll, lp().margins(t = dp(22)))
+        content.addView(chipsScroll, lp().margins(t = dp(12)))
+
+        gridNote = label(12.5f, C.MUTED).apply { setPadding(dp(4), 0, 0, 0) }
+        content.addView(gridNote, lp().margins(t = dp(14)))
 
         grid = column()
         content.addView(grid, lp().margins(t = dp(14)))
@@ -214,7 +225,7 @@ class MainActivity : Activity() {
         val connected = Home.backend != null
         welcome.visibility = if (connected) View.GONE else View.VISIBLE
         refresh.visibility = if (connected) View.VISIBLE else View.GONE
-        listOf(summary, alerts, scenesTitle, scenesScroll, chipsScroll, grid).forEach { it.visibility = if (connected) View.VISIBLE else View.GONE }
+        listOf(summary, alerts, scenesTitle, scenesScroll, modes, chipsScroll, gridNote, grid).forEach { it.visibility = if (connected) View.VISIBLE else View.GONE }
 
         spinner(Home.loading)
         status.setTextColor(if (Home.error != null) C.RED else C.FAINT)
@@ -351,7 +362,57 @@ class MainActivity : Activity() {
         Filter("sensor", "Sensoren") { it.kind == Kind.SENSOR || it.kind == Kind.ALARM },
     )
 
+    private fun hasBattery(d: Device) = !d.isGroup && (d.batteryLevel != null || d.anyBatteryLow)
+
+    private fun renderModes(all: List<Device>) {
+        modes.removeAllViews()
+        // Hidden while nothing reports a battery; the chosen view is kept for when the devices have loaded
+        if (all.none(::hasBattery)) {
+            modes.visibility = View.GONE
+            return
+        }
+        modes.visibility = View.VISIBLE
+        modes.background = rounded(C.GLASS, 22f, C.STROKE)
+        modes.setPadding(dp(4), dp(4), dp(4), dp(4))
+        for ((key, g, title) in listOf(Triple("temp", Glyph.Kind.THERMO, "Temperatur"), Triple("battery", Glyph.Kind.BATTERY, "Batterie"))) {
+            val on = key == view
+            val seg = row().apply {
+                setPadding(dp(14), dp(9), dp(16), dp(9))
+                background = if (on) rounded(C.TEXT, 18f) else null
+                addView(ImageView(context).apply { setImageDrawable(Glyph(g, if (on) C.BG else C.MUTED)) }, lp(dp(18), dp(18)))
+                addView(context.label(14f, if (on) C.BG else C.TEXT, Type.medium).apply { text = title }, lp(WRAP, WRAP).margins(l = dp(7)))
+                pressable(18f)
+                setOnClickListener {
+                    if (view == key) return@setOnClickListener
+                    view = key
+                    store.view = key
+                    render()
+                }
+            }
+            modes.addView(seg)
+        }
+    }
+
     private fun renderGrid(all: List<Device>) {
+        renderModes(all)
+        if (view == "battery" && modes.visibility == View.VISIBLE) {
+            chipsScroll.visibility = View.GONE
+            // Weakest first, so the batteries to change are at the top
+            val shown = all.filter(::hasBattery).sortedBy { if (it.anyBatteryLow) -1 else it.batteryLevel ?: 101 }
+            val low = shown.count { it.anyBatteryLow || (it.batteryLevel ?: 100) <= 20 }
+            gridNote.visibility = View.VISIBLE
+            gridNote.text = "${shown.size} Geräte mit Batterie · " + if (low == 0) "alle in Ordnung" else "$low schwach"
+            gridNote.setTextColor(if (low == 0) C.MUTED else C.RED)
+            fill(shown.map { d ->
+                val c = cards["b" + d.id]
+                val v = if (c != null && c.first == d) c.second else batteryCard(d).also { cards["b" + d.id] = d to it }
+                (v.parent as? ViewGroup)?.removeView(v)
+                v
+            })
+            return
+        }
+        gridNote.visibility = View.GONE
+
         // Chips only for kinds that exist here
         val available = filters.filter { f -> f.key == "all" || all.any(f.test) }
         if (available.none { it.key == filter }) filter = "all"
@@ -377,7 +438,6 @@ class MainActivity : Activity() {
         val shown = all.filter(filters.first { it.key == filter }.test)
             .sortedBy { if (it.isGroup) 0 else 1 } // stable: rooms first, then the order of the FRITZ!Box
 
-        columns = (resources.configuration.screenWidthDp / 190).coerceIn(2, 5)
         val views = when {
             shown.isNotEmpty() -> shown.map { d ->
                 val c = cards[d.id]
@@ -388,6 +448,11 @@ class MainActivity : Activity() {
             Home.updated == 0L && Home.error == null -> List(4) { skeleton() }
             else -> emptyList()
         }
+        fill(views)
+    }
+
+    private fun fill(views: List<View>) {
+        columns = (resources.configuration.screenWidthDp / 190).coerceIn(2, 5)
         grid.removeAllViews()
         if (views.isEmpty()) {
             grid.addView(label(14.5f, C.MUTED).apply {
@@ -417,6 +482,47 @@ class MainActivity : Activity() {
     }
 
     // ---- Cards --------------------------------------------------------------------------------
+
+    /** Card for the battery view: charge level big, with a battery that fills accordingly. */
+    private fun batteryCard(d: Device): View {
+        val level = d.batteryLevel
+        val col = C.battery(level, d.anyBatteryLow)
+        val c = column().apply {
+            setPadding(dp(16), dp(15), dp(14), dp(14))
+            background = card(if (col == C.GREEN) null else col)
+            alpha = if (d.present) 1f else .55f
+            pressable(26f)
+            setOnClickListener { open(d) }
+        }
+        val top = row()
+        top.addView(bubble(kindGlyph(d), if (col == C.GREEN) null else col))
+        top.addView(space())
+        when {
+            !d.present -> top.addView(pill("Offline", C.MUTED))
+            col == C.RED -> top.addView(pill("Wechseln", C.RED))
+        }
+        c.addView(top)
+        c.addView(label(15.5f, C.TEXT, Type.medium).apply {
+            text = d.name
+            maxLines = 2
+            ellipsize = TextUtils.TruncateAt.END
+            setLineSpacing(0f, 1.1f)
+        }, lp().margins(t = dp(14)))
+        c.addView(label(12.5f, C.MUTED).apply {
+            text = d.product.ifEmpty { "Batterie" }
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+        }, lp().margins(t = dp(5)))
+        c.addView(space(), lp(MATCH, 0, 1f))
+        val bottom = row()
+        bottom.addView(label(27f, if (level == null) C.RED else C.TEXT, Type.light).apply {
+            text = level?.let { "$it %" } ?: "Schwach"
+            maxLines = 1
+        }, lp(0, WRAP, 1f))
+        bottom.addView(ImageView(this).apply { setImageDrawable(Glyph(Glyph.Kind.BATTERY, col, level ?: 10)) }, lp(dp(34), dp(34)))
+        c.addView(bottom)
+        return c
+    }
 
     private fun card(d: Device): View {
         val accent = Cards.accent(d)
