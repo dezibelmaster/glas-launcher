@@ -1,5 +1,46 @@
 [
  {
+  "version": "2.39",
+  "notes": {
+   "de": [
+    "Neu: Einstellen per Handy (Einstellungen → Handy). QR-Code scannen und am Handy Hintergrund, Dock, Wetterorte, Bildschirmschoner, Kindersicherung und Sprache einstellen",
+    "Eigene Bilder und Videos direkt vom Handy auf den Fernseher laden und als Hintergrund verwenden",
+    "Einstellungen aufs Handy sichern und von dort wiederherstellen",
+    "Änderungen erscheinen sofort auf dem Fernseher"
+   ],
+   "en": [
+    "New: set up from phone (Settings → Phone). Scan the QR code and set the background, dock, weather places, screensaver, parental controls and language on your phone",
+    "Upload your own pictures and videos from the phone to the TV and use them as background",
+    "Back up the settings to the phone and restore them from there",
+    "Changes appear on the TV right away"
+   ],
+   "fr": [
+    "Nouveau : réglages depuis le téléphone (Paramètres → Téléphone). Scannez le code QR et réglez sur le téléphone l'arrière-plan, le dock, les lieux météo, l'économiseur d'écran, le contrôle parental et la langue",
+    "Envoyez vos images et vidéos du téléphone vers le téléviseur et utilisez-les comme arrière-plan",
+    "Sauvegardez les paramètres sur le téléphone et restaurez-les depuis celui-ci",
+    "Les modifications apparaissent tout de suite sur le téléviseur"
+   ],
+   "es": [
+    "Nuevo: ajustes desde el móvil (Ajustes → Móvil). Escanea el código QR y ajusta en el móvil el fondo, el dock, los lugares del tiempo, el salvapantallas, el control parental y el idioma",
+    "Sube tus imágenes y vídeos del móvil al televisor y úsalos como fondo",
+    "Guarda los ajustes en el móvil y restáuralos desde allí",
+    "Los cambios aparecen al instante en el televisor"
+   ],
+   "it": [
+    "Novità: impostazioni dal telefono (Impostazioni → Telefono). Scansiona il codice QR e imposta dal telefono sfondo, dock, luoghi meteo, salvaschermo, controllo genitori e lingua",
+    "Carica le tue immagini e i tuoi video dal telefono al televisore e usali come sfondo",
+    "Salva le impostazioni sul telefono e ripristinale da lì",
+    "Le modifiche appaiono subito sul televisore"
+   ],
+   "nl": [
+    "Nieuw: instellen via telefoon (Instellingen → Telefoon). Scan de QR-code en stel op je telefoon achtergrond, dock, weerlocaties, schermbeveiliging, ouderlijk toezicht en taal in",
+    "Upload eigen afbeeldingen en video's van de telefoon naar de tv en gebruik ze als achtergrond",
+    "Maak een back-up van de instellingen op je telefoon en zet ze van daaruit terug",
+    "Wijzigingen verschijnen meteen op de tv"
+   ]
+  }
+ },
+ {
   "version": "2.38",
   "notes": {
    "de": [

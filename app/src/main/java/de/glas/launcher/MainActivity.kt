@@ -110,6 +110,8 @@ class MainActivity : Activity() {
     private val idle = Runnable { startActivity(Intent(this, ScreensaverActivity::class.java)) }
 
     private val builtLanguage = I18n.lang
+    private var started = false
+    private var resumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -305,6 +307,7 @@ class MainActivity : Activity() {
             if (bar.visibility == View.VISIBLE && now != null && !isInside(now, bar)) hideBar(focusDock = false)
         }
         setContentView(root)
+        PhoneRemote.addListener(phoneListener)
         pointOutWhatsNew()
     }
 
@@ -323,8 +326,35 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        started = true
         // A new language in the settings: build the home screen again in it
         if (builtLanguage != I18n.lang) { recreate(); return }
+        applyPrefs()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        started = false
+    }
+
+    /** Settings changed on the phone while the home screen shows: apply them right away. */
+    private val phoneListener: (Boolean) -> Unit = { settings ->
+        if (settings && started) {
+            if (builtLanguage != I18n.lang) recreate()
+            else {
+                applyPrefs()
+                if (resumed) {
+                    backdrop.resume()
+                    handler.removeCallbacks(weatherTick)
+                    handler.post(weatherTick)
+                    resetIdle()
+                }
+            }
+        }
+    }
+
+    /** Brings the home screen in line with the settings. */
+    private fun applyPrefs() {
         applyBackdrop()
         // Own videos may have been deleted or added in the meantime
         if (prefs.background == "video") (backdrop as? VideoBackdrop)?.refresh()
@@ -355,6 +385,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        resumed = true
         backdrop.resume()
         handler.post(clockTick)
         handler.post(weatherTick)
@@ -363,6 +394,7 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         super.onPause()
+        resumed = false
         // Free the video decoder right away: TVs often have only one for 4K, and the app being
         // opened (e.g. YouTube) crashes if the launcher still holds it
         backdrop.pause()
@@ -371,6 +403,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        PhoneRemote.removeListener(phoneListener)
         if (::backdrop.isInitialized) backdrop.release()
     }
 

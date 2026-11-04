@@ -37,6 +37,16 @@ object Backup {
         return runCatching { fromJson(ctx, JSONObject(text)) }.isSuccess
     }
 
+    /** The settings as the text of a backup file. */
+    fun text(ctx: Context): String = toJson(ctx).toString(2)
+
+    /** Applies a backup file's text; false if it isn't one. */
+    fun restore(ctx: Context, text: String): Boolean = runCatching {
+        val json = JSONObject(text)
+        if (json.optString("app") != "Glas Launcher" || !json.has("prefs")) return false
+        fromJson(ctx, json)
+    }.isSuccess
+
     private fun toJson(ctx: Context): JSONObject {
         val prefs = JSONObject()
         for ((key, value) in ctx.getSharedPreferences("glas", Context.MODE_PRIVATE).all) {

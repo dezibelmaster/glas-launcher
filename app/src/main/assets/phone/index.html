@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="robots" content="noindex">
+<title>Glas Launcher</title>
+<style>
+  :root {
+    --bg1: #1a2230; --bg2: #07090d;
+    --glass: rgba(255,255,255,.06); --glass2: rgba(255,255,255,.11);
+    --line: rgba(255,255,255,.12); --text: #fff; --muted: rgba(243,246,250,.62);
+    --warn: #ffd166; --bad: #ff7b7b; --ok: #8be3a5;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    background: linear-gradient(180deg, var(--bg1), var(--bg2)) fixed; background-color: var(--bg2);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 300;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-weight: 200; font-size: 32px; margin: 4px 0 2px; letter-spacing: .01em; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+  section { background: var(--glass); border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin: 14px 0;
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+  h2 { font-size: 12px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  h3 { font-size: 15px; font-weight: 400; margin: 16px 0 8px; }
+  .note { color: var(--muted); font-size: 13px; margin: 10px 2px 0; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-top: 1px solid rgba(255,255,255,.06); min-height: 52px; }
+  .row:first-of-type { border-top: 0; }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .small { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  img.icon { width: 40px; height: 40px; border-radius: 10px; flex: none; background: rgba(255,255,255,.08); }
+  .emoji { width: 40px; height: 40px; flex: none; display: grid; place-items: center; font-size: 22px; border-radius: 10px; background: rgba(255,255,255,.08); }
+  button, .button, select, input[type=text], input[type=password], input[type=search], input[type=time], input[type=tel] {
+    font: inherit; color: var(--text); background: var(--glass2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 14px; min-height: 44px;
+  }
+  button, .button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+  button:active, .button:active { background: rgba(255,255,255,.2); }
+  button:disabled { opacity: .4; }
+  button.icon-btn { width: 44px; padding: 0; flex: none; }
+  button.primary { background: #fff; color: #0d1117; border-color: #fff; font-weight: 500; }
+  button.danger { color: var(--bad); }
+  select { appearance: none; -webkit-appearance: none; padding-right: 34px; max-width: 100%;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+  select option { color: #000; }
+  input::placeholder { color: var(--muted); }
+  .full { width: 100%; }
+  .line { display: flex; gap: 8px; margin-top: 10px; }
+  .line > input, .line > select { flex: 1; min-width: 0; }
+  .choices { display: grid; gap: 8px; }
+  .choice { text-align: left; justify-content: flex-start; white-space: normal; }
+  .choice.on { background: rgba(255,255,255,.22); border-color: #fff; }
+  .choice.on::after { content: "✓"; margin-left: auto; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .seg button.on { background: #fff; color: #0d1117; }
+  .switch { position: relative; width: 52px; height: 32px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch span { position: absolute; inset: 0; border-radius: 16px; background: rgba(255,255,255,.18); transition: .2s; }
+  .switch span::before { content: ""; position: absolute; width: 26px; height: 26px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: .2s; }
+  .switch input:checked + span { background: var(--ok); }
+  .switch input:checked + span::before { transform: translateX(20px); }
+  .badge { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #0d1117; background: #fff; border-radius: 8px; padding: 2px 7px; }
+  .bar { height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .bar > div { height: 100%; background: #fff; width: 0; transition: width .2s; }
+  #toast { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); max-width: 608px; margin: 0 auto;
+    background: rgba(13,17,23,.96); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; transform: translateY(150%);
+    transition: transform .25s; z-index: 9; }
+  #toast.show { transform: none; }
+  #toast.err { border-color: var(--bad); }
+  .center { text-align: center; padding: 60px 8px; }
+  .muted { color: var(--muted); }
+  .times { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .times input { flex: 1; min-width: 110px; }
+  details > summary { cursor: pointer; color: var(--muted); font-size: 14px; padding: 8px 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main id="app"><div class="center muted" id="loading">…</div></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const KEY = decodeURIComponent(location.hash.slice(1));
+let T = {};
+let S = null;
+let PIN = null;
+let LOCK = null;
+let found = [];
+let customFor = null;
+
+function t(s, ...args) {
+  let r = T[s] || s;
+  args.forEach((v, i) => { r = r.split('{' + i + '}').join(String(v)); });
+  return r;
+}
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'class') el.className = v;
+    else if (k in el && k !== 'list') el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : String(kid));
+  return el;
+}
+
+let toastTimer;
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, err ? 5000 : 2500);
+}
+
+class ApiError extends Error { constructor(code, msg) { super(msg); this.code = code; } }
+
+async function api(path, body, opts = {}) {
+  const headers = { 'X-Glas-Key': KEY };
+  if (PIN) headers['X-Glas-Pin'] = PIN;
+  let init = { method: body === undefined ? 'GET' : 'POST', headers };
+  if (body !== undefined) {
+    if (opts.raw) init.body = body;
+    else { init.body = JSON.stringify(body); headers['Content-Type'] = 'application/json'; }
+  }
+  let res;
+  try { res = await fetch(path, init); }
+  catch (e) { throw new ApiError(0, t('Keine Verbindung zum Fernseher. Ist das Handy im selben WLAN?')); }
+  if (opts.blob && res.ok) return res.blob();
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* empty answer */ }
+  if (!res.ok) {
+    if (res.status === 403) gone(data.error);
+    if (res.status === 401) PIN = null;
+    throw new ApiError(res.status, data.error || res.statusText);
+  }
+  return data;
+}
+
+function gone(msg) {
+  document.getElementById('app').replaceChildren(h('div', { class: 'center' },
+    h('h1', {}, 'Glas Launcher'),
+    h('p', { class: 'muted' }, msg || t('Der Zugang ist abgelaufen. Scanne den QR-Code am Fernseher neu.'))));
+  throw new ApiError(403, '');
+}
+
+/** Runs a change, shows what went wrong, and loads the new state. */
+async function act(fn, done) {
+  try {
+    await fn();
+    if (done) toast(done);
+    await load();
+  } catch (e) {
+    if (e.code !== 403) toast(e.message, true);
+    if (e.code === 401) { LOCK = null; render(); }
+  }
+}
+
+const set = (o, done) => act(() => api('/api/settings', o), done || t('Gespeichert'));
+
+async function load() {
+  S = await api('/api/state');
+  LOCK = PIN || !S.hasPin ? await api('/api/lock').catch(() => null) : null;
+  render();
+}
+
+// ---- Building blocks ----
+
+const section = (title, ...kids) => h('section', {}, h('h2', {}, title), ...kids);
+
+function row(...kids) { return h('div', { class: 'row' }, ...kids); }
+
+function toggle(label, checked, onchange) {
+  return row(h('div', { class: 'grow' }, label),
+    h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked, 'aria-label': label, onchange: e => onchange(e.target.checked) }), h('span')));
+}
+
+function choose(label, value, options, onchange) {
+  const sel = h('select', { 'aria-label': label, onchange: e => onchange(options[e.target.selectedIndex][0]) },
+    options.map(([v, text]) => h('option', { selected: v === value }, text)));
+  return row(h('div', { class: 'grow' }, label), sel);
+}
+
+function iconOf(component) {
+  return h('img', { class: 'icon', alt: '', loading: 'lazy', onerror: e => { e.target.style.visibility = 'hidden'; }, src: '/api/icon?k=' + encodeURIComponent(KEY) + '&c=' + encodeURIComponent(component) });
+}
+
+const appByComponent = c => S.apps.find(a => a.component === c);
+const minutes = m => m === 0 ? t('Aus') : t('{0} Minuten', m);
+const rateLabel = r => r <= 0 ? t('Standbild') : t('{0}× pro Sekunde', r);
+const windowLabel = w => w ? t('{0} bis {1} Uhr', w.split('-')[0], w.split('-')[1]) : t('immer erlaubt');
+const PRESETS = ['06:00-18:00', '06:00-19:00', '06:00-20:00', '06:00-21:00', '14:00-20:00'];
+
+// ---- Sections ----
+
+function backgroundCard() {
+  const styles = [
+    ['realistic', t('Wetter · Realistisch (Fotos)')],
+    ['lifelike', t('Wetter · Realistisch animiert')],
+    ['modern', t('Wetter · Modern (gezeichnet)')],
+    ['abstract', t('Wetter · Abstrakt (Farbverläufe)')],
+  ];
+  const weather = S.background === 'weather';
+  const choices = styles.map(([id, label]) =>
+    h('button', { class: 'choice' + (weather && S.weatherStyle === id ? ' on' : ''), onclick: () => set({ weatherStyle: id }) }, label));
+  if (S.videos.length > 1) choices.push(h('button', {
+    class: 'choice' + (S.background === 'video' && !S.videoUri ? ' on' : ''), onclick: () => set({ video: null }),
+  }, t('Alle eigenen Videos abwechselnd')));
+  const current = S.background === 'image' ? t('Eigenes Bild') : S.background === 'video' && S.videoUri ? t('Eigenes Video') : S.otherBackground;
+  const glassNames = [t('Hell'), t('Mittel'), t('Dunkel')];
+  return section(t('Hintergrund'),
+    current ? h('p', { class: 'note', style: 'margin:0 2px 10px' }, t('Gerade: {0}', current)) : null,
+    h('div', { class: 'choices' }, choices),
+    h('h3', {}, t('Milchglas')),
+    h('div', { class: 'seg' }, glassNames.map((n, i) => h('button', { class: S.glass === i ? 'on' : '', onclick: () => set({ glass: i }) }, n))),
+    choose(t('Milchglas über Videos'), S.glassVideoRate, [0, 1, 2, 4, 8, 15].map(r => [r, rateLabel(r)]), v => set({ glassVideoRate: v })),
+    choose(t('Oben anzeigen'), S.topStyle, [['bar', t('Statusleiste')], ['classic', t('Große Uhr und Wetterkarte')]], v => set({ topStyle: v })),
+    h('p', { class: 'note' }, t('Erweiterungen und Projectivy-Plugins wählst du am Fernseher unter Einstellungen → Hintergrund.')));
+}
+
+function mediaCard() {
+  const items = [...S.videos.map(v => ({ ...v, video: true })), ...S.images.map(v => ({ ...v, video: false }))];
+  const progress = h('div', { id: 'uploads' });
+  const input = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: e => upload([...e.target.files], progress) });
+  const list = items.map(m => {
+    const active = m.video ? S.background === 'video' && S.videoUri === m.uri : S.background === 'image' && S.imageUri === m.uri;
+    return row(h('div', { class: 'emoji', 'aria-hidden': 'true' }, m.video ? '🎬' : '🖼'),
+      h('div', { class: 'grow' }, h('div', { class: 'name' }, m.name)),
+      active ? h('span', { class: 'badge' }, t('Aktiv'))
+        : h('button', { onclick: () => set(m.video ? { video: m.uri } : { image: m.uri }, t('Hintergrund geändert')) }, t('Verwenden')),
+      h('button', { class: 'icon-btn danger', 'aria-label': t('Löschen'), title: t('Löschen'), onclick: () => {
+        if (confirm(t('„{0}“ vom Fernseher löschen?', m.name))) act(() => api('/api/media/delete', { uri: m.uri }), t('Gelöscht'));
+      } }, '✕'));
+  });
+  return section(t('Eigene Bilder und Videos'),
+    h('label', { class: 'button primary full' }, input, '＋ ' + t('Vom Handy hochladen')),
+    progress,
+    list.length ? h('div', { style: 'margin-top:8px' }, list) : h('p', { class: 'note' }, t('Noch keine eigenen Bilder oder Videos auf dem Fernseher.')),
+    h('p', { class: 'note' }, t('Frei auf dem Fernseher: {0} GB. Am flüssigsten laufen Videos in 1080p mit 25 oder 30 Bildern pro Sekunde als MP4.', (S.freeSpace / 1e9).toLocaleString(document.documentElement.lang, { maximumFractionDigits: 1 }))));
+}
+
+async function upload(files, box) {
+  let last = null;
+  for (const file of files) {
+    const bar = h('div');
+    const line = h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name' }, file.name), h('div', { class: 'bar' }, bar)));
+    box.append(line);
+    try {
+      last = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload?name=' + encodeURIComponent(file.name));
+        xhr.setRequestHeader('X-Glas-Key', KEY);
+        xhr.upload.onprogress = e => { if (e.lengthComputable) bar.style.width = (100 * e.loaded / e.total) + '%'; };
+        xhr.onload = () => {
+          let data = {};
+          try { data = JSON.parse(xhr.responseText); } catch (e) { /* empty */ }
+          xhr.status === 200 ? resolve(data) : reject(new Error(data.error || xhr.statusText));
+        };
+        xhr.onerror = () => reject(new Error(t('Keine Verbindung zum Fernseher. Ist das Handy im selben WLAN?')));
+        xhr.send(file);
+      });
+      bar.style.width = '100%';
+    } catch (e) {
+      toast(file.name + ': ' + e.message, true);
+    }
+  }
+  await load().catch(() => {});
+  if (last && files.length === 1 && confirm(t('Hochgeladen. Gleich als Hintergrund verwenden?'))) {
+    set(last.video ? { video: last.uri } : { image: last.uri }, t('Hintergrund geändert'));
+  } else if (last) toast(t('Hochgeladen'));
+}
+
+function dockCard() {
+  const dock = S.dock.filter(appByComponent);
+  const save = list => act(() => api('/api/dock', list), t('Dock gespeichert'));
+  const move = (i, d) => { const l = [...dock]; [l[i], l[i + d]] = [l[i + d], l[i]]; save(l); };
+  const rest = S.apps.filter(a => !dock.includes(a.component));
+  const add = h('select', { 'aria-label': t('App hinzufügen') },
+    h('option', { value: '' }, t('App hinzufügen …')), rest.map(a => h('option', { value: a.component }, a.label)));
+  add.addEventListener('change', () => { if (add.value) save([...dock, add.value]); });
+  return section(t('Dock'),
+    dock.map((c, i) => row(iconOf(c), h('div', { class: 'grow name' }, appByComponent(c).label),
+      h('button', { class: 'icon-btn', 'aria-label': t('Nach oben'), disabled: i === 0, onclick: () => move(i, -1) }, '↑'),
+      h('button', { class: 'icon-btn', 'aria-label': t('Nach unten'), disabled: i === dock.length - 1, onclick: () => move(i, 1) }, '↓'),
+      h('button', { class: 'icon-btn danger', 'aria-label': t('Entfernen'), onclick: () => save(dock.filter(x => x !== c)) }, '✕'))),
+    h('div', { class: 'line' }, add));
+}
+
+function weatherCard() {
+  const places = S.places;
+  const save = (list, done) => act(() => api('/api/places', list), done);
+  const q = h('input', { type: 'search', placeholder: t('z. B. Düsseldorf oder Palma'), 'aria-label': t('Ort suchen'), enterkeyhint: 'search' });
+  const results = h('div');
+  const showFound = () => results.replaceChildren(...found.map(p => row(
+    h('div', { class: 'grow' }, h('div', { class: 'name' }, p.name), h('div', { class: 'small' }, p.region)),
+    h('button', { onclick: () => { found = []; save([...places, p], t('{0} hinzugefügt', p.name)); } }, '＋ ' + t('Hinzufügen')))));
+  const search = async e => {
+    e.preventDefault();
+    if (!q.value.trim()) return;
+    try {
+      found = await api('/api/places/search?q=' + encodeURIComponent(q.value.trim()));
+      if (!found.length) toast(t('Keinen Ort „{0}“ gefunden', q.value.trim()), true);
+      showFound();
+    } catch (err) { toast(err.message, true); }
+  };
+  showFound();
+  return section(t('Wetter'),
+    places.map((p, i) => row(
+      h('div', { class: 'grow' }, h('div', { class: 'name' }, p.name, ' ', i === 0 ? h('span', { class: 'badge' }, t('Hauptort')) : null), h('div', { class: 'small' }, p.region)),
+      i > 0 ? h('button', { onclick: () => save([p, ...places.filter((_, j) => j !== i)], t('Hauptort geändert')) }, t('Hauptort')) : null,
+      places.length > 1 ? h('button', { class: 'icon-btn danger', 'aria-label': t('Entfernen'), onclick: () => save(places.filter((_, j) => j !== i)) }, '✕') : null)),
+    h('form', { class: 'line', onsubmit: search }, q, h('button', { type: 'submit' }, t('Suchen'))),
+    results,
+    choose(t('Wetterquelle'), S.weatherSource, S.weatherSources.map(s => [s.id, s.name]), v => set({ weatherSource: v })),
+    h('p', { class: 'note' }, t('Der Hauptort bestimmt den Wetter-Hintergrund. Weitere Orte erscheinen klein unter der Wetterkarte.')));
+}
+
+function saverCard() {
+  return section(t('Bildschirmschoner'),
+    choose(t('Im Launcher starten nach'), S.idleMinutes, [0, 2, 5, 10, 15, 30].map(m => [m, minutes(m)]), v => set({ idleMinutes: v })),
+    toggle(t('Uhrzeit anzeigen'), S.saverClock, v => set({ saverClock: v })),
+    toggle(t('Datum anzeigen'), S.saverDate, v => set({ saverDate: v })),
+    toggle(t('Wetter anzeigen'), S.saverWeather, v => set({ saverWeather: v })));
+}
+
+function pinField(placeholder) {
+  return h('input', { type: 'tel', inputmode: 'numeric', pattern: '[0-9]*', maxlength: 4, autocomplete: 'off', placeholder, 'aria-label': placeholder,
+    style: '-webkit-text-security:disc; letter-spacing:.3em' });
+}
+
+function lockCard() {
+  if (S.hasPin && !LOCK) {
+    const pin = pinField(t('PIN eingeben'));
+    const unlock = async e => {
+      e.preventDefault();
+      PIN = pin.value;
+      try {
+        await api('/api/pin/check', {});
+        await load();
+      } catch (err) { PIN = null; toast(err.message, true); pin.value = ''; }
+    };
+    return section(t('Kindersicherung'),
+      h('p', { class: 'note', style: 'margin-top:0' }, t('Gib den PIN des Fernsehers ein, um die Kindersicherung, Updates und Sicherungen zu ändern.')),
+      h('form', { class: 'line', onsubmit: unlock }, pin, h('button', { type: 'submit', class: 'primary' }, t('Entsperren'))));
+  }
+  const newPin = pinField(S.hasPin ? t('Neuer PIN') : t('Neuen PIN festlegen'));
+  const setPin = e => {
+    e.preventDefault();
+    if (!/^\d{4}$/.test(newPin.value)) return toast(t('Der PIN hat 4 Ziffern'), true);
+    const value = newPin.value;
+    act(async () => { await api('/api/pin', { pin: value }); PIN = value; }, t('PIN gespeichert'));
+  };
+  const pinForm = h('form', { class: 'line', onsubmit: setPin }, newPin, h('button', { type: 'submit' }, S.hasPin ? t('PIN ändern') : t('Festlegen')));
+  if (!S.hasPin) {
+    return section(t('Kindersicherung'),
+      h('p', { class: 'note', style: 'margin-top:0' }, t('Noch kein PIN festgelegt. Mit PIN lassen sich Apps sperren oder nur zu bestimmten Uhrzeiten öffnen.')),
+      pinForm);
+  }
+  const saveLock = (o, done) => act(() => api('/api/lock', o), done || t('Gespeichert'));
+  const apps = S.apps.map(a => {
+    const locked = LOCK.locked.includes(a.pkg);
+    const w = LOCK.timeWindows[a.pkg] || null;
+    const custom = w && !PRESETS.includes(w);
+    const options = [[null, windowLabel(null)], ...PRESETS.map(p => [p, windowLabel(p)])];
+    if (custom) options.push([w, windowLabel(w)]);
+    options.push(['custom', t('Eigene Zeiten …')]);
+    const sel = h('select', { 'aria-label': t('Zeitfenster für {0}', a.label), onchange: e => {
+      const v = options[e.target.selectedIndex][0];
+      if (v === 'custom') { customFor = a.pkg; render(); return; }
+      const all = { ...LOCK.timeWindows };
+      if (v) all[a.pkg] = v; else delete all[a.pkg];
+      saveLock({ timeWindows: all });
+    } }, options.map(([v, text]) => h('option', { selected: v === w }, text)));
+    let times = null;
+    if (customFor === a.pkg) {
+      const from = h('input', { type: 'time', value: (w || '06:00-20:00').split('-')[0], 'aria-label': t('Von') });
+      const to = h('input', { type: 'time', value: (w || '06:00-20:00').split('-')[1], 'aria-label': t('Bis') });
+      times = h('div', { class: 'times' }, from, '–', to, h('button', { class: 'primary', onclick: () => {
+        customFor = null;
+        saveLock({ timeWindows: { ...LOCK.timeWindows, [a.pkg]: from.value + '-' + to.value } });
+      } }, t('Speichern')));
+    }
+    return h('div', { class: 'row', style: 'flex-wrap:wrap' },
+      iconOf(a.component),
+      h('div', { class: 'grow' }, h('div', { class: 'name' }, (locked ? '🔒 ' : '') + a.label), h('div', { class: 'small' }, w ? '⏰ ' + windowLabel(w) : '')),
+      h('label', { class: 'switch', title: t('Mit PIN sperren') },
+        h('input', { type: 'checkbox', checked: locked, 'aria-label': t('{0} mit PIN sperren', a.label), onchange: e => {
+          const pkgs = new Set(LOCK.locked);
+          if (e.target.checked) pkgs.add(a.pkg); else pkgs.delete(a.pkg);
+          saveLock({ locked: [...pkgs] });
+        } }), h('span')),
+      h('div', { style: 'flex-basis:100%; display:flex; flex-direction:column; padding-left:50px' }, sel, times));
+  });
+  return section(t('Kindersicherung'),
+    toggle(t('„Alle Apps“ mit PIN schützen'), LOCK.lockAllApps, v => saveLock({ lockAllApps: v })),
+    toggle(t('Einstellungen mit PIN schützen'), LOCK.protectSettings, v => saveLock({ protectSettings: v })),
+    h('h3', {}, t('Apps sperren und Zeitfenster')),
+    h('p', { class: 'note', style: 'margin-top:0' }, t('Mit Zeitfenster lässt sich eine App nur zu bestimmten Uhrzeiten ohne PIN öffnen, z. B. 06:00 bis 20:00 Uhr.')),
+    apps,
+    h('h3', {}, 'PIN'),
+    pinForm,
+    h('div', { class: 'line' }, h('button', { class: 'danger full', onclick: () => {
+      if (confirm(t('PIN entfernen und alle Sperren aufheben') + '?')) act(async () => { await api('/api/pin', { pin: null }); PIN = null; }, t('PIN entfernt'));
+    } }, t('PIN entfernen und alle Sperren aufheben'))));
+}
+
+function languageCard() {
+  return section(t('Sprache') + (S.language !== 'en' ? ' · Language' : ''),
+    choose(t('Sprache'), S.language, S.languages.map(l => [l.code, l.name]), v => act(async () => {
+      await api('/api/settings', { language: v });
+      await loadTexts();
+    }, t('Gespeichert'))));
+}
+
+function backupCard() {
+  const locked = S.hasPin && !LOCK;
+  const repo = h('input', { type: 'text', value: S.updateRepo || '', placeholder: t('GitHub-Name/Projekt, z. B. name/glas-launcher'),
+    'aria-label': t('Update-Quelle (GitHub)'), autocapitalize: 'off', autocorrect: 'off', spellcheck: false, disabled: locked });
+  const file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: async e => {
+    const f = e.target.files[0];
+    if (!f || !confirm(t('Die aktuellen Einstellungen werden durch die gesicherten ersetzt.'))) return;
+    const text = await f.text();
+    act(async () => { await api('/api/restore', text, { raw: true }); await loadTexts(); }, t('Einstellungen wiederhergestellt'));
+  } });
+  const download = async () => {
+    try {
+      const blob = await api('/api/backup', undefined, { blob: true });
+      const a = h('a', { href: URL.createObjectURL(blob), download: 'GlasLauncher-Einstellungen.json' });
+      document.body.append(a); a.click(); a.remove();
+    } catch (e) { toast(e.message, true); }
+  };
+  return section(t('Sichern und Updates'),
+    locked ? h('p', { class: 'note', style: 'margin-top:0' }, t('Erst oben bei der Kindersicherung den PIN eingeben.')) : null,
+    h('div', { class: 'line', style: 'margin-top:0' },
+      h('button', { class: 'full', disabled: locked, onclick: download }, '⤓ ' + t('Sicherung aufs Handy')),
+      h('label', { class: 'button full', style: locked ? 'opacity:.4;pointer-events:none' : '' }, file, '⤒ ' + t('Sicherung einspielen'))),
+    h('h3', {}, t('Update-Quelle (GitHub)')),
+    h('form', { class: 'line', onsubmit: e => { e.preventDefault(); set({ updateRepo: repo.value.trim() || null }); } },
+      repo, h('button', { type: 'submit', disabled: locked }, t('Speichern'))),
+    h('p', { class: 'note' }, t('Ist eine Quelle festgelegt, sucht Glas Launcher einmal am Tag nach einer neuen Version und zeigt einen Hinweis.')));
+}
+
+function render() {
+  if (!S) return;
+  const y = window.scrollY;
+  document.getElementById('app').replaceChildren(
+    h('h1', {}, 'Glas Launcher'),
+    h('div', { class: 'sub' }, S.tv + ' · ' + t('Version {0}', S.version)),
+    backgroundCard(), mediaCard(), dockCard(), weatherCard(), saverCard(), lockCard(), languageCard(), backupCard(),
+    h('p', { class: 'note', style: 'text-align:center; margin-top:24px' },
+      t('Änderungen erscheinen sofort auf dem Fernseher. Einstellen per Handy schaltet sich nach 30 Minuten ohne Nutzung aus.')));
+  window.scrollTo(0, y);
+}
+
+async function loadTexts() {
+  const r = await api('/api/texts');
+  T = r.texts || {};
+  document.documentElement.lang = r.lang;
+}
+
+(async () => {
+  if (!KEY) return gone(t('Öffne diese Seite über den QR-Code am Fernseher: Einstellungen → Einstellen per Handy.'));
+  try {
+    await loadTexts();
+    await load();
+  } catch (e) {
+    if (e.code !== 403) document.getElementById('app').replaceChildren(h('div', { class: 'center' }, h('h1', {}, 'Glas Launcher'), h('p', { class: 'muted' }, e.message)));
+  }
+})();
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -24,6 +24,9 @@ Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
 
 ## Funktionen
 
+- **Einstellen per Handy:** QR-Code am Fernseher scannen und am Handy Hintergrund, eigene Bilder und Videos (Hochladen
+  vom Handy), Dock, Wetterorte, Bildschirmschoner, Kindersicherung, Sprache und Sicherung einstellen. Änderungen
+  erscheinen sofort auf dem Fernseher.
 - **Statusleiste oben mittig:** Datum, Uhrzeit, Wettersymbol mit Temperatur, WLAN-Signalstärke und Zahnrad zu den
   Fernseher-Einstellungen. Auf Wunsch eingeklappt, dann nur die Uhrzeit oben rechts. Alternativ große Uhr mit Wetterkarte.
 - **Dock:** Apps hinzufügen, entfernen und verschieben. Alle Symbole als einheitlich abgerundete Quadrate.
@@ -70,6 +73,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 ## Einstellungen
 
 - **Sprache:** Automatisch (Sprache des Fernsehers, sonst Englisch) oder eine feste Sprache
+- **Handy:** Einstellen per Handy ein- und ausschalten, QR-Code anzeigen
 - **Aussehen:** Hintergrund, Milchglas, *Oben anzeigen* (Statusleiste oder große Uhr mit Wetterkarte),
   eigene Bilder und Videos löschen, heruntergeladene Videos löschen
 - **Wetter:** Orte suchen und hinzufügen, Hauptort festlegen (bestimmt den Hintergrund), Orte entfernen
@@ -85,13 +89,33 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 - **Fernseher:** Fernseher-Einstellungen öffnen
 - **Info:** installierte Versionen von Glas Launcher und Glas Natur-Videos
 
+## Einstellen per Handy
+
+*Einstellungen → Handy → Einstellen per Handy* startet einen kleinen Webserver im Launcher und zeigt einen QR-Code.
+Mit der Handy-Kamera scannen (Handy und Fernseher im selben WLAN), die Seite öffnet sich im Browser. Ohne QR-Code
+geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7m2p9qa`.
+
+- **Was geht:** Hintergrund (Wetter-Stile, eigene Bilder und Videos), Milchglas, „Oben anzeigen“, eigene Bilder und
+  Videos hochladen, als Hintergrund verwenden und löschen, Dock sortieren, Apps hinzufügen und entfernen, Wetterorte
+  suchen, Hauptort, Wetterquelle, Bildschirmschoner, Sprache, Sicherung aufs Handy und zurück, Update-Quelle.
+- **Kindersicherung:** PIN festlegen oder ändern, Apps sperren, Zeitfenster (auch eigene Uhrzeiten), „Alle Apps“ und
+  Einstellungen schützen. Ist ein PIN festgelegt, fragt die Seite ihn zuerst ab, genau wie der Fernseher. Nach fünf
+  falschen Versuchen ist eine Minute Pause.
+- **Sicherheit:** Die Adresse enthält nach dem `#` einen Zugangsschlüssel, der bei jedem Einschalten neu entsteht.
+  Ohne ihn lässt sich nichts lesen oder ändern. Der Fernseher meldet, wenn sich ein Handy verbindet. Der Server läuft
+  nur, solange die Funktion an ist, und schaltet sich nach 30 Minuten ohne Nutzung von selbst aus. Die Verbindung ist
+  unverschlüsselt (HTTP) und nur für das eigene Heimnetz gedacht.
+- **Hochgeladene Dateien** landen in `Movies/GlasLauncher` bzw. `Pictures/GlasLauncher`. Ein Bild mit dem Namen
+  eines Wetterfotos (z. B. `clear_day.jpg`) ersetzt dort das eingebaute Foto, solange es noch keine Datei mit diesem Namen gibt.
+- Erweiterungen, Projectivy-Plugins und die Google-TV-Oberfläche werden weiter am Fernseher eingestellt.
+
 ## Bauen
 
 ```
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.38.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.39.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,7 +124,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.38` anlegen und `GlasLauncher-2.38.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.39` anlegen und `GlasLauncher-2.39.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
@@ -134,7 +158,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.38.apk
+adb install -r GlasLauncher-2.39.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
