@@ -335,7 +335,6 @@
  "Schneeschauer": "Snow showers",
  "Keine Daten für diesen Ort": "No data for this location",
  "1. Handy ins selbe WLAN wie den Fernseher\n2. QR-Code mit der Kamera scannen\n3. Oder diese Adresse im Browser öffnen:": "1. Connect your phone to the same Wi-Fi as the TV\n2. Scan the QR code with the camera\n3. Or open this address in the browser:",
- "Android fragt bei dieser Datei am Fernseher nach. Lösche sie dort unter Einstellungen → Eigene Bilder und Videos verwalten.": "Android asks for confirmation on the TV for this file. Delete it there under Settings → Manage your own pictures and videos.",
  "App hinzufügen": "Add app",
  "App hinzufügen …": "Add app …",
  "Apps sperren und Zeitfenster": "Lock apps and time windows",
@@ -396,5 +395,7 @@
  "{0} mit PIN sperren": "Lock {0} with PIN",
  "Änderungen erscheinen sofort auf dem Fernseher. Einstellen per Handy schaltet sich nach 30 Minuten ohne Nutzung aus.": "Changes appear on the TV right away. Set up from phone switches off after 30 minutes without use.",
  "Öffne diese Seite über den QR-Code am Fernseher: Einstellungen → Einstellen per Handy.": "Open this page via the QR code on the TV: Settings → Set up from phone.",
- "„{0}“ vom Fernseher löschen?": "Delete “{0}” from the TV?"
+ "„{0}“ vom Fernseher löschen?": "Delete “{0}” from the TV?",
+ "Bitte am Fernseher mit der Fernbedienung bestätigen, dass „{0}“ gelöscht werden darf.": "Please confirm on the TV with the remote that “{0}” may be deleted.",
+ "Lösche …": "Deleting …"
 }

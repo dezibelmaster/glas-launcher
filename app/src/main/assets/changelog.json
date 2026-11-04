@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.40",
+  "notes": {
+   "de": [
+    "Einstellen per Handy: Bilder und Videos lassen sich jetzt auch dann vom Handy aus löschen, wenn sie z. B. mit Bugjaeger auf den Fernseher kamen",
+    "Ist das USB-Debugging aus, fragt der Fernseher kurz nach, ob gelöscht werden darf"
+   ],
+   "en": [
+    "Set up from phone: pictures and videos can now be deleted from the phone even if they came to the TV e.g. with Bugjaeger",
+    "If USB debugging is off, the TV briefly asks whether deleting is allowed"
+   ],
+   "fr": [
+    "Réglages depuis le téléphone : les images et vidéos peuvent désormais être supprimées depuis le téléphone, même si elles ont été copiées sur le téléviseur par ex. avec Bugjaeger",
+    "Si le débogage USB est désactivé, le téléviseur demande brièvement si la suppression est autorisée"
+   ],
+   "es": [
+    "Ajustes desde el móvil: ahora se pueden borrar imágenes y vídeos desde el móvil aunque llegaran al televisor p. ej. con Bugjaeger",
+    "Si la depuración USB está desactivada, el televisor pregunta brevemente si se permite borrar"
+   ],
+   "it": [
+    "Impostazioni dal telefono: ora immagini e video si possono eliminare dal telefono anche se sono arrivati sul televisore ad es. con Bugjaeger",
+    "Se il debug USB è disattivato, il televisore chiede brevemente se l'eliminazione è consentita"
+   ],
+   "nl": [
+    "Instellen via telefoon: afbeeldingen en video's kunnen nu ook vanaf de telefoon worden verwijderd als ze bijv. met Bugjaeger op de tv zijn gezet",
+    "Staat USB-foutopsporing uit, dan vraagt de tv kort of verwijderen mag"
+   ]
+  }
+ },
+ {
   "version": "2.39",
   "notes": {
    "de": [

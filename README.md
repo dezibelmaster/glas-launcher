@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.40**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -107,6 +107,10 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
   unverschlüsselt (HTTP) und nur für das eigene Heimnetz gedacht.
 - **Hochgeladene Dateien** landen in `Movies/GlasLauncher` bzw. `Pictures/GlasLauncher`. Ein Bild mit dem Namen
   eines Wetterfotos (z. B. `clear_day.jpg`) ersetzt dort das eingebaute Foto, solange es noch keine Datei mit diesem Namen gibt.
+- **Löschen vom Handy:** Eigene Uploads löscht der Launcher direkt. Dateien, die anders auf den Fernseher kamen
+  (z. B. mit Bugjaeger), darf eine App ab Android 10 nicht ohne Weiteres löschen. Ist das USB-Debugging an, löscht der
+  Launcher sie über den eigenen Debugging-Zugang (wie bei der Google-TV-Oberfläche). Sonst erscheint am Fernseher
+  Androids Frage, ob gelöscht werden darf, und wird mit der Fernbedienung bestätigt.
 - Erweiterungen, Projectivy-Plugins und die Google-TV-Oberfläche werden weiter am Fernseher eingestellt.
 
 ## Bauen
@@ -115,7 +119,7 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.39.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.40.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -124,7 +128,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.39` anlegen und `GlasLauncher-2.39.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.40` anlegen und `GlasLauncher-2.40.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
@@ -158,7 +162,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.39.apk
+adb install -r GlasLauncher-2.40.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 

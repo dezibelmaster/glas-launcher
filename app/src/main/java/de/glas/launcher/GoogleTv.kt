@@ -38,25 +38,44 @@ object GoogleTv {
 
     /** Blocking; waits up to a minute for the debugging question on the TV to be answered. */
     fun switch(ctx: Context, on: Boolean): Result {
+        val result = TvShell.run(ctx, packages.filter { installed(ctx, it) }.map { pkg ->
+            if (on) "pm enable $pkg" else "pm disable-user --user 0 $pkg"
+        })
+        if (result != Result.Done) return result
+        return if (isOn(ctx) == on) Result.Done else Result.Failed(tr("Der Fernseher hat die Änderung nicht übernommen"))
+    }
+}
+
+/**
+ * Commands on the TV's own debugging port (127.0.0.1:5555, like Bugjaeger), for things an ordinary
+ * app may not do. The first time, the TV asks whether to allow debugging from the Glas Launcher.
+ */
+object TvShell {
+    /** Runs the commands one after the other and stops at the first that fails. Blocking. */
+    fun run(ctx: Context, commands: List<String>, waitForApproval: Int = 60_000): GoogleTv.Result {
+        if (Build.VERSION.SDK_INT < 26) return GoogleTv.Result.NoDebugging
         val dir = File(ctx.filesDir, "adb").apply { mkdirs() }
         val private = File(dir, "adbkey")
         val public = File(dir, "adbkey.pub")
         return try {
             if (!private.exists() || !public.exists()) AdbKeyPair.generate(private, public)
             val keys = AdbKeyPair.read(private, public)
-            Dadb.create("127.0.0.1", 5555, keys, 5_000, 60_000).use { adb ->
-                for (pkg in packages.filter { installed(ctx, it) }) {
-                    val r = adb.shell(if (on) "pm enable $pkg" else "pm disable-user --user 0 $pkg")
-                    if (r.exitCode != 0) return Result.Failed(r.allOutput.trim().ifBlank { "Fehler ${r.exitCode}" })
+            Dadb.create("127.0.0.1", 5555, keys, 5_000, waitForApproval).use { adb ->
+                for (command in commands) {
+                    val r = adb.shell(command)
+                    if (r.exitCode != 0) return GoogleTv.Result.Failed(r.allOutput.trim().ifBlank { "Fehler ${r.exitCode}" })
                 }
             }
-            if (isOn(ctx) == on) Result.Done else Result.Failed(tr("Der Fernseher hat die Änderung nicht übernommen"))
+            GoogleTv.Result.Done
         } catch (e: ConnectException) {
-            Result.NoDebugging
+            GoogleTv.Result.NoDebugging
         } catch (e: SocketTimeoutException) {
-            Result.NotAllowed
+            GoogleTv.Result.NotAllowed
         } catch (e: Exception) {
-            Result.Failed(e.message ?: e.javaClass.simpleName)
+            GoogleTv.Result.Failed(e.message ?: e.javaClass.simpleName)
         }
     }
+
+    /** A path in single quotes for the shell. */
+    fun quote(path: String) = "'" + path.replace("'", "'\\''") + "'"
 }

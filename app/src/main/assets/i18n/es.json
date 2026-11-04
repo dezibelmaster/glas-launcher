@@ -335,7 +335,6 @@
  "Schneeschauer": "Chubascos de nieve",
  "Keine Daten für diesen Ort": "No hay datos para este lugar",
  "1. Handy ins selbe WLAN wie den Fernseher\n2. QR-Code mit der Kamera scannen\n3. Oder diese Adresse im Browser öffnen:": "1. Conecta el móvil a la misma wifi que el televisor\n2. Escanea el código QR con la cámara\n3. O abre esta dirección en el navegador:",
- "Android fragt bei dieser Datei am Fernseher nach. Lösche sie dort unter Einstellungen → Eigene Bilder und Videos verwalten.": "Android pide confirmación en el televisor para este archivo. Bórralo allí en Ajustes → Gestionar tus imágenes y vídeos.",
  "App hinzufügen": "Añadir app",
  "App hinzufügen …": "Añadir app …",
  "Apps sperren und Zeitfenster": "Bloquear apps y franjas horarias",
@@ -396,5 +395,7 @@
  "{0} mit PIN sperren": "Bloquear {0} con PIN",
  "Änderungen erscheinen sofort auf dem Fernseher. Einstellen per Handy schaltet sich nach 30 Minuten ohne Nutzung aus.": "Los cambios aparecen al instante en el televisor. Los ajustes desde el móvil se desactivan tras 30 minutos sin uso.",
  "Öffne diese Seite über den QR-Code am Fernseher: Einstellungen → Einstellen per Handy.": "Abre esta página con el código QR del televisor: Ajustes → Ajustes desde el móvil.",
- "„{0}“ vom Fernseher löschen?": "¿Borrar «{0}» del televisor?"
+ "„{0}“ vom Fernseher löschen?": "¿Borrar «{0}» del televisor?",
+ "Bitte am Fernseher mit der Fernbedienung bestätigen, dass „{0}“ gelöscht werden darf.": "Confirma en el televisor con el mando que se puede borrar «{0}».",
+ "Lösche …": "Borrando …"
 }

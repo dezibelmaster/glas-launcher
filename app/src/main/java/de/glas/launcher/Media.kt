@@ -118,6 +118,23 @@ object Media {
         }
     }
 
+    /** Where a picture or video lies on the TV's storage, or null if that can't be told. */
+    @Suppress("DEPRECATION")
+    fun pathOf(ctx: Context, uri: String): String? {
+        val u = Uri.parse(uri)
+        if (u.scheme == "file") return u.path
+        return runCatching {
+            ctx.contentResolver.query(u, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            }
+        }.getOrNull()
+    }
+
+    /** Removes a file deleted from outside the launcher from the media index. */
+    fun forget(ctx: Context, path: String) {
+        MediaScannerConnection.scanFile(ctx, arrayOf(path), null, null)
+    }
+
     /** The media index entry for a file, scanning it in first if it isn't indexed yet. */
     @Suppress("DEPRECATION")
     private fun mediaStoreUri(ctx: Context, file: File): Uri? {

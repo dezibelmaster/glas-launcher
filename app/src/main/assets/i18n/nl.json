@@ -335,7 +335,6 @@
  "Schneeschauer": "Sneeuwbuien",
  "Keine Daten für diesen Ort": "Geen gegevens voor deze locatie",
  "1. Handy ins selbe WLAN wie den Fernseher\n2. QR-Code mit der Kamera scannen\n3. Oder diese Adresse im Browser öffnen:": "1. Verbind je telefoon met hetzelfde wifi als de tv\n2. Scan de QR-code met de camera\n3. Of open dit adres in de browser:",
- "Android fragt bei dieser Datei am Fernseher nach. Lösche sie dort unter Einstellungen → Eigene Bilder und Videos verwalten.": "Android vraagt voor dit bestand om bevestiging op de tv. Verwijder het daar via Instellingen → Eigen afbeeldingen en video's beheren.",
  "App hinzufügen": "App toevoegen",
  "App hinzufügen …": "App toevoegen …",
  "Apps sperren und Zeitfenster": "Apps vergrendelen en tijdvensters",
@@ -396,5 +395,7 @@
  "{0} mit PIN sperren": "{0} met pincode vergrendelen",
  "Änderungen erscheinen sofort auf dem Fernseher. Einstellen per Handy schaltet sich nach 30 Minuten ohne Nutzung aus.": "Wijzigingen verschijnen meteen op de tv. Instellen via telefoon gaat na 30 minuten zonder gebruik uit.",
  "Öffne diese Seite über den QR-Code am Fernseher: Einstellungen → Einstellen per Handy.": "Open deze pagina via de QR-code op de tv: Instellingen → Instellen via telefoon.",
- "„{0}“ vom Fernseher löschen?": "„{0}” van de tv verwijderen?"
+ "„{0}“ vom Fernseher löschen?": "„{0}” van de tv verwijderen?",
+ "Bitte am Fernseher mit der Fernbedienung bestätigen, dass „{0}“ gelöscht werden darf.": "Bevestig op de tv met de afstandsbediening dat „{0}” verwijderd mag worden.",
+ "Lösche …": "Verwijderen …"
 }

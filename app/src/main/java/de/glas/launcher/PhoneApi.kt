@@ -52,7 +52,7 @@ object PhoneApi {
             "POST /api/lock" -> { requirePin(prefs, req); setLock(prefs, JSONObject(req.text())); ok() }
             "POST /api/pin" -> { requirePin(prefs, req); setPin(prefs, JSONObject(req.text())); ok() }
             "POST /api/upload" -> upload(ctx, req)
-            "POST /api/media/delete" -> deleteMedia(ctx, prefs, JSONObject(req.text()).getString("uri"))
+            "POST /api/media/delete" -> deleteMedia(ctx, JSONObject(req.text()).getString("uri"))
             "GET /api/backup" -> { requirePin(prefs, req); backup(ctx) }
             "POST /api/restore" -> { requirePin(prefs, req); restore(ctx, req.text()); ok() }
             else -> error(404, "Not found")
@@ -320,21 +320,48 @@ object PhoneApi {
         return json(JSONObject().put("uri", uri).put("name", name).put("video", video))
     }
 
-    private fun deleteMedia(ctx: Context, prefs: Prefs, uri: String): Response {
+    private fun deleteMedia(ctx: Context, uri: String): Response {
         val item = (Media.list(ctx, video = false) + Media.list(ctx, video = true)).firstOrNull { it.uri == uri }
             ?: bad(tr("Die Datei gibt es nicht mehr"))
-        return when (Media.delete(ctx, uri)) {
-            Media.Deletion.Done -> {
-                // The deleted file was the background: fall back to the weather, as on the TV
-                if ((prefs.background == "image" && prefs.imageUri == uri) || (prefs.background == "video" && prefs.videoUri == uri)) {
-                    prefs.background = "weather"
-                }
-                PhoneRemote.changed()
-                ok()
-            }
+        return when (val result = Media.delete(ctx, uri)) {
+            Media.Deletion.Done -> { deleted(ctx, uri); ok() }
             Media.Deletion.Failed -> bad(tr("„{0}“ ließ sich nicht löschen", item.name))
-            is Media.Deletion.Confirm -> bad(tr("Android fragt bei dieser Datei am Fernseher nach. Lösche sie dort unter Einstellungen → Eigene Bilder und Videos verwalten."))
+            is Media.Deletion.Confirm -> {
+                // Not the launcher's own file. Delete it through the TV's debugging port like Bugjaeger
+                // would; without debugging, Android asks on the TV itself.
+                if (deleteWithShell(ctx, uri)) {
+                    deleted(ctx, uri)
+                    ok()
+                } else {
+                    DeleteConfirmActivity.start(ctx, result.sender, uri)
+                    json(JSONObject().put("ok", false).put("confirm", true)
+                        .put("message", tr("Bitte am Fernseher mit der Fernbedienung bestätigen, dass „{0}“ gelöscht werden darf.", item.name)))
+                }
+            }
         }
+    }
+
+    /** Deletes a file the launcher may not delete itself, through the debugging port. Blocking. */
+    private fun deleteWithShell(ctx: Context, uri: String): Boolean {
+        val path = Media.pathOf(ctx, uri) ?: return false
+        @Suppress("DEPRECATION")
+        val storage = Environment.getExternalStorageDirectory().absolutePath
+        // Only files on the TV's shared storage, never anything else
+        if (!path.startsWith("$storage/") || path.contains("/../")) return false
+        val q = TvShell.quote(path)
+        val result = TvShell.run(ctx, listOf("rm -f $q && ! test -e $q"), waitForApproval = 30_000)
+        if (result != GoogleTv.Result.Done) return false
+        Media.forget(ctx, path)
+        return true
+    }
+
+    /** After a file is gone: if it was the background, the weather comes back, as on the TV. */
+    fun deleted(ctx: Context, uri: String) {
+        val prefs = Prefs(ctx)
+        if ((prefs.background == "image" && prefs.imageUri == uri) || (prefs.background == "video" && prefs.videoUri == uri)) {
+            prefs.background = "weather"
+        }
+        PhoneRemote.changed()
     }
 
     // ---- Backup ----
