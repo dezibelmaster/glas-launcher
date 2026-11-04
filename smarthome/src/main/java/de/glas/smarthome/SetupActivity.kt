@@ -64,6 +64,8 @@ class SetupActivity : Activity() {
         password = field("Kennwort", "FRITZ!Box-Kennwort", store.password,
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD, col)
         password.imeOptions = EditorInfo.IME_ACTION_GO
+        password.transformationMethod = android.text.method.PasswordTransformationMethod.getInstance()
+        passwordEye()
         password.setOnEditorActionListener { _, _, _ -> connect(); true }
 
         message = label(13.5f, C.RED).apply { visibility = View.GONE; setLineSpacing(0f, 1.2f) }
@@ -152,13 +154,44 @@ class SetupActivity : Activity() {
     /** Opens the web interface inside the app, already logged in with the stored user. */
     private fun openWebUi() = startActivity(android.content.Intent(this, WebActivity::class.java))
 
+    /** Eye button inside the password field: shows the password while it is on, dots otherwise. */
+    private fun passwordEye() {
+        val parent = password.parent as LinearLayout
+        val index = parent.indexOfChild(password)
+        val params = password.layoutParams
+        parent.removeView(password)
+        val frame = FrameLayout(this)
+        password.setPadding(dp(16), dp(15), dp(56), dp(15))
+        frame.addView(password, FrameLayout.LayoutParams(MATCH, WRAP))
+        var shown = false
+        val eye = android.widget.ImageView(this).apply {
+            setImageDrawable(Glyph(Glyph.Kind.EYE, C.MUTED))
+            val pad = dp(12)
+            setPadding(pad, pad, pad, pad)
+            contentDescription = "Kennwort anzeigen"
+            setOnClickListener {
+                shown = !shown
+                val pos = password.selectionEnd
+                password.transformationMethod =
+                    if (shown) android.text.method.HideReturnsTransformationMethod.getInstance()
+                    else android.text.method.PasswordTransformationMethod.getInstance()
+                password.setSelection(pos.coerceIn(0, password.text.length))
+                setImageDrawable(Glyph(if (shown) Glyph.Kind.EYE_OFF else Glyph.Kind.EYE, if (shown) C.ACCENT else C.MUTED))
+                contentDescription = if (shown) "Kennwort verbergen" else "Kennwort anzeigen"
+            }
+        }
+        frame.addView(eye, FrameLayout.LayoutParams(dp(48), dp(48), android.view.Gravity.END or android.view.Gravity.CENTER_VERTICAL).apply { marginEnd = dp(4) })
+        parent.addView(frame, index, params)
+    }
+
     private fun field(title: String, hint: String, value: String, type: Int, parent: LinearLayout): EditText {
         parent.addView(label(13f, C.MUTED, Type.medium).apply { text = title }, lp().margins(t = dp(20), l = dp(4)))
         val e = EditText(this).apply {
             setText(value)
             this.hint = hint
-            inputType = type
+            // setSingleLine() swaps the transformation, so it has to come before the input type
             setSingleLine()
+            inputType = type
             setTextColor(C.TEXT)
             setHintTextColor(C.FAINT)
             textSize = 16f

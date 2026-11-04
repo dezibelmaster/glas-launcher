@@ -253,7 +253,7 @@ class Toggle(ctx: Context, var color: Int = C.GREEN) : View(ctx) {
 class Glyph(private val kind: Kind, color: Int, private val level: Int = -1) : Drawable() {
     enum class Kind {
         RADIATOR, PLUG, BULB, THERMO, DROP, BLIND, HOME, GEAR, REFRESH, PLUS, MINUS, FLAME, WINDOW,
-        BATTERY, BOLT, POWER, SPARK, ALERT, MOON, SUN, CLOSE, UP, DOWN, STOP, REMOTE, BELL, CLOCK, ROCKET, CHEVRON, EXTERNAL
+        BATTERY, BOLT, POWER, SPARK, ALERT, MOON, SUN, CLOSE, UP, DOWN, STOP, REMOTE, BELL, CLOCK, ROCKET, CHEVRON, EXTERNAL, EYE, EYE_OFF
     }
 
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -432,6 +432,17 @@ class Glyph(private val kind: Kind, color: Int, private val level: Int = -1) : D
             Kind.UP -> { val p = Path().apply { moveTo(5f, 15f); lineTo(12f, 8f); lineTo(19f, 15f) }; c.drawPath(p, st) }
             Kind.DOWN -> { val p = Path().apply { moveTo(5f, 9f); lineTo(12f, 16f); lineTo(19f, 9f) }; c.drawPath(p, st) }
             Kind.CHEVRON -> { val p = Path().apply { moveTo(9f, 5f); lineTo(16f, 12f); lineTo(9f, 19f) }; c.drawPath(p, st) }
+            Kind.EYE, Kind.EYE_OFF -> {
+                val p = Path().apply {
+                    moveTo(2.5f, 12f)
+                    quadTo(12f, 2.5f, 21.5f, 12f)
+                    quadTo(12f, 21.5f, 2.5f, 12f)
+                    close()
+                }
+                c.drawPath(p, st)
+                c.drawCircle(12f, 12f, 3f, st)
+                if (kind == Kind.EYE_OFF) c.drawLine(4f, 20f, 20f, 4f, st)
+            }
             Kind.EXTERNAL -> {
                 val p = Path().apply {
                     moveTo(11f, 4.5f); lineTo(6f, 4.5f)

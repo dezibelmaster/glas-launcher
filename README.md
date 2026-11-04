@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.3** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.4** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -342,13 +342,13 @@ im gleichen dunklen Milchglas-Stil wie der Launcher.
 **Anmelden:** Adresse (`fritz.box`), Benutzername (leer für den Standardbenutzer) und Kennwort. Der Benutzer braucht in
 der FRITZ!Box unter *System → FRITZ!Box-Benutzer* das Recht **Smart Home**. Die App spricht nur mit der FRITZ!Box im
 Heimnetz (AHA-HTTP-Schnittstelle `webservices/homeautoswitch.lua`, Anmeldung über `login_sid.lua` mit PBKDF2, bei
-älterem FRITZ!OS MD5). Das Kennwort liegt verschlüsselt mit einem Schlüssel aus dem Android-Keystore des Handys.
+älterem FRITZ!OS MD5). Das Kennwort liegt verschlüsselt mit einem Schlüssel aus dem Android-Keystore des Handys. Im Feld erscheint es als Punkte; das Auge daneben blendet es kurz ein.
 
 **Bauen und installieren:**
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.3.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.4.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).
