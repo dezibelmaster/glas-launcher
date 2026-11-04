@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.0** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -302,6 +302,42 @@ Die Texte stehen auf Deutsch im Code und laufen durch `tr("…")`. Die Übersetz
 heißen `{0}`, `{1}`. Fehlt ein Eintrag, erscheint der deutsche Text. Eine neue Sprache braucht eine solche Datei
 und einen Eintrag in `I18n.languages`. Amtliche Unwetterwarnungen gibt der Deutsche Wetterdienst nur auf Deutsch
 und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
+
+## Glas Smart Home (Handy-App für die FRITZ!Box)
+
+Modul `smarthome`: eine eigene Android-App fürs Handy (ab Android 8), die die Smart-Home-Geräte der FRITZ!Box steuert,
+im gleichen dunklen Milchglas-Stil wie der Launcher.
+
+| | | |
+|---|---|---|
+| ![Übersicht](docs/screenshots/smarthome-uebersicht.jpg) | ![Heizkörper](docs/screenshots/smarthome-heizkoerper.jpg) | ![Steckdose](docs/screenshots/smarthome-steckdose.jpg) |
+| Übersicht mit Räumen, Geräten, Szenen | Heizkörper mit Drehregler | Steckdose mit Verbrauch |
+
+- **Übersicht:** Begrüßung, Ø-Innentemperatur, wie viele Heizkörper gerade heizen, aktueller Stromverbrauch.
+  Hinweise bei schwacher Batterie, offenem Fenster, Störungen oder nicht erreichbaren Geräten.
+- **Karten** für Gruppen (Räume), Heizkörperregler, Steckdosen, Lampen, Rollläden und Sensoren (z. B. FRITZ!Smart Control 440
+  mit Luftfeuchte). Die Farbe folgt der Temperatur, von Blau bis Rot. Heizkörper direkt mit − / + verstellen,
+  Steckdosen und Lampen mit dem Schalter. Filter: Alle, Räume, Heizung, Steckdosen, Licht, Rollläden, Sensoren.
+- **Antippen** öffnet die Details: Drehregler (Aus, 8 bis 28 °C, An), Absenk- und Komforttemperatur, Boost (30 Minuten),
+  Fenster offen (15 Minuten Pause), nächste Änderung, Batterie; bei Steckdosen Leistung, Verbrauch, Spannung;
+  bei Lampen die Helligkeit; bei Rollläden Öffnen, Stopp, Schließen und Position.
+- **Szenen:** die Vorlagen aus *Smart Home → Vorlagen* der FRITZ!Box, mit einem Tipp ausführen.
+- **Demo-Modus** zum Ausprobieren ohne FRITZ!Box.
+- Aktualisiert alle 15 Sekunden, solange die App offen ist.
+
+**Anmelden:** Adresse (`fritz.box`), Benutzername (leer für den Standardbenutzer) und Kennwort. Der Benutzer braucht in
+der FRITZ!Box unter *System → FRITZ!Box-Benutzer* das Recht **Smart Home**. Die App spricht nur mit der FRITZ!Box im
+Heimnetz (AHA-HTTP-Schnittstelle `webservices/homeautoswitch.lua`, Anmeldung über `login_sid.lua` mit PBKDF2, bei
+älterem FRITZ!OS MD5). Das Kennwort liegt verschlüsselt mit einem Schlüssel aus dem Android-Keystore des Handys.
+
+**Bauen und installieren:**
+
+```
+gradle :smarthome:assembleDebug
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.0.apk
+```
+
+Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).
 
 ## Quellen
 
