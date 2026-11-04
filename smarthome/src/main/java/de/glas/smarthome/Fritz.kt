@@ -26,12 +26,16 @@ class FritzClient(private val config: Config) {
 
     @Volatile private var sid: String? = null
 
-    private val base: String
-        get() {
-            var b = config.host.trim().trimEnd('/')
-            if (!b.startsWith("http://") && !b.startsWith("https://")) b = "http://$b"
-            return b
-        }
+    private val base: String get() = baseUrl(config.host)
+
+    /** Model and FRITZ!OS version from `jason_boxinfo.xml`, which the box gives out without a login; null if it does not. */
+    fun boxInfo(): Pair<String, String>? = runCatching {
+        val x = XNode.parse(http("$base/jason_boxinfo.xml").second)
+        val name = x.text("j:Name") ?: return null
+        // "154.08.25" is model 154 with FRITZ!OS 8.25
+        val version = x.text("j:Version")?.split('.')?.drop(1)?.joinToString(".")?.trimStart('0') ?: ""
+        name to version
+    }.getOrNull()
 
     private fun http(url: String, post: String? = null): Pair<Int, String> {
         val host = runCatching { URL(url).host }.getOrDefault(config.host)
@@ -120,6 +124,13 @@ class FritzClient(private val config: Config) {
     }
 
     companion object {
+        /** The address as typed, with http:// added when no scheme is given. */
+        fun baseUrl(host: String): String {
+            var b = host.trim().trimEnd('/').ifEmpty { "fritz.box" }
+            if (!b.startsWith("http://") && !b.startsWith("https://")) b = "http://$b"
+            return b
+        }
+
         private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
         /** FRITZ!OS 7.24 and newer: two rounds of PBKDF2-HMAC-SHA256. */

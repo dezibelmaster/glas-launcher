@@ -42,17 +42,22 @@ class SetupActivity : Activity() {
             ins
         }
         setContentView(root)
+        // No keyboard popping up on opening: the column takes the focus instead of the first field
+        col.isFocusableInTouchMode = true
+        col.requestFocus()
 
         val top = row()
         top.addView(iconButton(Glyph.Kind.CHEVRON, 44) { finish() }.apply { rotation = 180f })
         col.addView(top)
 
         col.addView(bubble(Glyph.Kind.HOME, C.ACCENT, 60), lp(dp(60), dp(60)).margins(t = dp(24)))
-        col.addView(label(30f, C.TEXT, Type.medium).apply { text = "FRITZ!Box verbinden" }, lp().margins(t = dp(20)))
+        col.addView(label(30f, C.TEXT, Type.medium).apply { text = if (store.configured) "Einstellungen" else "FRITZ!Box verbinden" }, lp().margins(t = dp(20)))
         col.addView(label(14.5f, C.MUTED).apply {
             text = "Die App spricht direkt mit deiner FRITZ!Box im Heimnetz. Dein Kennwort bleibt verschlüsselt auf diesem Handy."
             setLineSpacing(0f, 1.25f)
         }, lp().margins(t = dp(10)))
+
+        if (store.configured && !store.demo) col.addView(boxCard(), lp().margins(t = dp(22)))
 
         host = field("Adresse", "fritz.box", store.host.ifEmpty { "fritz.box" }, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI, col)
         user = field("Benutzername", "leer lassen für den Standardbenutzer", store.user, InputType.TYPE_CLASS_TEXT, col)
@@ -108,6 +113,49 @@ class SetupActivity : Activity() {
             text = "Glas Smart Home " + runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrDefault("")
             gravity = Gravity.CENTER
         }, lp().margins(t = dp(22)))
+    }
+
+    /** Model, FRITZ!OS and address of the connected box, and a button to its own web interface. */
+    private fun boxCard() = column().apply {
+        background = card(null, 22f)
+        val head = column().apply { setPadding(dp(18), dp(18), dp(18), dp(16)) }
+        val name = label(22f, C.TEXT, Type.medium).apply { text = "FRITZ!Box" }
+        val sub = label(13.5f, C.MUTED).apply { text = "Verbinde …" }
+        head.addView(name)
+        head.addView(sub, lp().margins(t = dp(6)))
+        addView(head)
+        addView(View(context).apply { setBackgroundColor(C.STROKE) }, lp(MATCH, 1))
+        val open = row(Gravity.CENTER).apply {
+            setPadding(dp(18), dp(16), dp(18), dp(16))
+            addView(label(15.5f, C.ACCENT, Type.medium).apply { text = "Benutzeroberfläche aufrufen" })
+            addView(android.widget.ImageView(context).apply { setImageDrawable(Glyph(Glyph.Kind.EXTERNAL, C.ACCENT)) },
+                lp(dp(20), dp(20)).margins(l = dp(10)))
+            pressable(22f)
+            setOnClickListener { openWebUi() }
+        }
+        addView(open)
+        val url = FritzClient.baseUrl(store.host)
+        val client = FritzClient(FritzClient.Config(store.host, store.user, store.password))
+        thread {
+            val info = client.boxInfo()
+            runOnUiThread {
+                if (isFinishing) return@runOnUiThread
+                if (info != null) name.text = info.first
+                sub.text = listOfNotNull(
+                    info?.second?.takeIf { it.isNotEmpty() }?.let { "FRITZ!OS $it" },
+                    url.removePrefix("http://").removePrefix("https://"),
+                ).joinToString(" · ")
+            }
+        }
+    }
+
+    private fun openWebUi() {
+        val url = FritzClient.baseUrl(host.text.toString().ifBlank { store.host })
+        try {
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+        } catch (e: android.content.ActivityNotFoundException) {
+            android.widget.Toast.makeText(this, "Kein Browser gefunden, um $url zu öffnen.", android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun field(title: String, hint: String, value: String, type: Int, parent: LinearLayout): EditText {
