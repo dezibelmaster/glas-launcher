@@ -37,7 +37,10 @@ class FritzClient(private val config: Config) {
         name to version
     }.getOrNull()
 
-    private fun http(url: String, post: String? = null): Pair<Int, String> {
+    private fun http(
+        url: String, post: String? = null, method: String = if (post != null) "POST" else "GET",
+        contentType: String = "application/x-www-form-urlencoded", headers: Map<String, String> = emptyMap(),
+    ): Pair<Int, String> {
         val host = runCatching { URL(url).host }.getOrDefault(config.host)
         val c = try {
             URL(url).openConnection() as HttpURLConnection
@@ -47,10 +50,11 @@ class FritzClient(private val config: Config) {
         c.connectTimeout = 6000
         c.readTimeout = 15000
         try {
+            c.requestMethod = method
+            for ((k, v) in headers) c.setRequestProperty(k, v)
             if (post != null) {
-                c.requestMethod = "POST"
                 c.doOutput = true
-                c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                c.setRequestProperty("Content-Type", contentType)
                 c.outputStream.use { it.write(post.toByteArray()) }
             }
             val code = c.responseCode
@@ -101,6 +105,42 @@ class FritzClient(private val config: Config) {
         sid = s
         return s
     }
+
+    /** A valid session id, logging in when there is none yet. */
+    fun session(): String = sid ?: login()
+
+    /** Web interface address that opens already logged in with this app's session. */
+    fun webUiUrl(): String = "$base/?sid=" + login()
+
+    /**
+     * Calls the Smart Home REST API of FRITZ!OS 8.20 and newer (`/api/v0/smarthome/...`), with the session id in the
+     * header `Authorization: AVM-SID <sid>`. Returns the JSON answer; logs in again once when the session expired.
+     */
+    fun rest(method: String, path: String, json: String? = null): String {
+        repeat(2) { attempt ->
+            val s = session()
+            val (code, body) = http(
+                "$base/api/v0/smarthome/$path", json, method, "application/json",
+                mapOf("Authorization" to "AVM-SID $s", "Accept" to "application/json"),
+            )
+            when {
+                code == 401 -> {
+                    sid = null
+                    if (attempt == 1) throw FritzException("Die FRITZ!Box hat die Anmeldung abgelehnt.")
+                }
+                code == 403 -> throw FritzException("Für Geräteeinstellungen braucht der FRITZ!Box-Benutzer zusätzlich das Recht „FRITZ!Box Einstellungen“.")
+                code == 404 && body.isBlank() -> throw FritzException("Geräteeinstellungen gibt es in der App erst ab FRITZ!OS 8.20.")
+                code >= 300 -> throw FritzException("Die FRITZ!Box meldet Fehler $code" + restError(body))
+                else -> return body
+            }
+        }
+        throw FritzException("Anmeldung fehlgeschlagen.")
+    }
+
+    private fun restError(body: String) = runCatching {
+        val e = org.json.JSONObject(body).optJSONArray("errors")?.optJSONObject(0)
+        e?.optString("message")?.takeIf { it.isNotBlank() }?.let { ": $it" }
+    }.getOrNull() ?: "."
 
     /** Sends one AHA command and returns the answer. Logs in again once when the session has expired. */
     fun aha(cmd: String, ain: String? = null, params: Map<String, String> = emptyMap()): String {

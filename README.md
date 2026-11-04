@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.2** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.3** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -323,8 +323,18 @@ im gleichen dunklen Milchglas-Stil wie der Launcher.
   bei Lampen die Helligkeit; bei Rollläden Öffnen, Stopp, Schließen und Position.
 - **Batterie-Ansicht (ab 1.1):** Umschalter *Temperatur / Batterie* über den Karten. In der Batterie-Ansicht zeigen alle
   Geräte mit Batterie ihren Ladestand, die schwächsten zuerst, rot ab 20 % mit „Wechseln“. Die Wahl bleibt gespeichert.
-- **Benutzeroberfläche aufrufen (ab 1.2):** unter ⚙ *Einstellungen* stehen Modell, FRITZ!OS-Version und Adresse der
-  FRITZ!Box; „Benutzeroberfläche aufrufen“ öffnet `fritz.box` (bzw. die eingetragene Adresse) im Browser.
+- **Benutzeroberfläche aufrufen:** unter ⚙ *Einstellungen* stehen Modell, FRITZ!OS-Version und Adresse der
+  FRITZ!Box. „Benutzeroberfläche aufrufen“ öffnet die Oberfläche der FRITZ!Box in der App, schon angemeldet: Die App
+  meldet sich mit dem gespeicherten Benutzer an und übergibt die Sitzung (`?sid=`). Erscheint trotzdem die
+  Anmeldeseite, füllt die App Benutzer und Kennwort selbst aus (nur auf der Adresse der eigenen FRITZ!Box).
+- **Temperaturverlauf (ab 1.3):** Diagramm der letzten 24 Stunden bei Heizkörperreglern und Sensoren
+  (`getbasicdevicestats`), Antippen und Ziehen zeigt Wert und Uhrzeit.
+- **Einstellungen zum Gerät (ab 1.3, FRITZ!OS 8.20 oder neuer):** bei jedem Heizkörperregler
+  *Temperaturmessung* (Raumtemperatur angleichen, −5 bis +5 °C), *Fenster-auf-Erkennung* (Ventil schließen für 1 bis
+  120 Minuten, Empfindlichkeit niedrig/mittel/hoch), *Bediensperre* (Tasten am Regler, App und Oberfläche),
+  *Temperaturbegrenzung* (Minimum und Maximum) und *Adaptive Heizphase*. Dafür nutzt die App die Smart-Home-REST-API
+  der FRITZ!Box (`/api/v0/smarthome/configuration/units/…`); der Benutzer braucht zusätzlich das Recht
+  **FRITZ!Box Einstellungen**.
 - **Szenen:** die Vorlagen aus *Smart Home → Vorlagen* der FRITZ!Box, mit einem Tipp ausführen.
 - **Demo-Modus** zum Ausprobieren ohne FRITZ!Box.
 - Aktualisiert alle 15 Sekunden, solange die App offen ist.
@@ -338,7 +348,7 @@ Heimnetz (AHA-HTTP-Schnittstelle `webservices/homeautoswitch.lua`, Anmeldung üb
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.2.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.3.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).

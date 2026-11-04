@@ -84,6 +84,48 @@ class DemoBackend : Backend {
     override fun window(d: Device, minutes: Int) = update(d.id) {
         it.copy(hkr = it.hkr?.copy(windowOpen = minutes > 0, windowEnd = if (minutes > 0) now + minutes * 60 else 0))
     }
+    override fun stats(d: Device): Stats? {
+        Thread.sleep(250)
+        val base = d.hkr?.tist ?: d.temp ?: return null
+        val now = System.currentTimeMillis() / 1000
+        // A day with a cooler night and a warm evening
+        val values = (0 until 96).map { i ->
+            val hour = ((now - (95 - i) * 900L) / 3600.0 + 1) % 24
+            val night = if (hour < 6 || hour > 23) -1.5 else 0.0
+            val evening = if (hour in 17.0..22.0) .5 else 0.0
+            Math.round((base + night + evening + Math.sin(i / 7.0) * .3) * 2) / 2.0
+        }
+        return Stats(values, 900, now)
+    }
+
+    private val configs = HashMap<String, HkrConfig>()
+
+    override fun config(d: Device): HkrConfig {
+        Thread.sleep(250)
+        return configs.getOrPut(d.id) {
+            HkrConfig(offset = 0.0, offsetExternal = false, windowDuration = 10, windowSensitivity = "high", windowExternal = false,
+                lockLocal = false, lockApi = false, rangeEnabled = d.id == "19", rangeMin = 16.0, rangeMax = 23.0, adaptive = true, stats = null)
+        }
+    }
+
+    override fun setConfig(d: Device, thermostat: org.json.JSONObject) {
+        var c = config(d)
+        thermostat.optJSONObject("temperatureOffset")?.let { c = c.copy(offset = it.optDouble("internalOffset", c.offset ?: 0.0)) }
+        thermostat.optJSONObject("windowOpenMode")?.let {
+            c = c.copy(windowDuration = it.optInt("internalDuration", c.windowDuration ?: 10),
+                windowSensitivity = it.optString("internalSensitivity", c.windowSensitivity ?: "medium"))
+        }
+        if (thermostat.has("lockedDeviceLocalEnabled")) c = c.copy(lockLocal = thermostat.getBoolean("lockedDeviceLocalEnabled"))
+        if (thermostat.has("lockedDeviceApiEnabled")) c = c.copy(lockApi = thermostat.getBoolean("lockedDeviceApiEnabled"))
+        if (thermostat.has("adaptiveHeatingModeEnabled")) c = c.copy(adaptive = thermostat.getBoolean("adaptiveHeatingModeEnabled"))
+        thermostat.optJSONObject("temperatureRangeLock")?.let { r ->
+            c = c.copy(rangeEnabled = r.optBoolean("temperatureLockEnabled", c.rangeEnabled ?: false),
+                rangeMin = r.optJSONObject("minimum")?.optDouble("celsius") ?: c.rangeMin,
+                rangeMax = r.optJSONObject("maximum")?.optDouble("celsius") ?: c.rangeMax)
+        }
+        configs[d.id] = c
+    }
+
     override fun apply(t: Template) {
         val raw = when (t.ain) { "demo-t1" -> 42; "demo-t2" -> 33; else -> 32 }
         list = list.map { it.copy(hkr = it.hkr?.copy(tsoll = raw)) }.toMutableList()

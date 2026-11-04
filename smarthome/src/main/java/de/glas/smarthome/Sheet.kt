@@ -125,6 +125,14 @@ class Sheet(private val act: Activity, private val devKey: String) {
             else -> sensor(d)
         }
         if (d.isGroup) members(d)
+        if (!d.isGroup && (d.hkr != null || d.temp != null)) {
+            panel.addView(section("Temperaturverlauf"), lp().margins(t = dp(22)))
+            panel.addView(historyCard(d), lp().margins(t = dp(10)))
+        }
+        if (!d.isGroup && d.hkr != null && Home.backend != null) {
+            panel.addView(section("Einstellungen zum Gerät"), lp().margins(t = dp(22)))
+            panel.addView(HkrSettings(this, d).view(), lp().margins(t = dp(10)))
+        }
         info(d)
 
         dialog.setContentView(scroll)

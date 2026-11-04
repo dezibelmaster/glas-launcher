@@ -186,7 +186,83 @@ object Parser {
         )
     }
 
+    /**
+     * `getbasicdevicestats`: comma separated values, newest first, temperatures in tenths of a degree,
+     * "-" where nothing was measured. The 15-minute grid covers the last 24 hours.
+     */
+    fun stats(root: XNode): Stats? {
+        val all = root.child("temperature")?.children?.filter { it.name == "stats" } ?: return null
+        val s = all.firstOrNull { it.attrs["grid"] == "900" } ?: all.firstOrNull() ?: return null
+        val values = s.text.trim().split(',').map { v -> v.trim().toDoubleOrNull()?.let { it / 10.0 } }
+        if (values.isEmpty()) return null
+        val grid = s.attrs["grid"]?.toIntOrNull() ?: 900
+        val at = s.attrs["datatime"]?.toLongOrNull() ?: (System.currentTimeMillis() / 1000)
+        return Stats(values.reversed(), grid, at)
+    }
+
     fun templates(root: XNode): List<Template> = root.children.filter { it.name == "template" }.map {
         Template(it.attrs["id"] ?: "", it.attrs["identifier"] ?: "", it.text("name") ?: "Vorlage")
+    }
+}
+
+/** Measured values at regular steps; [values] are oldest first, null where the device sent nothing. */
+data class Stats(val values: List<Double?>, val stepSeconds: Int, val newestAt: Long) {
+    fun timeOf(i: Int) = newestAt - (values.size - 1 - i).toLong() * stepSeconds
+    val valid get() = values.count { it != null } >= 2
+}
+
+/** Settings of a radiator controller from the Smart Home REST API. Null fields are not reported by the box. */
+data class HkrConfig(
+    val offset: Double?,
+    val offsetExternal: Boolean,
+    val windowDuration: Int?,
+    val windowSensitivity: String?,
+    val windowExternal: Boolean,
+    val lockLocal: Boolean?,
+    val lockApi: Boolean?,
+    val rangeEnabled: Boolean?,
+    val rangeMin: Double?,
+    val rangeMax: Double?,
+    val adaptive: Boolean?,
+    val stats: Stats?,
+) {
+    companion object {
+        private fun org.json.JSONObject.boolOrNull(vararg names: String): Boolean? {
+            for (n in names) if (has(n) && !isNull(n)) return optBoolean(n)
+            return null
+        }
+        private fun org.json.JSONObject.doubleOrNull(n: String) = if (has(n) && !isNull(n)) optDouble(n).takeIf { !it.isNaN() } else null
+        private fun org.json.JSONObject.intOrNull(n: String) = if (has(n) && !isNull(n)) optInt(n) else null
+
+        fun parse(unit: org.json.JSONObject): HkrConfig {
+            val t = unit.optJSONObject("interfaces")?.optJSONObject("thermostatInterface")
+                ?: throw FritzException("Dieses Gerät hat keine Heizkörper-Einstellungen.")
+            val off = t.optJSONObject("temperatureOffset")
+            val win = t.optJSONObject("windowOpenMode")
+            val range = t.optJSONObject("temperatureRangeLock")
+            val stats = unit.optJSONObject("statistics")?.optJSONArray("temperatures")?.let { arr ->
+                (0 until arr.length()).map { arr.getJSONObject(it) }
+                    .firstOrNull { it.optString("statisticsState") == "valid" && it.optString("period") == "day" }
+                    ?.let { s ->
+                        val v = s.optJSONArray("values") ?: return@let null
+                        val list = (0 until v.length()).map { i -> if (v.isNull(i)) null else v.optDouble(i).takeIf { !it.isNaN() } }
+                        Stats(list.reversed(), s.optInt("interval", 900).coerceAtLeast(1), System.currentTimeMillis() / 1000)
+                    }
+            }
+            return HkrConfig(
+                offset = off?.doubleOrNull("internalOffset"),
+                offsetExternal = off?.optString("sensorMode") == "external",
+                windowDuration = win?.intOrNull("internalDuration"),
+                windowSensitivity = win?.optString("internalSensitivity")?.takeIf { it.isNotEmpty() && it != "unknown" },
+                windowExternal = win?.optString("sensorMode") == "external",
+                lockLocal = t.boolOrNull("lockedDeviceLocalEnabled", "isLockedDeviceLocal"),
+                lockApi = t.boolOrNull("lockedDeviceApiEnabled", "isLockedDeviceApi"),
+                rangeEnabled = range?.boolOrNull("temperatureLockEnabled", "isTemperatureLock"),
+                rangeMin = range?.optJSONObject("minimum")?.doubleOrNull("celsius"),
+                rangeMax = range?.optJSONObject("maximum")?.doubleOrNull("celsius"),
+                adaptive = t.boolOrNull("adaptiveHeatingModeEnabled"),
+                stats = stats,
+            )
+        }
     }
 }

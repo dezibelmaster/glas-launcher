@@ -24,6 +24,12 @@ interface Backend {
     fun boost(d: Device, minutes: Int)
     fun window(d: Device, minutes: Int)
     fun apply(t: Template)
+    /** Temperatures of the last 24 hours, oldest first. */
+    fun stats(d: Device): Stats?
+    /** Settings of a radiator controller (REST API, FRITZ!OS 8.20+). */
+    fun config(d: Device): HkrConfig
+    /** Changes some of them; [thermostat] holds only the fields to change, as in `thermostatInterface`. */
+    fun setConfig(d: Device, thermostat: org.json.JSONObject)
 }
 
 class FritzBackend(config: FritzClient.Config) : Backend {
@@ -70,6 +76,45 @@ class FritzBackend(config: FritzClient.Config) : Backend {
 
     override fun apply(t: Template) {
         c.aha("applytemplate", t.ain)
+    }
+
+    override fun stats(d: Device): Stats? {
+        val aha = runCatching { Parser.stats(XNode.parse(c.aha("getbasicdevicestats", d.ain))) }
+        aha.getOrNull()?.takeIf { it.valid }?.let { return it }
+        // Some boxes only report the history through the REST API
+        if (d.hkr != null && !d.isGroup) runCatching { config(d).stats }.getOrNull()?.takeIf { it.valid }?.let { return it }
+        aha.exceptionOrNull()?.let { throw it }
+        return null
+    }
+
+    /** Unit UID of the REST API; equals the AIN for radiator controllers, otherwise found in the unit list. */
+    private val uids = HashMap<String, String>()
+
+    private fun unit(d: Device): org.json.JSONObject {
+        uids[d.ain]?.let { return org.json.JSONObject(c.rest("GET", "configuration/units/" + path(it))) }
+        val direct = runCatching { org.json.JSONObject(c.rest("GET", "configuration/units/" + path(d.ain))) }.getOrNull()
+        if (direct != null && direct.has("interfaces")) { uids[d.ain] = d.ain; return direct }
+        val list = org.json.JSONArray(c.rest("GET", "configuration/units"))
+        val compact = d.ain.replace(" ", "")
+        for (i in 0 until list.length()) {
+            val u = list.getJSONObject(i)
+            val ain = u.optString("ain").replace(" ", "")
+            if (ain == compact && u.optJSONObject("interfaces")?.has("thermostatInterface") == true) {
+                uids[d.ain] = u.getString("UID")
+                return org.json.JSONObject(c.rest("GET", "configuration/units/" + path(u.getString("UID"))))
+            }
+        }
+        throw FritzException("Die FRITZ!Box kennt keine Einstellungen für „${d.name}“.")
+    }
+
+    private fun path(uid: String) = java.net.URLEncoder.encode(uid, "UTF-8").replace("+", "%20")
+
+    override fun config(d: Device): HkrConfig = HkrConfig.parse(unit(d))
+
+    override fun setConfig(d: Device, thermostat: org.json.JSONObject) {
+        val uid = uids[d.ain] ?: run { unit(d); uids[d.ain] ?: d.ain }
+        val body = org.json.JSONObject().put("interfaces", org.json.JSONObject().put("thermostatInterface", thermostat))
+        c.rest("PUT", "configuration/units/" + path(uid), body.toString())
     }
 }
 
@@ -146,6 +191,15 @@ object Home {
         overrides[d.id] = SystemClock.elapsedRealtime() to d
         devices = devices.map { if (it.id == d.id) d else it }
         changed()
+    }
+
+    /** Runs [work] on the FRITZ!Box thread and hands the result (or the error text) back on the main thread. */
+    fun <T> fetch(work: (Backend) -> T, done: (T?, String?) -> Unit) {
+        val b = backend ?: return
+        io.execute {
+            val r = runCatching { work(b) }
+            main.post { done(r.getOrNull(), r.exceptionOrNull()?.let { message(it) }) }
+        }
     }
 
     fun send(refreshAfter: Long = 1500, action: (Backend) -> Unit) {

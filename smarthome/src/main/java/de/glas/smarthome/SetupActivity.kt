@@ -149,14 +149,8 @@ class SetupActivity : Activity() {
         }
     }
 
-    private fun openWebUi() {
-        val url = FritzClient.baseUrl(host.text.toString().ifBlank { store.host })
-        try {
-            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
-        } catch (e: android.content.ActivityNotFoundException) {
-            android.widget.Toast.makeText(this, "Kein Browser gefunden, um $url zu öffnen.", android.widget.Toast.LENGTH_LONG).show()
-        }
-    }
+    /** Opens the web interface inside the app, already logged in with the stored user. */
+    private fun openWebUi() = startActivity(android.content.Intent(this, WebActivity::class.java))
 
     private fun field(title: String, hint: String, value: String, type: Int, parent: LinearLayout): EditText {
         parent.addView(label(13f, C.MUTED, Type.medium).apply { text = title }, lp().margins(t = dp(20), l = dp(4)))
