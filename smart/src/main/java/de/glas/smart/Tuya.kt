@@ -50,7 +50,7 @@ class Tuya(private val clientId: String, private val secret: String, private val
             e is TuyaException && e.code == 1106 ->
                 "Keine Berechtigung. Meist passt das Rechenzentrum nicht oder das Smart-Life-Konto ist nicht mit dem Projekt verknüpft."
             e is TuyaException && e.code == 28841002 ->
-                "Der kostenlose Cloud-Dienst ist abgelaufen. Auf iot.tuya.com unter Cloud → Cloud Services → IoT Core verlängern."
+                "Der kostenlose Cloud-Dienst ist abgelaufen. Auf iot.tuya.com unter Cloud → Cloud Project → Cloud Services → IoT Core verlängern."
             e is TuyaException && e.code == 28841105 ->
                 "Dieser Dienst ist im Cloud-Projekt nicht freigeschaltet (Cloud → Projekt → Service API)."
             e is TuyaException && e.code == 2008 -> "Das Gerät unterstützt diesen Befehl nicht."

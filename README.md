@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.0** (Handy-App für Smart-Life-Geräte).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.1** (Handy-App für Smart-Life-Geräte).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -286,18 +286,18 @@ Sie ersetzt die Smart-Life-App im Alltag; zum Anlernen neuer Geräte bleibt Smar
 Smart Life) über einen eigenen, kostenlosen Entwicklerzugang an.
 
 1. Auf [iot.tuya.com](https://iot.tuya.com) ein Konto anlegen.
-2. *Cloud → Development → Create Cloud Project*: Industry „Smart Home“, Development Method „Smart Home“,
+2. Links im Menü *Cloud → Cloud Project → Project Management* → „Create Cloud Project“ (ältere Ansicht: *Cloud → Development*): Industry „Smart Home“, Development Method „Smart Home“,
    Data Center „Central Europe Data Center“. Die vorgeschlagenen API-Dienste bestätigen. Für Räume und Szenen zusätzlich
-   „Smart Home Basic Service“ und „Smart Home Scene Linkage“.
+   „Smart Home Basic Service“ und „Country and City Info“.
 3. *Devices → Link App Account → Add App Account*: den QR-Code in der Smart-Life-App unter *Ich* → Scan-Symbol scannen.
 4. Unter *Overview* Access ID und Access Secret kopieren und in Glas Smart eintragen, Rechenzentrum „Mitteleuropa“ wählen.
 
-Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab und lässt sich unter *Cloud → Cloud Services → IoT Core*
+Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab und lässt sich unter *Cloud → Cloud Project → Cloud Services → IoT Core*
 kostenlos verlängern; die App weist darauf hin. Zugangsdaten und Zwischenspeicher bleiben auf dem Handy
 (keine Android-Sicherung) und gehen nur an die Tuya-Cloud.
 
-Installieren: `GlasSmart-1.0.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
-`adb install -r GlasSmart-1.0.apk`.
+Installieren: `GlasSmart-1.1.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
+`adb install -r GlasSmart-1.1.apk`.
 
 ## Projectivy-Plugins
 

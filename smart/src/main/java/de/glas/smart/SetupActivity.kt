@@ -169,10 +169,10 @@ class SetupActivity : Activity() {
         val steps = listOf(
             "Auf iot.tuya.com ein kostenloses Konto anlegen (Land: Deutschland). Das ist ein Entwicklerkonto, " +
                 "getrennt von deinem Smart-Life-Konto.",
-            "Cloud → Development → Create Cloud Project. Name beliebig, Industry „Smart Home“, Development Method " +
+            "Links im Menü Cloud → Cloud Project → Project Management, dann „Create Cloud Project“ (ältere Ansicht: Cloud → Development). Name beliebig, Industry „Smart Home“, Development Method " +
                 "„Smart Home“, Data Center „Central Europe Data Center“.",
             "Beim Anlegen werden die nötigen API-Dienste vorgeschlagen (u. a. IoT Core, Authorization). Einfach bestätigen. " +
-                "Für Räume und Szenen zusätzlich „Smart Home Basic Service“ und „Smart Home Scene Linkage“ hinzufügen, falls angeboten.",
+                "Für Räume und Szenen zusätzlich „Smart Home Basic Service“ und „Country and City Info“ hinzufügen, falls nicht schon dabei.",
             "Im Projekt unter Overview stehen Access ID und Access Secret. Beide oben eintragen.",
             "Im Projekt: Devices → Link App Account → Add App Account. Es erscheint ein QR-Code. In der Smart-Life-App " +
                 "unter „Ich“ oben rechts auf das Scan-Symbol tippen, den Code scannen und bestätigen.",
@@ -187,7 +187,7 @@ class SetupActivity : Activity() {
         }
         box.addView(text(13f, MUTED).apply {
             text = "Hinweis: Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab. Dann zeigt die App einen Hinweis; " +
-                "auf iot.tuya.com unter Cloud → Cloud Services → IoT Core lässt er sich kostenlos verlängern."
+                "auf iot.tuya.com unter Cloud → Cloud Project → Cloud Services → IoT Core lässt er sich kostenlos verlängern."
             setLineSpacing(0f, 1.15f)
         }, matchWrap().margins(b = dp(12)))
         box.addView(pill("iot.tuya.com öffnen", null) {
