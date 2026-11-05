@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Access data stays on the phone: no cloud backup of the Tuya secret -->
+    <application
+        android:label="Glas Smart"
+        android:icon="@drawable/icon"
+        android:roundIcon="@drawable/icon"
+        android:allowBackup="false"
+        android:theme="@style/Glas">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".DeviceActivity" android:exported="false" />
+        <activity android:name=".SetupActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+    </application>
+</manifest>

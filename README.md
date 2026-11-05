@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.0** (Handy-App für Smart-Life-Geräte).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -93,6 +93,7 @@ gradle assembleDebug
 
 - Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.38.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
+- Smart-Life-App fürs Handy: `smart/build/outputs/apk/debug/GlasSmart-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
 
@@ -265,6 +266,38 @@ Der Speicher ist auf 800 MB begrenzt; ältere Videos werden automatisch gelösch
 `title`, `subtitle`, `type` (`video` oder `image`) und `uri` (https, content oder file). Beispiel: `videos/`.
 Damit der Launcher eine neue Erweiterung sieht, muss ihre Authority außerdem in `app/src/main/AndroidManifest.xml`
 unter `<queries>` stehen.
+
+## Glas Smart (Smart-Life-Geräte vom Handy steuern)
+
+Schlanke Android-App (ab Android 8) im Modul `smart`, ohne Werbung und ohne Tracking, im gleichen dunklen Glas-Stil.
+Sie ersetzt die Smart-Life-App im Alltag; zum Anlernen neuer Geräte bleibt Smart Life installiert.
+
+- **Übersicht:** alle Geräte als Kacheln, nach Räumen aus Smart Life oder nach Art (Lampen, Steckdosen & Schalter,
+  Sensoren, Sonstiges). Ein-/Aus-Knopf direkt auf der Kachel, darunter Helligkeit, Leistung in Watt oder Messwerte.
+- **Schnellaktionen:** „Alle Lichter aus“ und die „Tap-to-Run“-Szenen aus Smart Life.
+- **Lampen und LED-Streifen:** Helligkeit, Weißton (warm bis kalt), Farbe mit Farbleiste, Sättigung und Schnellfarben, Modus.
+- **Steckdosen und Schalter:** jede Dose einzeln oder alle zusammen, Timer, Verhalten nach Stromausfall, Kindersicherung,
+  Leistung, Spannung, Strom, Verbrauch.
+- **Sensoren:** Temperatur, Luftfeuchtigkeit, Tür/Fenster, Bewegung, Wasser, Rauch, Batterie.
+- **Alles Weitere:** Die App liest die Funktionen jedes Geräts aus und bietet dafür Schalter, Regler und Auswahl an.
+- Favoriten (★) und Ausblenden: Kachel lange gedrückt halten. Aktualisiert sich alle 30 Sekunden, die Detailansicht alle 10.
+
+**Einrichtung (einmalig, ca. 10 Minuten, am besten am Computer):** Die App spricht die Tuya-Cloud (die Plattform hinter
+Smart Life) über einen eigenen, kostenlosen Entwicklerzugang an.
+
+1. Auf [iot.tuya.com](https://iot.tuya.com) ein Konto anlegen.
+2. *Cloud → Development → Create Cloud Project*: Industry „Smart Home“, Development Method „Smart Home“,
+   Data Center „Central Europe Data Center“. Die vorgeschlagenen API-Dienste bestätigen. Für Räume und Szenen zusätzlich
+   „Smart Home Basic Service“ und „Smart Home Scene Linkage“.
+3. *Devices → Link App Account → Add App Account*: den QR-Code in der Smart-Life-App unter *Ich* → Scan-Symbol scannen.
+4. Unter *Overview* Access ID und Access Secret kopieren und in Glas Smart eintragen, Rechenzentrum „Mitteleuropa“ wählen.
+
+Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab und lässt sich unter *Cloud → Cloud Services → IoT Core*
+kostenlos verlängern; die App weist darauf hin. Zugangsdaten und Zwischenspeicher bleiben auf dem Handy
+(keine Android-Sicherung) und gehen nur an die Tuya-Cloud.
+
+Installieren: `GlasSmart-1.0.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
+`adb install -r GlasSmart-1.0.apk`.
 
 ## Projectivy-Plugins
 

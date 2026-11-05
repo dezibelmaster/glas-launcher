@@ -14,4 +14,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "GlasLauncher"
-include(":app", ":videos")
+include(":app", ":videos", ":smart")
