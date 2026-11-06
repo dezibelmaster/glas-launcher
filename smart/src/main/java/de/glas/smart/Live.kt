@@ -45,6 +45,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
         setShutterBackgroundColor(Color.BLACK)
         setKeepContentOnPlayerReset(true)
+        findViewById<View>(androidx.media3.ui.R.id.exo_buffering)?.visibility = View.GONE
     }
     private val message = ctx.text(15f).apply {
         gravity = Gravity.CENTER
@@ -123,9 +124,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             val pos = p.currentPosition
             if (p.playbackState == Player.STATE_BUFFERING || pos == lastPos) stuck++ else stuck = 0
             lastPos = pos
+            // A stretch of smooth picture forgives earlier drop-outs
+            if (stuck == 0 && ++goodTicks >= 15) reconnects = 0
+            if (stuck > 0) goodTicks = 0
             if (stuck >= 3) reconnect() else later(4000, this)
         }
     }
+    private var goodTicks = 0
     private var attempt = 0
     private var gotFrame = false
     private val notes = ArrayList<String>()
@@ -212,6 +217,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             override fun onPlaybackStateChanged(state: Int) {
                 if (!gotFrame && state == Player.STATE_BUFFERING) message.text = "Lade Bild (${type.uppercase()}) …"
                 if (!gotFrame && state == Player.STATE_READY) message.text = "Warte auf das erste Bild (${type.uppercase()}) …"
+                // The cloud ends a stream after a while: just fetch a new one
+                if (gotFrame && state == Player.STATE_ENDED) reconnect()
             }
 
             override fun onVideoSizeChanged(size: androidx.media3.common.VideoSize) = showQuality()

@@ -52,7 +52,7 @@ class RtspsProxy(remoteUrl: String) {
         }
         synchronized(sockets) { sockets += client; sockets += tls }
         thread(name = "rtsps-up", isDaemon = true) {
-            pump(BufferedInputStream(client.getInputStream()), tls.getOutputStream()) { swap(it, local, remote) }
+            pump(BufferedInputStream(client.getInputStream()), tls.getOutputStream()) { fixAuth(swap(it, local, remote)) }
             closeAll()
         }
         pump(BufferedInputStream(tls.getInputStream()), client.getOutputStream()) { swapBack(it) }
@@ -68,6 +68,38 @@ class RtspsProxy(remoteUrl: String) {
     }
 
     private fun swap(s: String, from: String, to: String) = s.replace(from, to)
+
+    private val user = uri.rawUserInfo?.substringBefore(':')?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+    private val pass = uri.rawUserInfo?.substringAfter(':', "")?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+
+    /**
+     * The player signs its login (Digest) with the address it knows, 127.0.0.1, but the server checks
+     * the signature against its own address. Recompute it for the real address with the login from the URL.
+     */
+    private fun fixAuth(msg: String): String {
+        if (user == null || pass == null) return msg
+        val line = Regex("(?im)^authorization:\\s*digest\\s+(.*)$").find(msg) ?: return msg
+        val params = Regex("(\\w+)=(\"([^\"]*)\"|[^,\\s]+)").findAll(line.groupValues[1])
+            .associate { it.groupValues[1].lowercase() to (it.groupValues[3].ifEmpty { it.groupValues[2] }) }
+        val realm = params["realm"] ?: return msg
+        val nonce = params["nonce"] ?: return msg
+        val method = msg.substringBefore(' ')
+        val requestUri = msg.substringAfter(' ').substringBefore(' ')
+        val ha1 = md5("$user:$realm:$pass")
+        val ha2 = md5("$method:$requestUri")
+        val qop = params["qop"]
+        val response = if (qop != null) md5("$ha1:$nonce:${params["nc"]}:${params["cnonce"]}:$qop:$ha2") else md5("$ha1:$nonce:$ha2")
+        val header = buildString {
+            append("Authorization: Digest username=\"$user\", realm=\"$realm\", nonce=\"$nonce\", uri=\"$requestUri\", response=\"$response\"")
+            params["opaque"]?.let { append(", opaque=\"$it\"") }
+            params["algorithm"]?.let { append(", algorithm=$it") }
+            if (qop != null) append(", qop=$qop, nc=${params["nc"]}, cnonce=\"${params["cnonce"]}\"")
+        }
+        return msg.replace(line.value.trimEnd('\r'), header)
+    }
+
+    private fun md5(s: String) = java.security.MessageDigest.getInstance("MD5").digest(s.toByteArray(Charsets.ISO_8859_1))
+        .joinToString("") { "%02x".format(it) }
 
     /**
      * Copies messages one by one. Binary media frames ('$', channel, 2-byte length) pass untouched;
