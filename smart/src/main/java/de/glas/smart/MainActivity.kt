@@ -83,7 +83,10 @@ object Repo {
                 ctx.toast("${d.name}: ${Tuya.explain(it)}")
                 done()
             }
-            r.onSuccess { save(store) }
+            r.onSuccess {
+                save(store)
+                Widgets.updateAll(ctx)
+            }
         }
     }
 }
@@ -185,6 +188,7 @@ class MainActivity : Activity() {
                 banner.visibility = View.GONE
                 Repo.merge(list)
                 Repo.save(store)
+                Widgets.updateAll(this)
                 render()
                 loadSpecs()
                 if (full) loadRooms()

@@ -210,10 +210,6 @@ class FamilyActivity : Activity() {
 
     private fun denied(e: Throwable) = e is TuyaException && (e.code == 1106 || e.code == 28841105)
 
-    private fun openSmartLife() {
-        val launch = packageManager.getLaunchIntentForPackage("com.tuya.smartlife")
-        if (launch != null) startActivity(launch) else toast("Die Smart-Life-App ist nicht installiert.")
-    }
 
     // ---- Another phone ----
 

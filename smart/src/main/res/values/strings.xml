@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_device_name">Glas Smart Gerät</string>
+    <string name="widget_device_description">Ein Gerät mit einem Tipp ein- und ausschalten</string>
+    <string name="widget_camera_name">Glas Smart Kamera</string>
+    <string name="widget_camera_description">Letztes Bild der Kamera, antippen für das Live-Bild</string>
+</resources>

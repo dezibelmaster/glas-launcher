@@ -59,7 +59,9 @@ class DeviceActivity : Activity() {
         if (d.isCamera) {
             val lv = LiveView(this, d.id)
             live = lv
-            outer.addView(lv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0).margins(b = dp(12)))
+            outer.addView(lv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0).margins(b = dp(10)))
+            // HD and talking only work in Smart Life
+            outer.addView(pill("In Smart Life öffnen", null) { openSmartLife() }, wrap().margins(b = dp(14)))
             lv.post { lv.layoutParams = lv.layoutParams.apply { height = lv.width * 9 / 16 } }
             lv.clipToOutline = true
             lv.outlineProvider = object : android.view.ViewOutlineProvider() {

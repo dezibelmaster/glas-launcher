@@ -7,45 +7,44 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.TextureView
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Tracks
-import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
-import androidx.media3.ui.PlayerView
+import androidx.media3.ui.AspectRatioFrameLayout
+
+/** Opens the Smart Life app, for what only it can do (HD picture, talking through the doorbell). */
+fun Context.openSmartLife() {
+    val launch = packageManager.getLaunchIntentForPackage("com.tuya.smartlife")
+    if (launch != null) startActivity(launch) else toast("Die Smart-Life-App ist nicht installiert.")
+}
 
 /**
  * Live picture of a Tuya camera or video doorbell. The cloud hands out a short-lived HLS address
  * (needs the "IoT Video Live Stream" service in the cloud project), which ExoPlayer plays.
+ * While it runs, a still picture is saved now and then for the camera widget.
  */
 class LiveView(ctx: Context, private val deviceId: String, private val fullscreen: Boolean = false) : FrameLayout(ctx) {
     private var player: ExoPlayer? = null
     private var proxy: RtspsProxy? = null
-    private val smartLife = ctx.text(14f).apply {
-        text = "In Smart Life öffnen"
-        gravity = Gravity.CENTER
-        setPadding(ctx.dp(16), ctx.dp(8), ctx.dp(16), ctx.dp(8))
-        background = ctx.glass(18f, 0x8C000000.toInt(), 0x40FFFFFF)
-        visibility = View.GONE
-        setOnClickListener {
-            val launch = ctx.packageManager.getLaunchIntentForPackage("com.tuya.smartlife")
-            if (launch != null) ctx.startActivity(launch) else ctx.toast("Die Smart-Life-App ist nicht installiert.")
-        }
-    }
     private var muted = true
-    private val video = PlayerView(ctx).apply {
-        useController = false
-        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
-        setShutterBackgroundColor(Color.BLACK)
-        setKeepContentOnPlayerReset(true)
-        findViewById<View>(androidx.media3.ui.R.id.exo_buffering)?.visibility = View.GONE
+
+    // A TextureView, unlike a SurfaceView, can hand out the current picture for the widget
+    private val texture = TextureView(ctx)
+    private val frame = AspectRatioFrameLayout(ctx).apply {
+        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        setAspectRatio(16f / 9f)
+        addView(texture, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
     private val message = ctx.text(15f).apply {
         gravity = Gravity.CENTER
@@ -53,33 +52,11 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         setShadowLayer(ctx.dp(6f), 0f, 0f, Color.BLACK)
     }
     private val sound = overlayButton("🔇") { toggleSound() }
-    // Quality badge like in Smart Life: shows the resolution, and switches HD/SD where the camera offers both
-    private val quality = ctx.text(14f).apply {
-        gravity = Gravity.CENTER
-        setPadding(ctx.dp(14), 0, ctx.dp(14), 0)
-        background = android.graphics.drawable.GradientDrawable().apply {
-            cornerRadius = ctx.dp(22f)
-            setColor(0x8C000000.toInt())
-        }
-        visibility = View.GONE
-        setOnClickListener { toggleQuality() }
-    }
-    // Quality: automatic (the player picks what the connection carries) or forced HD
-    private var hd = false
-    private val stalls = ArrayList<Long>()
-    private var heights: List<Int> = emptyList()
-    private var videoTracks = 0
 
     init {
         setBackgroundColor(Color.BLACK)
-        addView(video, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        addView(frame, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, Gravity.CENTER))
         addView(message, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        addView(smartLife, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
-            setMargins(0, ctx.dp(10), 0, 0)
-        })
-        addView(quality, LayoutParams(LayoutParams.WRAP_CONTENT, ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
-            setMargins(ctx.dp(62), 0, 0, ctx.dp(10))
-        })
         addView(sound, LayoutParams(ctx.dp(44), ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
             setMargins(ctx.dp(10), 0, 0, ctx.dp(10))
         })
@@ -107,35 +84,36 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     private fun idle() {
-        video.visibility = View.INVISIBLE
+        frame.visibility = View.INVISIBLE
         message.text = "▶  Live-Bild anzeigen"
         message.visibility = View.VISIBLE
         sound.visibility = View.GONE
-        quality.visibility = View.GONE
     }
 
-    // Tried in this order: HLS works on most cameras, RTSP is the fallback for those whose HLS stays black
     // HLS works on most cameras, RTSP is the fallback; the way that worked last time is tried first
     private val prefs = ctx.getSharedPreferences("glas_smart", Context.MODE_PRIVATE)
     private var types = listOf("hls", "rtsp")
+    private var attempt = 0
+    private var gotFrame = false
     private var reconnects = 0
+    private val stalls = ArrayList<Long>()
+    private val notes = ArrayList<String>()
+    private var info = ""
     private var lastPos = -1L
     private var stuck = 0
-    // Live streams from the cloud sometimes stall after a while: watch the position and reconnect
+    private var lastSnapshot = 0L
+
+    // Live streams from the cloud stall or end after a while: watch the position and reconnect
     private val health = object : Runnable {
         override fun run() {
             val p = player ?: return
             val pos = p.currentPosition
             if (p.playbackState == Player.STATE_BUFFERING || pos == lastPos) stuck++ else stuck = 0
             lastPos = pos
-            // A stretch of smooth picture forgives earlier drop-outs
+            if (stuck == 0) snapshot()
             if (stuck >= 3) reconnect() else later(4000, this)
         }
     }
-    private var attempt = 0
-    private var gotFrame = false
-    private val notes = ArrayList<String>()
-    private var info = ""
     private val watchdog = Runnable { failed("kein Bild nach 20 s${if (info.isNotEmpty()) " ($info)" else ""}") }
 
     fun start() {
@@ -150,11 +128,10 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     private fun connect() {
-        smartLife.visibility = View.GONE
         val type = types[attempt]
         gotFrame = false
         info = ""
-        message.text = "Verbinde mit der Kamera (${type.uppercase()}) …"
+        message.text = "Verbinde mit der Kamera …"
         message.visibility = View.VISIBLE
         val api = Store(context).api()
         val device = Repo.find(deviceId)
@@ -169,26 +146,21 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             r.onFailure {
                 if (it is TuyaException && (it.code == 28841105 || it.code == 1106) && attempt == 0) {
                     stop()
-                    message.text = "Kein Live-Bild\n\n${explain(it)}\n\nAntippen zum Wiederholen"
+                    message.text = "Kein Live-Bild\n\nIm Tuya-Projekt unter Cloud services den Dienst " +
+                        "„IoT Video Live Stream“ hinzufügen (kostenlos).\n\nAntippen zum Wiederholen"
                 } else failed(Tuya.explain(it))
             }
             r.onSuccess { url -> play(url, type) }
         }
     }
 
-    private fun explain(e: Throwable) =
-        if (e is TuyaException && (e.code == 28841105 || e.code == 1106))
-            "Im Tuya-Projekt unter Cloud services den Dienst „IoT Video Live Stream“ hinzufügen (kostenlos)."
-        else Tuya.explain(e)
-
     private fun play(url: String, type: String) {
         val renderers = DefaultRenderersFactory(context).setEnableDecoderFallback(true)
         val p = ExoPlayer.Builder(context, renderers).build()
         player = p
-        video.player = p
-        video.visibility = View.VISIBLE
+        p.setVideoTextureView(texture)
+        frame.visibility = View.VISIBLE
         p.volume = if (muted) 0f else 1f
-        if (hd) p.trackSelectionParameters = p.trackSelectionParameters.buildUpon().setForceHighestSupportedBitrate(true).build()
         if (type == "rtsp") {
             // rtsps:// goes through a small TLS proxy on the phone; media is carried inside the RTSP connection
             var playUrl = url
@@ -211,31 +183,25 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                     lastPos = -1
                     cancel(health)
                     later(4000, health)
+                    later(1500) { snapshot(force = true) }
                 }
                 gotFrame = true
                 cancel(watchdog)
                 message.visibility = View.GONE
                 sound.visibility = View.VISIBLE
-                showQuality()
+            }
+
+            override fun onVideoSizeChanged(size: VideoSize) {
+                if (size.width > 0 && size.height > 0) frame.setAspectRatio(size.width * size.pixelWidthHeightRatio / size.height)
             }
 
             override fun onPlaybackStateChanged(state: Int) {
-                if (!gotFrame && state == Player.STATE_BUFFERING) message.text = "Lade Bild (${type.uppercase()}) …"
-                if (!gotFrame && state == Player.STATE_READY) message.text = "Warte auf das erste Bild (${type.uppercase()}) …"
+                if (!gotFrame && state == Player.STATE_BUFFERING) message.text = "Lade Bild …"
                 // The cloud ends a stream after a while: just fetch a new one
                 if (gotFrame && state == Player.STATE_ENDED) reconnect()
             }
 
-            override fun onVideoSizeChanged(size: androidx.media3.common.VideoSize) = showQuality()
-
             override fun onTracksChanged(tracks: Tracks) {
-                heights = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
-                    .flatMap { g -> (0 until g.length).filter { g.isTrackSupported(it) }.map { g.getTrackFormat(it).height } }
-                    .filter { it > 0 }.distinct().sorted()
-                // HLS variants often come without a stated resolution, so count the video tracks themselves
-                videoTracks = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
-                    .sumOf { g -> (0 until g.length).count { g.isTrackSupported(it) } }
-                showQuality()
                 // Remember the video format, to explain a black picture (e.g. a codec the phone can't decode)
                 for (g in tracks.groups) {
                     if (g.type != C.TRACK_TYPE_VIDEO) continue
@@ -247,14 +213,14 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                // The underlying cause tells more than the generic code, e.g. an HTTP status or a TLS problem
-                var cause: Throwable? = error.cause
-                while (cause?.cause != null && cause.message.isNullOrBlank()) cause = cause.cause
-                val detail = cause?.let { c -> "${c.javaClass.simpleName}: ${c.message ?: ""}".take(140) } ?: ""
                 if (gotFrame) {
                     reconnect()
                     return
                 }
+                // The underlying cause tells more than the generic code, e.g. an HTTP status or a TLS problem
+                var cause: Throwable? = error.cause
+                while (cause?.cause != null && cause.message.isNullOrBlank()) cause = cause.cause
+                val detail = cause?.let { c -> "${c.javaClass.simpleName}: ${c.message ?: ""}".take(140) } ?: ""
                 failed(error.errorCodeName.removePrefix("ERROR_CODE_").lowercase().replace('_', ' ') +
                     if (detail.isNotEmpty()) " ($detail)" else "")
             }
@@ -263,6 +229,17 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         p.prepare()
         cancel(watchdog)
         later(20_000, watchdog)
+    }
+
+    /** Saves the current picture for the camera widget, at most every 30 seconds. */
+    private fun snapshot(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && now - lastSnapshot < 30_000) return
+        if (!gotFrame || !texture.isAvailable) return
+        val bmp = texture.getBitmap(640, (640 / frame.let { if (it.width > 0) it.width.toFloat() / it.height else 16f / 9f }).toInt())
+            ?: return
+        lastSnapshot = now
+        Widgets.saveSnapshot(context, deviceId, bmp)
     }
 
     /** This way didn't work: note why and try the next one, or show all reasons. */
@@ -274,64 +251,31 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             connect()
             return
         }
+        giveUp()
+    }
+
+    private fun giveUp() {
+        attempt = types.size
         message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
         message.visibility = View.VISIBLE
-        smartLife.visibility = View.VISIBLE
-        video.visibility = View.INVISIBLE
+        frame.visibility = View.INVISIBLE
     }
 
     /** The picture was there but stopped: fetch a fresh stream address the same way. */
     private fun reconnect() {
         release()
         reconnects++
-        // Picture keeps freezing: in HD go back to automatic, otherwise stop instead of loading forever
         val now = System.currentTimeMillis()
         stalls.removeAll { now - it > 90_000 }
         stalls += now
-        if (stalls.size >= 3) {
-            stalls.clear()
-            if (hd) {
-                hd = false
-                context.toast("HD läuft über die Cloud nicht stabil, zurück auf Automatisch.")
-            } else {
-                notes += "${types[attempt].uppercase()}: Bild bleibt ständig hängen"
-                attempt = types.size
-                message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
-                message.visibility = View.VISIBLE
-                smartLife.visibility = View.VISIBLE
-                return
-            }
-        }
-        if (reconnects > 3) {
-            failed("Verbindung bricht immer wieder ab")
+        // Freezes again and again: stop instead of loading forever
+        if (stalls.size >= 3 || reconnects > 3) {
+            notes += "${types[attempt].uppercase()}: Bild bleibt ständig hängen"
+            giveUp()
             return
         }
         connect()
         message.text = "Verbindung wird erneuert …"
-    }
-
-    /** "HD 1080p" or "SD 360p"; tappable only if the stream offers more than one resolution. */
-    private fun showQuality() {
-        val h = player?.videoSize?.height ?: 0
-        if (h <= 0 || !gotFrame) return
-        val switchable = videoTracks > 1 || heights.size > 1
-        val way = types.getOrNull(attempt)?.uppercase() ?: ""
-        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" +
-            if (switchable) (if (hd) " · HD" else " · Auto") + "  ⇅" else ""
-        quality.isClickable = true
-        quality.visibility = View.VISIBLE
-    }
-
-    private fun toggleQuality() {
-        val p = player ?: return
-        if (videoTracks < 2 && heights.size < 2) {
-            context.toast("Die Kamera liefert über die Cloud nur diese Auflösung.")
-            return
-        }
-        hd = !hd
-        stalls.clear()
-        context.toast(if (hd) "HD erzwingen" else "Automatische Qualität")
-        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon().setForceHighestSupportedBitrate(hd).build()
     }
 
     private fun release() {
@@ -341,9 +285,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         proxy = null
         player?.release()
         player = null
-        video.player = null
         sound.visibility = View.GONE
-        quality.visibility = View.GONE
     }
 
     private fun toggleSound() {
@@ -359,7 +301,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 }
 
-/** Live picture across the whole screen, turned sideways. */
+/** Live picture across the whole screen, turned sideways. Also opened by the camera widget. */
 class LiveActivity : Activity() {
     private lateinit var live: LiveView
 
@@ -370,6 +312,8 @@ class LiveActivity : Activity() {
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        // Started from a widget, the device list may not be loaded yet
+        Repo.load(Store(this))
         live = LiveView(this, intent.getStringExtra("id") ?: "", fullscreen = true)
         val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         root.addView(live, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
