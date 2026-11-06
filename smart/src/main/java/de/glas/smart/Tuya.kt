@@ -131,6 +131,42 @@ class Tuya(private val clientId: String, private val secret: String, private val
         call("POST", "/v1.0/homes/${s.homeId}/scenes/${s.id}/trigger", body = "")
     }
 
+    // ---- Family: members of a home, like "Home management" in Smart Life ----
+
+    data class Member(val uid: String, val name: String, val account: String, val admin: Boolean, val owner: Boolean)
+
+    fun members(homeId: String): List<Member> {
+        val arr = call("GET", "/v1.0/homes/$homeId/members") as JSONArray
+        return (0 until arr.length()).map {
+            val o = arr.getJSONObject(it)
+            val account = listOf("member_account", "username", "account", "email", "mobile")
+                .map { k -> o.optString(k) }.firstOrNull { v -> v.isNotBlank() } ?: ""
+            Member(
+                uid = o.optString("uid"),
+                name = o.optString("name").ifBlank { o.optString("nick_name") }.ifBlank { account },
+                account = account,
+                admin = o.optBoolean("admin", false) || o.optInt("role", 0) >= 1,
+                owner = o.optBoolean("owner", false) || o.optInt("role", 0) == 2,
+            )
+        }
+    }
+
+    /** Adds a Smart Life account (e-mail or phone number) to the home. */
+    fun addMember(homeId: String, account: String, countryCode: String, name: String, admin: Boolean) {
+        val member = JSONObject().put("country_code", countryCode).put("member_account", account)
+            .put("admin", admin).put("name", name)
+        call("POST", "/v1.0/homes/$homeId/members",
+            body = JSONObject().put("app_schema", "smartlife").put("member", member).toString())
+    }
+
+    fun setAdmin(homeId: String, uid: String, admin: Boolean) {
+        call("PUT", "/v1.0/homes/$homeId/members/$uid", body = JSONObject().put("admin", admin).toString())
+    }
+
+    fun removeMember(homeId: String, uid: String) {
+        call("DELETE", "/v1.0/homes/$homeId/members/$uid")
+    }
+
     // ---- Signing and transport -----------------------------------------------------------
 
     private fun accessToken(): String = synchronized(Tuya::class.java) {

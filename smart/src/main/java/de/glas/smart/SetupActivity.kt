@@ -160,6 +160,27 @@ class SetupActivity : Activity() {
             }
         }
         box.addView(connect, matchWrap())
+
+        // Setup link from another family phone (Familie → Glas Smart auf einem weiteren Handy)
+        fun applyLink(link: String?): Boolean {
+            val text = link?.trim() ?: return false
+            val u = Uri.parse(text.substring(text.indexOf("glassmart://").coerceAtLeast(0)).lines().first().trim())
+            if (u.scheme != "glassmart" || u.host != "setup") return false
+            id.setText(u.getQueryParameter("id") ?: return false)
+            secret.setText(u.getQueryParameter("secret") ?: return false)
+            region = u.getQueryParameter("region") ?: region
+            showRegion()
+            status.setTextColor(GREEN)
+            status.text = "Einrichtungslink übernommen. Jetzt auf „Verbinden“ tippen."
+            status.visibility = View.VISIBLE
+            return true
+        }
+        applyLink(intent?.dataString)
+        box.addView(pill("Einrichtungslink einfügen", null) {
+            val clip = (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager).primaryClip
+            val pasted = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString()
+            if (!applyLink(pasted)) toast("In der Zwischenablage ist kein Einrichtungslink. Bitte den Link zuerst kopieren.")
+        }, wrap().margins(t = dp(10)))
         box.addView(status, matchWrap().margins(t = dp(10)))
         return box
     }

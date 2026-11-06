@@ -21,7 +21,16 @@
             </intent-filter>
         </activity>
         <activity android:name=".DeviceActivity" android:exported="false" />
-        <activity android:name=".SetupActivity" android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".FamilyActivity" android:exported="false" />
+        <!-- Opens setup links glassmart://setup?... from the family page of another phone -->
+        <activity android:name=".SetupActivity" android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="glassmart" android:host="setup" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.smart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
     }
 
     // Same fixed key as the launcher, so updates install over earlier versions
@@ -42,6 +42,11 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    // Draws the QR code for setting up another phone (pure Java, no Google services)
+    implementation("com.google.zxing:core:3.5.3")
 }
 
 // APK named with its version, e.g. GlasSmart-1.0.apk

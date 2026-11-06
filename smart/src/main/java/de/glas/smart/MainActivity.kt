@@ -120,6 +120,7 @@ class MainActivity : Activity() {
         titles.addView(title)
         titles.addView(subtitle)
         head.addView(titles, weight())
+        head.addView(iconButton("👪") { startActivity(Intent(this, FamilyActivity::class.java)) }, wrap().margins(r = dp(8)))
         head.addView(iconButton("↻") { refresh(full = true) })
         head.addView(iconButton("⚙") { startActivity(Intent(this, SetupActivity::class.java)) }, wrap().margins(l = dp(8)))
         root.addView(head, matchWrap().margins(t = dp(8), b = dp(6)))
