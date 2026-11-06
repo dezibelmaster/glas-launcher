@@ -295,8 +295,13 @@ class WebRtcLive(
                     val c = body.optString("candidate").removePrefix("a=").trimEnd('\r', '\n')
                     if (c.isNotEmpty()) peer.addIceCandidate(IceCandidate(answerMid, 0, c))
                 }
-                "disconnect" -> if (!closed) listener.onLost(
-                    "Kamera hat beendet${if (gotAnswer) "" else " ohne Antwort"} (${body.toString().take(160)})")
+                "disconnect" -> if (!closed) {
+                    // 93 and 100 came while Smart Life or the web viewer were showing the doorbell: it allows one viewer
+                    val code = body.optInt("close_reason", -1)
+                    listener.onLost(if (!gotAnswer && (code == 93 || code == 100))
+                        "Kamera hat beendet: belegt (Code $code). Läuft das Bild gerade in Smart Life oder im Browser?"
+                    else "Kamera hat beendet${if (gotAnswer) "" else " ohne Antwort"} (${body.toString().take(160)})")
+                }
             }
         }
     }

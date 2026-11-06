@@ -186,7 +186,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (!gotFrame && reason.startsWith("Kamera hat beendet") && ++rtcRefusals <= 4) {
             releaseRtc()
             val uid = Repo.find(deviceId)?.uid ?: ""
-            message.text = "Kamera ist noch beschäftigt, neuer Versuch ($rtcRefusals/4) …"
+            message.text = "Kamera ist belegt, neuer Versuch ($rtcRefusals/4) …\nBild in Smart Life oder im Browser schließen"
             message.visibility = View.VISIBLE
             onStatus?.invoke("WebRTC: $reason")
             later(3000L * rtcRefusals) { if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid) }
