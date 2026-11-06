@@ -66,6 +66,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
     private var sd = false
     private var heights: List<Int> = emptyList()
+    private var videoTracks = 0
+    private var hdRetried = false
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -140,6 +142,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         val preferred = prefs.getString("stream_$deviceId", null)
         types = listOf("hls", "rtsp").sortedBy { if (it == preferred) 0 else 1 }
         reconnects = 0
+        hdRetried = false
         attempt = 0
         notes.clear()
         connect()
@@ -184,6 +187,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         video.player = p
         video.visibility = View.VISIBLE
         p.volume = if (muted) 0f else 1f
+        // Start straight in the best quality: live streams are too short for the player to work its way up
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setForceHighestSupportedBitrate(!sd).setForceLowestBitrate(sd).build()
         if (type == "rtsp") {
             // rtsps:// goes through a small TLS proxy on the phone; media is carried inside the RTSP connection
             var playUrl = url
@@ -227,6 +233,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                 heights = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
                     .flatMap { g -> (0 until g.length).filter { g.isTrackSupported(it) }.map { g.getTrackFormat(it).height } }
                     .filter { it > 0 }.distinct().sorted()
+                // HLS variants often come without a stated resolution, so count the video tracks themselves
+                videoTracks = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
+                    .sumOf { g -> (0 until g.length).count { g.isTrackSupported(it) } }
                 showQuality()
                 // Remember the video format, to explain a black picture (e.g. a codec the phone can't decode)
                 for (g in tracks.groups) {
@@ -288,21 +297,35 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun showQuality() {
         val h = player?.videoSize?.height ?: 0
         if (h <= 0 || !gotFrame) return
-        val switchable = heights.size > 1
+        // The cloud sometimes starts in SD: ask once for a fresh stream, which often comes in HD
+        if (h < 720 && !sd && videoTracks < 2 && !hdRetried) {
+            hdRetried = true
+            later(1500) { if (player != null) reconnect() }
+        }
+        val switchable = videoTracks > 1 || heights.size > 1
         val way = types.getOrNull(attempt)?.uppercase() ?: ""
-        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" + if (switchable) "  ⇅" else ""
-        quality.isClickable = switchable
+        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" + when {
+            switchable -> "  ⇅"
+            h < 720 -> "  · HD ↻"
+            else -> ""
+        }
+        quality.isClickable = true
         quality.visibility = View.VISIBLE
     }
 
     private fun toggleQuality() {
         val p = player ?: return
-        if (heights.size < 2) return
+        if (videoTracks < 2 && heights.size < 2) {
+            // Only one quality in this stream: in SD, fetch a new stream in the hope of HD
+            if ((p.videoSize.height) < 720) {
+                context.toast("Fordere HD an …")
+                reconnect()
+            } else context.toast("Die Kamera liefert über die Cloud nur diese Auflösung.")
+            return
+        }
         sd = !sd
-        val b = p.trackSelectionParameters.buildUpon()
-        if (sd) b.setMaxVideoSize(Int.MAX_VALUE, heights.first()).setForceLowestBitrate(true)
-        else b.clearVideoSizeConstraints().setForceLowestBitrate(false).setForceHighestSupportedBitrate(true)
-        p.trackSelectionParameters = b.build()
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setForceHighestSupportedBitrate(!sd).setForceLowestBitrate(sd).build()
     }
 
     private fun release() {
