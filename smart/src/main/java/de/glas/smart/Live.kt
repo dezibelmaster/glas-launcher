@@ -52,6 +52,19 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         setShadowLayer(ctx.dp(6f), 0f, 0f, Color.BLACK)
     }
     private val sound = overlayButton("🔇") { toggleSound() }
+    // Quality badge like in Smart Life: shows the resolution, and switches HD/SD where the camera offers both
+    private val quality = ctx.text(14f).apply {
+        gravity = Gravity.CENTER
+        setPadding(ctx.dp(14), 0, ctx.dp(14), 0)
+        background = android.graphics.drawable.GradientDrawable().apply {
+            cornerRadius = ctx.dp(22f)
+            setColor(0x8C000000.toInt())
+        }
+        visibility = View.GONE
+        setOnClickListener { toggleQuality() }
+    }
+    private var sd = false
+    private var heights: List<Int> = emptyList()
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -59,6 +72,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         addView(message, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         addView(smartLife, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
             setMargins(0, ctx.dp(10), 0, 0)
+        })
+        addView(quality, LayoutParams(LayoutParams.WRAP_CONTENT, ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
+            setMargins(ctx.dp(62), 0, 0, ctx.dp(10))
         })
         addView(sound, LayoutParams(ctx.dp(44), ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
             setMargins(ctx.dp(10), 0, 0, ctx.dp(10))
@@ -90,6 +106,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.text = "▶  Live-Bild anzeigen"
         message.visibility = View.VISIBLE
         sound.visibility = View.GONE
+        quality.visibility = View.GONE
     }
 
     // Tried in this order: HLS works on most cameras, RTSP is the fallback for those whose HLS stays black
@@ -164,6 +181,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                 cancel(watchdog)
                 message.visibility = View.GONE
                 sound.visibility = View.VISIBLE
+                showQuality()
             }
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -171,7 +189,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                 if (!gotFrame && state == Player.STATE_READY) message.text = "Warte auf das erste Bild (${type.uppercase()}) …"
             }
 
+            override fun onVideoSizeChanged(size: androidx.media3.common.VideoSize) = showQuality()
+
             override fun onTracksChanged(tracks: Tracks) {
+                heights = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
+                    .flatMap { g -> (0 until g.length).filter { g.isTrackSupported(it) }.map { g.getTrackFormat(it).height } }
+                    .filter { it > 0 }.distinct().sorted()
+                showQuality()
                 // Remember the video format, to explain a black picture (e.g. a codec the phone can't decode)
                 for (g in tracks.groups) {
                     if (g.type != C.TRACK_TYPE_VIDEO) continue
@@ -211,6 +235,26 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         smartLife.visibility = View.VISIBLE
     }
 
+    /** "HD 1080p" or "SD 360p"; tappable only if the stream offers more than one resolution. */
+    private fun showQuality() {
+        val h = player?.videoSize?.height ?: 0
+        if (h <= 0 || !gotFrame) return
+        val switchable = heights.size > 1
+        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p" + if (switchable) "  ⇅" else ""
+        quality.isClickable = switchable
+        quality.visibility = View.VISIBLE
+    }
+
+    private fun toggleQuality() {
+        val p = player ?: return
+        if (heights.size < 2) return
+        sd = !sd
+        val b = p.trackSelectionParameters.buildUpon()
+        if (sd) b.setMaxVideoSize(Int.MAX_VALUE, heights.first()).setForceLowestBitrate(true)
+        else b.clearVideoSizeConstraints().setForceLowestBitrate(false).setForceHighestSupportedBitrate(true)
+        p.trackSelectionParameters = b.build()
+    }
+
     private fun release() {
         cancel(watchdog)
         proxy?.close()
@@ -219,6 +263,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         player = null
         video.player = null
         sound.visibility = View.GONE
+        quality.visibility = View.GONE
     }
 
     private fun toggleSound() {
