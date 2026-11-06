@@ -139,14 +139,6 @@ class Tuya(private val clientId: String, private val secret: String, private val
         return r.getString("url")
     }
 
-    /** WebRTC settings of a camera: login for the camera, ICE servers and what streams it offers. */
-    fun webrtcConfig(uid: String, id: String) = call("GET", "/v1.0/users/$uid/devices/$id/webrtc-configs") as JSONObject
-
-    /** Access to Tuya's message broker (MQTT), which carries the WebRTC handshake to the camera. */
-    fun hubConfig(uid: String) = call("POST", "/v2.0/open-iot-hub/access/config", body = JSONObject()
-        .put("uid", uid).put("unique_id", UUID.randomUUID().toString()).put("link_type", "mqtt").put("topics", "ipc")
-        .toString()) as JSONObject
-
     // ---- Homes, rooms, scenes (optional: need the Smart Home services of the project) ----
 
     data class Home(val id: String, val name: String)
