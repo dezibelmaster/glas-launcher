@@ -51,6 +51,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     // WebRTC picture (HD/SD selectable); HLS above stays as the fallback
     private var rtc: WebRtcLive? = null
     private var rtcTries = 0
+    // The doorbell refuses while an earlier session is still winding down: ask again a few times first
+    private var rtcRefusals = 0
     private var rendererReady = false
     private val renderer = org.webrtc.SurfaceViewRenderer(ctx).apply { visibility = View.GONE }
     private val rtcWatchdog = Runnable { rtcFailed("kein Bild nach 25 s") }
@@ -123,6 +125,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (player != null || rtc != null) return
         newStreams = 0
         rtcTries = 0
+        rtcRefusals = 0
         attempt = 0
         notes.clear()
         val uid = Repo.find(deviceId)?.uid ?: ""
@@ -179,9 +182,19 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     /** WebRTC didn't work: note why and fall back to HLS. */
     private fun rtcFailed(reason: String) {
         if (rtc == null) return
+        val info = rtc?.info ?: ""
+        if (!gotFrame && reason.startsWith("Kamera hat beendet") && ++rtcRefusals <= 4) {
+            releaseRtc()
+            val uid = Repo.find(deviceId)?.uid ?: ""
+            message.text = "Kamera ist noch beschäftigt, neuer Versuch ($rtcRefusals/4) …"
+            message.visibility = View.VISIBLE
+            onStatus?.invoke("WebRTC: $reason")
+            later(3000L * rtcRefusals) { if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid) }
+            return
+        }
         notes += "WebRTC: $reason"
         // Show why, so a fallback to HLS isn't a mystery
-        onStatus?.invoke("WebRTC: $reason" + (rtc?.info?.takeIf { it.isNotEmpty() }?.let { "\n$it" } ?: ""))
+        onStatus?.invoke("WebRTC: $reason" + (info.takeIf { it.isNotEmpty() }?.let { "\n$it" } ?: ""))
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)
