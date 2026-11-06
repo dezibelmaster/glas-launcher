@@ -11,8 +11,11 @@ android {
         applicationId = "de.glas.smart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "2.6"
+        versionCode = 19
+        versionName = "2.7"
+
+        // Phones only: keeps the WebRTC library from bloating the APK with emulator builds
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     // Same fixed key as the launcher, so updates install over earlier versions
@@ -52,6 +55,9 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:1.4.1")
     implementation("androidx.media3:media3-exoplayer-rtsp:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
+    // WebRTC live picture with HD/SD choice, handshake over Tuya's MQTT broker (like go2rtc)
+    implementation("io.getstream:stream-webrtc-android:1.3.8")
+    implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
 }
 
 // APK named with its version, e.g. GlasSmart-1.0.apk

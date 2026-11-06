@@ -48,9 +48,26 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
     private val sound = overlayButton("🔇") { toggleSound() }
 
+    // WebRTC picture (HD/SD selectable); HLS above stays as the fallback
+    private var rtc: WebRtcLive? = null
+    private var rtcTries = 0
+    private var rendererReady = false
+    private val renderer = org.webrtc.SurfaceViewRenderer(ctx).apply { visibility = View.GONE }
+    private val rtcWatchdog = Runnable { rtcFailed("kein Bild nach 25 s") }
+    private val prefs = ctx.getSharedPreferences("glas_smart", Context.MODE_PRIVATE)
+
+    /** HD (main stream) or SD (sub stream); remembered per camera. */
+    var hd: Boolean
+        get() = prefs.getBoolean("hd_$deviceId", true)
+        private set(v) = prefs.edit().putBoolean("hd_$deviceId", v).apply()
+
+    /** Told whether HD/SD can be chosen right now (only over WebRTC). */
+    var onQuality: ((available: Boolean) -> Unit)? = null
+
     init {
         setBackgroundColor(Color.BLACK)
         addView(video, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        addView(renderer, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         addView(message, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         addView(sound, LayoutParams(ctx.dp(44), ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
             setMargins(ctx.dp(10), 0, 0, ctx.dp(10))
@@ -100,11 +117,87 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private val watchdog = Runnable { failed("kein Bild nach 20 s${if (info.isNotEmpty()) " ($info)" else ""}") }
 
     fun start() {
-        if (player != null) return
+        if (player != null || rtc != null) return
         newStreams = 0
+        rtcTries = 0
         attempt = 0
         notes.clear()
+        val uid = Repo.find(deviceId)?.uid ?: ""
+        if (uid.isNotEmpty()) startRtc(uid) else connect()
+    }
+
+    // ---- WebRTC ----
+
+    private fun startRtc(uid: String) {
+        if (!rendererReady) {
+            renderer.init(WebRtcLive.egl.eglBaseContext, object : org.webrtc.RendererCommon.RendererEvents {
+                override fun onFirstFrameRendered() { post { rtcPicture() } }
+                override fun onFrameResolutionChanged(w: Int, h: Int, r: Int) {}
+            })
+            renderer.setScalingType(org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+            renderer.setEnableHardwareScaler(true)
+            rendererReady = true
+        }
+        gotFrame = false
+        message.text = "Verbinde mit der Kamera …"
+        message.visibility = View.VISIBLE
+        renderer.visibility = View.VISIBLE
+        val session = WebRtcLive(context, deviceId, uid, renderer, object : WebRtcLive.Listener {
+            override fun onFailed(reason: String) = rtcFailed(reason)
+            override fun onLost() {
+                // Connection dropped after it ran: try again, a few times
+                if (gotFrame && ++rtcTries <= 3) {
+                    releaseRtc()
+                    startRtc(uid)
+                    message.text = "Verbindung wird erneuert …"
+                } else rtcFailed("Verbindung abgebrochen")
+            }
+        })
+        session.muted = muted
+        rtc = session
+        session.start(hd)
+        cancel(rtcWatchdog)
+        later(25_000, rtcWatchdog)
+    }
+
+    private fun rtcPicture() {
+        if (rtc == null) return
+        cancel(rtcWatchdog)
+        gotFrame = true
+        rtcTries = 0
+        message.visibility = View.GONE
+        sound.visibility = View.VISIBLE
+        onQuality?.invoke(true)
+        cancel(snapshots)
+        later(2000, snapshots)
+    }
+
+    /** WebRTC didn't work: note why and fall back to HLS. */
+    private fun rtcFailed(reason: String) {
+        if (rtc == null) return
+        notes += "WebRTC: $reason"
+        releaseRtc()
+        renderer.visibility = View.GONE
+        onQuality?.invoke(false)
         connect()
+    }
+
+    private fun releaseRtc() {
+        cancel(rtcWatchdog)
+        rtc?.stop()
+        rtc = null
+    }
+
+    /** Switches HD/SD: directly if the camera supports it, otherwise by reconnecting. */
+    fun setQuality(wantHd: Boolean) {
+        if (wantHd == hd) return
+        hd = wantHd
+        val session = rtc ?: return
+        if (!session.setHd(wantHd)) {
+            val uid = Repo.find(deviceId)?.uid ?: return
+            releaseRtc()
+            startRtc(uid)
+        }
     }
 
     private fun connect() {
@@ -232,6 +325,10 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
 
     /** Copies the current picture for the camera widget (works on the video surface since Android 7). */
     private fun snapshot() {
+        rtc?.let { session ->
+            session.snapshot { bmp -> Widgets.saveSnapshot(context, deviceId, bmp) }
+            return
+        }
         val surface = video.videoSurfaceView as? android.view.SurfaceView ?: return
         if (!gotFrame || surface.width <= 0 || surface.height <= 0) return
         val bmp = android.graphics.Bitmap.createBitmap(640, 640 * surface.height / surface.width, android.graphics.Bitmap.Config.ARGB_8888)
@@ -243,6 +340,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     private fun release() {
+        releaseRtc()
         cancel(watchdog)
         cancel(snapshots)
         proxy?.close()
@@ -256,11 +354,22 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun toggleSound() {
         muted = !muted
         player?.volume = if (muted) 0f else 1f
+        rtc?.muted = muted
         sound.text = if (muted) "🔇" else "🔊"
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        stop()
+        if (rendererReady) {
+            renderer.release()
+            rendererReady = false
+        }
     }
 
     fun stop() {
         release()
+        renderer.visibility = View.GONE
         attempt = types.size
         idle()
     }

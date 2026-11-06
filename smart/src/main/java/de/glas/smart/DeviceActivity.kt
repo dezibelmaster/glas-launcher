@@ -60,8 +60,19 @@ class DeviceActivity : Activity() {
             val lv = LiveView(this, d.id)
             live = lv
             outer.addView(lv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0).margins(b = dp(10)))
-            // HD and talking only work in Smart Life
-            outer.addView(pill("In Smart Life öffnen", null) { openSmartLife() }, wrap().margins(b = dp(14)))
+            // HD/SD (over WebRTC only) and, for talking, Smart Life
+            val row = horizontal()
+            val qualityBox = horizontal().apply { visibility = View.GONE }
+            fun drawQuality() {
+                qualityBox.removeAllViews()
+                qualityBox.addView(pill("HD", if (lv.hd) AMBER else null) { lv.setQuality(true); drawQuality() }, wrap().margins(r = dp(8)))
+                qualityBox.addView(pill("SD", if (!lv.hd) AMBER else null) { lv.setQuality(false); drawQuality() }, wrap().margins(r = dp(8)))
+            }
+            drawQuality()
+            lv.onQuality = { available -> qualityBox.visibility = if (available) View.VISIBLE else View.GONE }
+            row.addView(qualityBox)
+            row.addView(pill("In Smart Life öffnen", null) { openSmartLife() })
+            outer.addView(row, matchWrap().margins(b = dp(14)))
             lv.post { lv.layoutParams = lv.layoutParams.apply { height = lv.width * 9 / 16 } }
             lv.clipToOutline = true
             lv.outlineProvider = object : android.view.ViewOutlineProvider() {
