@@ -61,6 +61,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         get() = prefs.getBoolean("hd_$deviceId", true)
         private set(v) = prefs.edit().putBoolean("hd_$deviceId", v).apply()
 
+    /** Short diagnostic line shown under the picture, e.g. why WebRTC fell back to HLS. */
+    var onStatus: ((String) -> Unit)? = null
+
     /** Told whether HD/SD can be chosen right now (only over WebRTC). */
     var onQuality: ((available: Boolean) -> Unit)? = null
 
@@ -144,13 +147,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         renderer.visibility = View.VISIBLE
         val session = WebRtcLive(context, deviceId, uid, renderer, object : WebRtcLive.Listener {
             override fun onFailed(reason: String) = rtcFailed(reason)
-            override fun onLost() {
+            override fun onLost(reason: String) {
                 // Connection dropped after it ran: try again, a few times
                 if (gotFrame && ++rtcTries <= 3) {
                     releaseRtc()
                     startRtc(uid)
                     message.text = "Verbindung wird erneuert …"
-                } else rtcFailed("Verbindung abgebrochen")
+                } else rtcFailed(reason)
             }
         })
         session.muted = muted
@@ -168,6 +171,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.visibility = View.GONE
         sound.visibility = View.VISIBLE
         onQuality?.invoke(true)
+        onStatus?.invoke("")
         cancel(snapshots)
         later(2000, snapshots)
     }
@@ -177,7 +181,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (rtc == null) return
         notes += "WebRTC: $reason"
         // Show why, so a fallback to HLS isn't a mystery
-        context.toast("WebRTC: $reason – versuche HLS")
+        onStatus?.invoke("WebRTC: $reason")
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)

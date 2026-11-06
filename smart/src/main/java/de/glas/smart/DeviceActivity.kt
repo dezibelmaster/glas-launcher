@@ -72,7 +72,13 @@ class DeviceActivity : Activity() {
             lv.onQuality = { available -> qualityBox.visibility = if (available) View.VISIBLE else View.GONE }
             row.addView(qualityBox)
             row.addView(pill("In Smart Life öffnen", null) { openSmartLife() })
-            outer.addView(row, matchWrap().margins(b = dp(14)))
+            outer.addView(row, matchWrap().margins(b = dp(6)))
+            val status = text(12f, MUTED).apply { visibility = View.GONE; setTextIsSelectable(true) }
+            lv.onStatus = { msg ->
+                status.text = msg
+                status.visibility = if (msg.isEmpty()) View.GONE else View.VISIBLE
+            }
+            outer.addView(status, matchWrap().margins(l = dp(4), b = dp(10)))
             lv.post { lv.layoutParams = lv.layoutParams.apply { height = lv.width * 9 / 16 } }
             lv.clipToOutline = true
             lv.outlineProvider = object : android.view.ViewOutlineProvider() {

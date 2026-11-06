@@ -43,7 +43,7 @@ class WebRtcLive(
 ) {
     interface Listener {
         fun onFailed(reason: String)
-        fun onLost()
+        fun onLost(reason: String)
     }
 
     companion object {
@@ -176,7 +176,9 @@ class WebRtcLive(
                     PeerConnection.PeerConnectionState.CONNECTED -> {
                         if (streamType == mainType && clarity) send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", 0))
                     }
-                    PeerConnection.PeerConnectionState.FAILED -> main.post { if (!closed) listener.onLost() }
+                    PeerConnection.PeerConnectionState.FAILED -> main.post {
+                        if (!closed) listener.onLost(if (gotAnswer) "Verbindung zur Kamera kam nicht zustande (ICE)" else "keine Antwort der Kamera")
+                    }
                     else -> {}
                 }
             }
@@ -204,10 +206,21 @@ class WebRtcLive(
             override fun onAddTrack(r: RtpReceiver, s: Array<out org.webrtc.MediaStream>) {}
         }) ?: return fail("WebRTC nicht verfügbar")
         pc = peer
-        peer.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
+        val audioT = peer.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
             RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.SEND_RECV))
-        peer.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
+        val videoT = peer.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
             RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY))
+        // Offer only what Tuya cameras understand, like go2rtc: H.264 video, G.711 or Opus audio
+        runCatching {
+            val f = factory(ctx)
+            val v = f.getRtpReceiverCapabilities(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO).codecs
+                .filter { it.name.equals("H264", true) }
+                .sortedBy { if (it.parameters["packetization-mode"] == "1" && it.parameters["profile-level-id"]?.startsWith("42e0") == true) 0 else 1 }
+            if (v.isNotEmpty()) videoT.setCodecPreferences(v)
+            val a = f.getRtpReceiverCapabilities(MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO).codecs
+                .filter { it.name.uppercase() in setOf("PCMA", "PCMU", "OPUS") }
+            if (a.isNotEmpty()) audioT.setCodecPreferences(a)
+        }
 
         peer.createOffer(object : SdpAdapter() {
             override fun onCreateSuccess(desc: SessionDescription) {
@@ -262,7 +275,8 @@ class WebRtcLive(
                     val c = body.optString("candidate").removePrefix("a=").trimEnd('\r', '\n')
                     if (c.isNotEmpty()) peer.addIceCandidate(IceCandidate(answerMid, 0, c))
                 }
-                "disconnect" -> if (!closed) listener.onLost()
+                "disconnect" -> if (!closed) listener.onLost(
+                    "Kamera hat beendet${if (gotAnswer) "" else " ohne Antwort"} (${body.toString().take(160)})")
             }
         }
     }
