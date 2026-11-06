@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.6** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.7** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -348,7 +348,9 @@ Heimnetz (AHA-HTTP-Schnittstelle `webservices/homeautoswitch.lua`, Anmeldung üb
 MyFRITZ!-Adresse mit Port, z. B. `xxxx.myfritz.net:44123` (steht in der FRITZ!Box unter *Internet → Freigaben →
 FRITZ!Box-Dienste*, dort auch „Internetzugriff über HTTPS“ einschalten). Der Benutzer braucht unter *System →
 FRITZ!Box-Benutzer* das Häkchen „Zugang auch aus dem Internet erlaubt“. Die App versucht immer zuerst die Adresse zu
-Hause; antwortet die FRITZ!Box dort nicht, nimmt sie die Adresse für unterwegs und prüft jede Minute, ob das Heimnetz
+Hause; antwortet die FRITZ!Box dort nicht (oder antwortet dort ein anderer Server, denn `fritz.box` ist im Internet eine echte
+Adresse), nimmt sie die Adresse für unterwegs. Mit nur mobilen Daten (kein WLAN, kein VPN) nimmt sie sofort die Adresse
+für unterwegs und prüft jede Minute, ob das Heimnetz
 wieder da ist. Unterwegs geht nur `https://`, damit das Kennwort nie unverschlüsselt durchs Internet geht. Oben in
 der App steht „Zuhause“ oder „Unterwegs über MyFRITZ!“.
 
@@ -362,7 +364,7 @@ Tippen auf „Verbinden“ zu Hause, oder von selbst beim nächsten Öffnen zu H
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.6.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.7.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).

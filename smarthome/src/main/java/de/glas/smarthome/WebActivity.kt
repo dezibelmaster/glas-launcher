@@ -30,6 +30,7 @@ class WebActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val store = Store(this)
+        watchNetwork(applicationContext)
         if (Build.VERSION.SDK_INT >= 30) window.setDecorFitsSystemWindows(false)
 
         val root = LinearLayout(this).apply {

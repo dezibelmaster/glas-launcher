@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only mobile data: skip the home address and use the address for away right away -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- The password lives encrypted with a key of this phone's keystore, which a backup cannot carry over -->
     <application

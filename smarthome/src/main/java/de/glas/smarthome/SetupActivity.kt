@@ -28,6 +28,7 @@ class SetupActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = Store(this)
+        watchNetwork(applicationContext)
         if (Build.VERSION.SDK_INT >= 30) window.setDecorFitsSystemWindows(false)
         if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
 

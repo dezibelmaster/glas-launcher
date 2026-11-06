@@ -64,6 +64,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = Store(this)
+        watchNetwork(applicationContext)
         filter = store.filter
         view = store.view
         edgeToEdge()

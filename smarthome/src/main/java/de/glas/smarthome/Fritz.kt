@@ -50,7 +50,13 @@ class FritzClient(private val config: Config) {
      */
     private fun <T> route(block: () -> T): T {
         if (!hasRemote) return block()
-        if (remoteActive && System.currentTimeMillis() - localCheckedAt > 60_000) {
+        // Only mobile data: the home address cannot be the box, go straight to the address for away
+        if (!remoteActive && onLan?.invoke() == false) {
+            remoteActive = true
+            sid = null
+            localCheckedAt = System.currentTimeMillis()
+        }
+        if (remoteActive && onLan?.invoke() != false && System.currentTimeMillis() - localCheckedAt > 60_000) {
             localCheckedAt = System.currentTimeMillis()
             val home = runCatching { http("${baseUrl(config.host)}/login_sid.lua?version=2", timeout = 2500) }.getOrNull()
             if (home != null && home.second.contains("<Challenge>")) { remoteActive = false; sid = null }
@@ -148,9 +154,16 @@ class FritzClient(private val config: Config) {
     fun login(): String = route { loginAt() }
 
     private fun loginAt(): String {
-        val info = XNode.parse(http("$base/login_sid.lua?version=2").second)
+        // A web server that is not a FRITZ!Box counts as "not reachable here": away from home "fritz.box" can be a
+        // real internet domain (.box), and then the address for away has to be used instead
+        val notABox = "Unter „${hostOf(base)}“ antwortet keine FRITZ!Box."
+        val info = runCatching { XNode.parse(http("$base/login_sid.lua?version=2").second) }.getOrElse {
+            if (it is UnreachableException || it !is FritzException || it.message?.startsWith("Die Antwort") == true || it.message?.startsWith("Leere") == true)
+                throw (it as? UnreachableException) ?: UnreachableException(notABox)
+            throw it
+        }
         val challenge = info.text("Challenge")
-            ?: throw FritzException("Unerwartete Antwort. Ist unter „${config.host}“ eine FRITZ!Box?")
+            ?: throw UnreachableException(notABox)
         val wait = info.int("BlockTime") ?: 0
         if (wait > 0) throw FritzException("Zu viele Fehlversuche. Bitte $wait Sekunden warten.")
         // Without a user name the box expects the one it proposes itself
@@ -240,6 +253,14 @@ class FritzClient(private val config: Config) {
     }
 
     companion object {
+        /**
+         * Tells whether the phone is in a local network right now (Wi-Fi, Ethernet or VPN). Set by the app; when it
+         * says no, the home address is skipped. Null means unknown, then the home address is tried first.
+         */
+        @Volatile var onLan: (() -> Boolean)? = null
+
+        private fun hostOf(url: String) = runCatching { URL(url).host }.getOrDefault(url)
+
         /** The address as typed, with http:// added when no scheme is given. */
         fun baseUrl(host: String): String {
             var b = host.trim().trimEnd('/').ifEmpty { "fritz.box" }

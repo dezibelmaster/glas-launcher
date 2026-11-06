@@ -313,3 +313,17 @@ class Store(ctx: Context) {
         const val ALIAS = "glas-smarthome"
     }
 }
+
+/** Lets the FRITZ!Box client know whether the phone is in a local network (Wi-Fi, Ethernet, VPN) or on mobile data only. */
+fun watchNetwork(ctx: Context) {
+    val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java) ?: return
+    FritzClient.onLan = {
+        runCatching {
+            val caps = cm.getNetworkCapabilities(cm.activeNetwork)
+            // No network at all: unknown, so the normal order (home first) applies
+            caps == null || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) ||
+                caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET) ||
+                caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_VPN)
+        }.getOrDefault(true)
+    }
+}
