@@ -104,6 +104,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     private fun idle() {
+        video.visibility = View.INVISIBLE
         message.text = "▶  Live-Bild anzeigen"
         message.visibility = View.VISIBLE
         sound.visibility = View.GONE
@@ -125,12 +126,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             if (p.playbackState == Player.STATE_BUFFERING || pos == lastPos) stuck++ else stuck = 0
             lastPos = pos
             // A stretch of smooth picture forgives earlier drop-outs
-            if (stuck == 0 && ++goodTicks >= 15) reconnects = 0
-            if (stuck > 0) goodTicks = 0
             if (stuck >= 3) reconnect() else later(4000, this)
         }
     }
-    private var goodTicks = 0
     private var attempt = 0
     private var gotFrame = false
     private val notes = ArrayList<String>()
@@ -184,6 +182,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         val p = ExoPlayer.Builder(context, renderers).build()
         player = p
         video.player = p
+        video.visibility = View.VISIBLE
         p.volume = if (muted) 0f else 1f
         if (type == "rtsp") {
             // rtsps:// goes through a small TLS proxy on the phone; media is carried inside the RTSP connection
@@ -201,6 +200,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
                 if (!gotFrame) {
+                    reconnects = 0
                     prefs.edit().putString("stream_$deviceId", type).apply()
                     stuck = 0
                     lastPos = -1
@@ -269,6 +269,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
         message.visibility = View.VISIBLE
         smartLife.visibility = View.VISIBLE
+        video.visibility = View.INVISIBLE
     }
 
     /** The picture was there but stopped: fetch a fresh stream address the same way. */
