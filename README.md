@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.6** (Handy-App für Smart-Life-Geräte).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.7** (Handy-App für Smart-Life-Geräte).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -308,8 +308,8 @@ Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab und lässt sich unter 
 kostenlos verlängern; die App weist darauf hin. Zugangsdaten und Zwischenspeicher bleiben auf dem Handy
 (keine Android-Sicherung) und gehen nur an die Tuya-Cloud.
 
-Installieren: `GlasSmart-1.6.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
-`adb install -r GlasSmart-1.6.apk`.
+Installieren: `GlasSmart-1.7.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
+`adb install -r GlasSmart-1.7.apk`.
 
 ## Projectivy-Plugins
 

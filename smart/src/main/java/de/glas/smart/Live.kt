@@ -18,6 +18,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.ui.PlayerView
 
 /**
@@ -26,9 +27,22 @@ import androidx.media3.ui.PlayerView
  */
 class LiveView(ctx: Context, private val deviceId: String, private val fullscreen: Boolean = false) : FrameLayout(ctx) {
     private var player: ExoPlayer? = null
+    private var proxy: RtspsProxy? = null
+    private val smartLife = ctx.text(14f).apply {
+        text = "In Smart Life öffnen"
+        gravity = Gravity.CENTER
+        setPadding(ctx.dp(16), ctx.dp(8), ctx.dp(16), ctx.dp(8))
+        background = ctx.glass(18f, 0x8C000000.toInt(), 0x40FFFFFF)
+        visibility = View.GONE
+        setOnClickListener {
+            val launch = ctx.packageManager.getLaunchIntentForPackage("com.tuya.smartlife")
+            if (launch != null) ctx.startActivity(launch) else ctx.toast("Die Smart-Life-App ist nicht installiert.")
+        }
+    }
     private var muted = true
     private val video = PlayerView(ctx).apply {
         useController = false
+        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
         setShutterBackgroundColor(Color.BLACK)
         setKeepContentOnPlayerReset(true)
     }
@@ -43,6 +57,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         setBackgroundColor(Color.BLACK)
         addView(video, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         addView(message, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        addView(smartLife, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
+            setMargins(0, ctx.dp(10), 0, 0)
+        })
         addView(sound, LayoutParams(ctx.dp(44), ctx.dp(44), Gravity.BOTTOM or Gravity.START).apply {
             setMargins(ctx.dp(10), 0, 0, ctx.dp(10))
         })
@@ -91,6 +108,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     private fun connect() {
+        smartLife.visibility = View.GONE
         val type = types[attempt]
         gotFrame = false
         info = ""
@@ -127,10 +145,19 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         player = p
         video.player = p
         p.volume = if (muted) 0f else 1f
-        val item = MediaItem.Builder().setUri(url)
-        if (type == "hls") item.setMimeType(MimeTypes.APPLICATION_M3U8)
-        if (type == "rtsp") item.setMimeType(MimeTypes.APPLICATION_RTSP)
-        p.setMediaItem(item.build())
+        if (type == "rtsp") {
+            // rtsps:// goes through a small TLS proxy on the phone; media is carried inside the RTSP connection
+            var playUrl = url
+            if (url.startsWith("rtsps://", ignoreCase = true)) {
+                val px = RtspsProxy(url)
+                proxy = px
+                playUrl = px.localUrl
+            }
+            p.setMediaSource(RtspMediaSource.Factory().setForceUseRtpTcp(true).setTimeoutMs(15_000)
+                .createMediaSource(MediaItem.fromUri(playUrl)))
+        } else {
+            p.setMediaItem(MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).build())
+        }
         p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
                 gotFrame = true
@@ -156,7 +183,12 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                failed(error.errorCodeName.removePrefix("ERROR_CODE_").lowercase().replace('_', ' '))
+                // The underlying cause tells more than the generic code, e.g. an HTTP status or a TLS problem
+                var cause: Throwable? = error.cause
+                while (cause?.cause != null && cause.message.isNullOrBlank()) cause = cause.cause
+                val detail = cause?.let { c -> "${c.javaClass.simpleName}: ${c.message ?: ""}".take(140) } ?: ""
+                failed(error.errorCodeName.removePrefix("ERROR_CODE_").lowercase().replace('_', ' ') +
+                    if (detail.isNotEmpty()) " ($detail)" else "")
             }
         })
         p.playWhenReady = true
@@ -176,10 +208,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         }
         message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
         message.visibility = View.VISIBLE
+        smartLife.visibility = View.VISIBLE
     }
 
     private fun release() {
         cancel(watchdog)
+        proxy?.close()
+        proxy = null
         player?.release()
         player = null
         video.player = null
