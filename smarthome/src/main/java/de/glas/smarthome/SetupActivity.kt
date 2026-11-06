@@ -145,7 +145,7 @@ class SetupActivity : Activity() {
             setOnClickListener { openWebUi() }
         }
         addView(open)
-        val client = FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote))
+        val client = FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote, store.pins))
         thread {
             val info = client.boxInfo()
             val away = client.remoteActive
@@ -216,7 +216,11 @@ class SetupActivity : Activity() {
         return e
     }
 
+    /** Saved with a note about the address for away; the next tap on the button closes the screen. */
+    private var savedWithNote = false
+
     private fun connect() {
+        if (savedWithNote) { finish(); return }
         if (busy) return
         val h = host.text.toString().trim().ifEmpty { "fritz.box" }
         val u = user.text.toString().trim()
@@ -237,13 +241,22 @@ class SetupActivity : Activity() {
         thread {
             // The address for away is checked on its own too, so a typo shows up now and not when away from home
             var warning: String? = null
+            var remoteOk = false
+            // Certificates remembered earlier stay valid as long as the addresses are the same
+            var pins = if (h == store.host && r == store.remote) store.pins else emptySet()
             val err = try {
-                val c = FritzClient(FritzClient.Config(h, u, p, r))
+                val c = FritzClient(FritzClient.Config(h, u, p, r, pins))
                 c.login()
                 c.aha("getdevicelistinfos")
                 if (r.isNotEmpty() && !c.remoteActive) {
-                    warning = runCatching { FritzClient(FritzClient.Config(FritzClient.remoteUrl(r), u, p)).login(); null }
-                        .getOrElse { "Gespeichert. Die Adresse für unterwegs antwortet gerade nicht: ${it.message}" }
+                    // Logged in over the home network, so it is our own box answering: remember its certificates now
+                    pins = FritzClient.readPins(h, r).ifEmpty { pins }
+                    warning = runCatching { FritzClient(FritzClient.Config(FritzClient.remoteUrl(r), u, p, pins = pins)).login(); null }
+                        .getOrElse {
+                            "Gespeichert. Die Adresse für unterwegs ließ sich von hier aus nicht prüfen: ${it.message}\n\n" +
+                                "Manche Anschlüsse lassen das aus dem eigenen WLAN nicht zu. Teste es am besten einmal mit mobilen Daten (WLAN aus)."
+                        }
+                    remoteOk = warning == null
                 }
                 null
             } catch (e: FritzException) {
@@ -260,11 +273,22 @@ class SetupActivity : Activity() {
                     store.remote = r
                     store.user = u
                     store.password = p
+                    store.pins = pins
                     store.demo = false
-                    warning?.let { android.widget.Toast.makeText(this, it, android.widget.Toast.LENGTH_LONG).show() }
-                    finish()
+                    if (warning != null) {
+                        // Show the whole note on the page; a toast cuts it off
+                        message.text = warning
+                        message.setTextColor(C.AMBER)
+                        message.visibility = View.VISIBLE
+                        connect.text = "Fertig"
+                        savedWithNote = true
+                    } else {
+                        if (remoteOk) android.widget.Toast.makeText(this, "Verbunden. Auch die Adresse für unterwegs funktioniert.", android.widget.Toast.LENGTH_LONG).show()
+                        finish()
+                    }
                 } else {
                     message.text = err
+                    message.setTextColor(C.RED)
                     message.visibility = View.VISIBLE
                 }
             }

@@ -26,7 +26,13 @@ class UnreachableException(msg: String) : FritzException(msg)
  */
 class FritzClient(private val config: Config) {
     /** [remote]: optional MyFRITZ! address (https only), used when [host] cannot be reached, e.g. away from home. */
-    data class Config(val host: String, val user: String, val password: String, val remote: String = "")
+    data class Config(
+        val host: String, val user: String, val password: String, val remote: String = "",
+        /** SHA-256 fingerprints of the box's own certificates, read at home; trusted for https besides the usual CAs. */
+        val pins: Set<String> = emptySet(),
+    )
+
+    private val pinnedFactory by lazy { pinnedContext(config.pins).socketFactory }
 
     @Volatile private var sid: String? = null
 
@@ -94,6 +100,14 @@ class FritzClient(private val config: Config) {
         } catch (e: Exception) {
             throw FritzException("Die Adresse „${config.host}“ ist ungültig.")
         }
+        if (c is javax.net.ssl.HttpsURLConnection && config.pins.isNotEmpty()) {
+            // The FRITZ!Box signs its certificate itself: accept exactly the one remembered at home
+            c.sslSocketFactory = pinnedFactory
+            c.hostnameVerifier = javax.net.ssl.HostnameVerifier { h, s ->
+                javax.net.ssl.HttpsURLConnection.getDefaultHostnameVerifier().verify(h, s) ||
+                    runCatching { fingerprint(s.peerCertificates[0]) in config.pins }.getOrDefault(false)
+            }
+        }
         c.connectTimeout = timeout
         c.readTimeout = 15000
         try {
@@ -117,7 +131,10 @@ class FritzClient(private val config: Config) {
             throw UnreachableException("Die FRITZ!Box antwortet nicht.")
         } catch (e: SSLException) {
             throw FritzException(
-                if (url.startsWith("https://")) "Das Zertifikat von „$host“ wird nicht anerkannt. In der FRITZ!Box unter Internet → Freigaben → FRITZ!Box-Dienste das Let's-Encrypt-Zertifikat für MyFRITZ! einschalten."
+                if (url.startsWith("https://") && config.pins.isEmpty())
+                    "Die FRITZ!Box nutzt ein eigenes Zertifikat. Einmal zu Hause im WLAN in den Einstellungen auf „Verbinden“ tippen, dann merkt sich die App das Zertifikat deiner FRITZ!Box."
+                else if (url.startsWith("https://"))
+                    "Das Zertifikat von „$host“ passt nicht zu deiner FRITZ!Box. Zu Hause im WLAN in den Einstellungen erneut auf „Verbinden“ tippen."
                 else "Sichere Verbindung fehlgeschlagen."
             )
         } catch (e: IOException) {
@@ -235,6 +252,71 @@ class FritzClient(private val config: Config) {
             val b = host.trim().trimEnd('/')
             if (b.startsWith("http://")) throw FritzException("Unterwegs geht nur eine sichere Adresse mit https://.")
             return if (b.startsWith("https://")) b else "https://$b"
+        }
+
+        /** SHA-256 of a certificate, Base64. */
+        fun fingerprint(cert: java.security.cert.Certificate): String =
+            java.util.Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest(cert.encoded))
+
+        private fun systemTrust(): javax.net.ssl.X509TrustManager =
+            javax.net.ssl.TrustManagerFactory.getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm())
+                .apply { init(null as java.security.KeyStore?) }
+                .trustManagers.filterIsInstance<javax.net.ssl.X509TrustManager>().first()
+
+        /** Trusts what Android trusts, and in addition exactly the certificates in [pins]. */
+        private fun pinnedContext(pins: Set<String>): javax.net.ssl.SSLContext {
+            val system = systemTrust()
+            val tm = object : javax.net.ssl.X509TrustManager {
+                override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) =
+                    system.checkClientTrusted(chain, authType)
+                override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+                    try {
+                        system.checkServerTrusted(chain, authType)
+                    } catch (e: java.security.cert.CertificateException) {
+                        if (chain.isEmpty() || fingerprint(chain[0]) !in pins) throw e
+                    }
+                }
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = system.acceptedIssuers
+            }
+            return javax.net.ssl.SSLContext.getInstance("TLS").apply { init(null, arrayOf(tm), null) }
+        }
+
+        /**
+         * Reads the certificate presented at [url] without checking it, and returns its fingerprint.
+         * Only called right after a login over the home network, so it is the user's own box answering.
+         */
+        fun peekCertificate(url: String): String? = runCatching {
+            val u = URL(url)
+            var leaf: java.security.cert.X509Certificate? = null
+            val record = object : javax.net.ssl.X509TrustManager {
+                override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) { leaf = chain.firstOrNull() }
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            }
+            val ctx = javax.net.ssl.SSLContext.getInstance("TLS").apply { init(null, arrayOf(record), null) }
+            val plain = java.net.Socket()
+            plain.connect(java.net.InetSocketAddress(u.host, if (u.port > 0) u.port else 443), 4000)
+            (ctx.socketFactory.createSocket(plain, u.host, if (u.port > 0) u.port else 443, true) as javax.net.ssl.SSLSocket).use {
+                it.soTimeout = 4000
+                it.startHandshake()
+            }
+            leaf?.let { fingerprint(it) }
+        }.getOrNull()
+
+        /**
+         * Fingerprints of the box's certificates, read at home: from https on the home address and,
+         * when given, from the address for away (which the box answers itself from inside the home network).
+         */
+        fun readPins(host: String, remote: String): Set<String> {
+            val home = baseUrl(host).replaceFirst("http://", "https://").let { u ->
+                // Plain http with a port (e.g. fritz.box:80) has no https there; use the standard port instead
+                val parsed = runCatching { URL(u) }.getOrNull()
+                if (parsed != null && parsed.port > 0 && !host.trim().startsWith("https://")) "https://${parsed.host}" else u
+            }
+            return setOfNotNull(
+                peekCertificate(home),
+                if (remote.isNotBlank()) runCatching { remoteUrl(remote) }.getOrNull()?.let { peekCertificate(it) } else null,
+            )
         }
 
         private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")

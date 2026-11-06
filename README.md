@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.5** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.6** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -350,14 +350,19 @@ FRITZ!Box-Dienste*, dort auch „Internetzugriff über HTTPS“ einschalten). De
 FRITZ!Box-Benutzer* das Häkchen „Zugang auch aus dem Internet erlaubt“. Die App versucht immer zuerst die Adresse zu
 Hause; antwortet die FRITZ!Box dort nicht, nimmt sie die Adresse für unterwegs und prüft jede Minute, ob das Heimnetz
 wieder da ist. Unterwegs geht nur `https://`, damit das Kennwort nie unverschlüsselt durchs Internet geht. Oben in
-der App steht „Zuhause“ oder „Unterwegs über MyFRITZ!“. Ohne MyFRITZ! geht es auch mit einem VPN zur FRITZ!Box
+der App steht „Zuhause“ oder „Unterwegs über MyFRITZ!“.
+
+**Zertifikat der FRITZ!Box (ab 1.6):** Für den Zugang von unterwegs nutzt die FRITZ!Box meist ein selbst ausgestelltes
+Zertifikat, das Android nicht kennt. Die App liest es deshalb ein, während sie über das Heimnetz angemeldet ist (beim
+Tippen auf „Verbinden“ zu Hause, oder von selbst beim nächsten Öffnen zu Hause), und merkt sich seinen Fingerabdruck
+(SHA-256). Unterwegs vertraut sie dann genau diesem Zertifikat, auch in der Benutzeroberfläche, und keinem anderen. Ohne MyFRITZ! geht es auch mit einem VPN zur FRITZ!Box
 (WireGuard); dann reicht `fritz.box`.
 
 **Bauen und installieren:**
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.5.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.6.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).

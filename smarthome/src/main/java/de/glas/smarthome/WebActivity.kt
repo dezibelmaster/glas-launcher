@@ -68,6 +68,16 @@ class WebActivity : Activity() {
                     runCatching { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)) }
                     return true
                 }
+                // Away from home the box shows its own certificate; accept it only if it is the one remembered at home
+                override fun onReceivedSslError(view: WebView, handler: android.webkit.SslErrorHandler, error: android.net.http.SslError) {
+                    val host = runCatching { android.net.Uri.parse(error.url).host }.getOrNull()
+                    val print = runCatching {
+                        val bytes = android.net.http.SslCertificate.saveState(error.certificate).getByteArray("x509-certificate")!!
+                        val cert = java.security.cert.CertificateFactory.getInstance("X.509").generateCertificate(bytes.inputStream())
+                        FritzClient.fingerprint(cert)
+                    }.getOrNull()
+                    if (host in ownHosts(store) && print != null && print in store.pins) handler.proceed() else handler.cancel()
+                }
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) { this@WebActivity.progress.visibility = View.VISIBLE }
                 override fun onPageFinished(view: WebView, url: String) {
                     this@WebActivity.progress.visibility = View.GONE
@@ -91,7 +101,7 @@ class WebActivity : Activity() {
         // Log in first; if that fails, show the normal login page of the box
         thread {
             val url = runCatching {
-                FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote)).webUiUrl()
+                FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote, store.pins)).webUiUrl()
             }.getOrElse { FritzClient.baseUrl(store.host) }
             runOnUiThread { if (!isFinishing) web.loadUrl(url) }
         }

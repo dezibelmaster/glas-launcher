@@ -145,10 +145,14 @@ object Home {
     val listeners = LinkedHashSet<() -> Unit>()
     var onError: ((String) -> Unit)? = null
 
+    private var store: Store? = null
+    private var pinsTried = false
+
     fun configure(store: Store) {
+        this.store = store
         val k = when {
             store.demo -> "demo"
-            store.configured -> "${store.host}|${store.remote}|${store.user}|${store.password.hashCode()}"
+            store.configured -> "${store.host}|${store.remote}|${store.pins}|${store.user}|${store.password.hashCode()}"
             else -> ""
         }
         if (k == key) return
@@ -156,7 +160,7 @@ object Home {
         devices = emptyList(); templates = emptyList(); error = null; updated = 0; overrides.clear(); loading = false
         backend = when {
             store.demo -> DemoBackend()
-            store.configured -> FritzBackend(FritzClient.Config(store.host, store.user, store.password, store.remote))
+            store.configured -> FritzBackend(FritzClient.Config(store.host, store.user, store.password, store.remote, store.pins))
             else -> null
         }
         changed()
@@ -184,9 +188,26 @@ object Home {
                     updated = System.currentTimeMillis()
                     remote = (b as? FritzBackend)?.remote == true
                     error = null
+                    rememberCertificates()
                 }.onFailure { error = message(it) }
                 changed()
             }
+        }
+    }
+
+    /**
+     * At home, with an address for away but no certificate remembered yet (set up with version 1.5):
+     * read the box's certificates once in the background. They take effect the next time the screen opens.
+     */
+    private fun rememberCertificates() {
+        val s = store ?: return
+        if (pinsTried || s.demo || remote || s.remote.isBlank() || s.pins.isNotEmpty()) return
+        pinsTried = true
+        val host = s.host
+        val away = s.remote
+        io.execute {
+            val pins = FritzClient.readPins(host, away)
+            if (pins.isNotEmpty()) main.post { if (s.host == host && s.remote == away) s.pins = pins }
         }
     }
 
@@ -240,6 +261,10 @@ class Store(ctx: Context) {
     var password: String
         get() = decrypt(p.getString("password", "") ?: "")
         set(v) = p.edit().putString("password", encrypt(v)).apply()
+    /** Fingerprints of the box's own certificates, read at home, for the address for away. */
+    var pins: Set<String>
+        get() = (p.getString("pins", "") ?: "").split(',').filter { it.isNotBlank() }.toSet()
+        set(v) = p.edit().putString("pins", v.joinToString(",")).apply()
     var demo: Boolean
         get() = p.getBoolean("demo", false)
         set(v) = p.edit().putBoolean("demo", v).apply()
@@ -254,7 +279,7 @@ class Store(ctx: Context) {
 
     val configured get() = host.isNotBlank()
 
-    fun logout() = p.edit().remove("host").remove("remote").remove("user").remove("password").putBoolean("demo", false).apply()
+    fun logout() = p.edit().remove("host").remove("remote").remove("pins").remove("user").remove("password").putBoolean("demo", false).apply()
 
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
