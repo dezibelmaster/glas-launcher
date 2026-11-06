@@ -110,7 +110,22 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     // Tried in this order: HLS works on most cameras, RTSP is the fallback for those whose HLS stays black
-    private val types = listOf("hls", "rtsp")
+    // HLS works on most cameras, RTSP is the fallback; the way that worked last time is tried first
+    private val prefs = ctx.getSharedPreferences("glas_smart", Context.MODE_PRIVATE)
+    private var types = listOf("hls", "rtsp")
+    private var reconnects = 0
+    private var lastPos = -1L
+    private var stuck = 0
+    // Live streams from the cloud sometimes stall after a while: watch the position and reconnect
+    private val health = object : Runnable {
+        override fun run() {
+            val p = player ?: return
+            val pos = p.currentPosition
+            if (p.playbackState == Player.STATE_BUFFERING || pos == lastPos) stuck++ else stuck = 0
+            lastPos = pos
+            if (stuck >= 3) reconnect() else later(4000, this)
+        }
+    }
     private var attempt = 0
     private var gotFrame = false
     private val notes = ArrayList<String>()
@@ -119,6 +134,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
 
     fun start() {
         if (player != null) return
+        val preferred = prefs.getString("stream_$deviceId", null)
+        types = listOf("hls", "rtsp").sortedBy { if (it == preferred) 0 else 1 }
+        reconnects = 0
         attempt = 0
         notes.clear()
         connect()
@@ -177,6 +195,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         }
         p.addListener(object : Player.Listener {
             override fun onRenderedFirstFrame() {
+                if (!gotFrame) {
+                    prefs.edit().putString("stream_$deviceId", type).apply()
+                    stuck = 0
+                    lastPos = -1
+                    cancel(health)
+                    later(4000, health)
+                }
                 gotFrame = true
                 cancel(watchdog)
                 message.visibility = View.GONE
@@ -211,6 +236,10 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                 var cause: Throwable? = error.cause
                 while (cause?.cause != null && cause.message.isNullOrBlank()) cause = cause.cause
                 val detail = cause?.let { c -> "${c.javaClass.simpleName}: ${c.message ?: ""}".take(140) } ?: ""
+                if (gotFrame) {
+                    reconnect()
+                    return
+                }
                 failed(error.errorCodeName.removePrefix("ERROR_CODE_").lowercase().replace('_', ' ') +
                     if (detail.isNotEmpty()) " ($detail)" else "")
             }
@@ -235,12 +264,25 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         smartLife.visibility = View.VISIBLE
     }
 
+    /** The picture was there but stopped: fetch a fresh stream address the same way. */
+    private fun reconnect() {
+        release()
+        reconnects++
+        if (reconnects > 3) {
+            failed("Verbindung bricht immer wieder ab")
+            return
+        }
+        connect()
+        message.text = "Verbindung wird erneuert …"
+    }
+
     /** "HD 1080p" or "SD 360p"; tappable only if the stream offers more than one resolution. */
     private fun showQuality() {
         val h = player?.videoSize?.height ?: 0
         if (h <= 0 || !gotFrame) return
         val switchable = heights.size > 1
-        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p" + if (switchable) "  ⇅" else ""
+        val way = types.getOrNull(attempt)?.uppercase() ?: ""
+        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" + if (switchable) "  ⇅" else ""
         quality.isClickable = switchable
         quality.visibility = View.VISIBLE
     }
@@ -257,6 +299,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
 
     private fun release() {
         cancel(watchdog)
+        cancel(health)
         proxy?.close()
         proxy = null
         player?.release()
