@@ -51,6 +51,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     // WebRTC picture (HD/SD selectable); HLS above stays as the fallback
     private var rtc: WebRtcLive? = null
     private var rtcTries = 0
+    private var frameHeight = 0
+    private val qualityCheck = Runnable { checkQuality() }
     // The doorbell refuses while an earlier session is still winding down: ask again a few times first
     private var rtcRefusals = 0
     private var rendererReady = false
@@ -138,7 +140,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (!rendererReady) {
             renderer.init(WebRtcLive.egl.eglBaseContext, object : org.webrtc.RendererCommon.RendererEvents {
                 override fun onFirstFrameRendered() { post { rtcPicture() } }
-                override fun onFrameResolutionChanged(w: Int, h: Int, r: Int) {}
+                override fun onFrameResolutionChanged(w: Int, h: Int, r: Int) {
+                    post {
+                        frameHeight = if (r % 180 == 0) h else w
+                        // Show what really arrives, so HD/SD can be checked
+                        if (rtc != null) onStatus?.invoke("Bild: ${if (r % 180 == 0) "$w×$h" else "$h×$w"} über WebRTC")
+                    }
+                }
             })
             renderer.setScalingType(org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FIT)
             renderer.setEnableHardwareScaler(true)
@@ -174,7 +182,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.visibility = View.GONE
         sound.visibility = View.VISIBLE
         onQuality?.invoke(true)
-        onStatus?.invoke("")
+        onStatus?.invoke(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "")
         cancel(snapshots)
         later(2000, snapshots)
     }
@@ -203,6 +211,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
 
     private fun releaseRtc() {
         cancel(rtcWatchdog)
+        cancel(qualityCheck)
         rtc?.stop()
         rtc = null
     }
@@ -212,10 +221,37 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (wantHd == hd) return
         hd = wantHd
         val session = rtc ?: return
-        if (!session.setHd(wantHd)) {
-            val uid = Repo.find(deviceId)?.uid ?: return
-            releaseRtc()
-            startRtc(uid)
+        // First ask the running connection to switch; only if the picture stays the same, reconnect
+        session.setHd(wantHd)
+        cancel(qualityCheck)
+        later(6000, qualityCheck)
+    }
+
+    private var qualityReconnected = false
+
+    private fun checkQuality() {
+        if (rtc == null || !gotFrame) return
+        val isHd = frameHeight >= 720
+        if (isHd == hd) {
+            qualityReconnected = false
+            return
+        }
+        if (qualityReconnected) {
+            onStatus?.invoke("Die Kamera liefert per WebRTC nur ${if (frameHeight >= 720) "HD" else "SD"} ($frameHeight Zeilen).")
+            qualityReconnected = false
+            return
+        }
+        // The doorbell allows one viewer: give it a moment to let the old session go before reconnecting
+        qualityReconnected = true
+        val uid = Repo.find(deviceId)?.uid ?: return
+        releaseRtc()
+        message.text = "Wechsle auf ${if (hd) "HD" else "SD"} …"
+        message.visibility = View.VISIBLE
+        later(3000) {
+            if (rtc == null && player == null && attempt == 0) {
+                startRtc(uid)
+                later(31_000, qualityCheck)
+            }
         }
     }
 

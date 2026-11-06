@@ -192,7 +192,7 @@ class WebRtcLive(
             override fun onConnectionChange(state: PeerConnection.PeerConnectionState) {
                 when (state) {
                     PeerConnection.PeerConnectionState.CONNECTED -> {
-                        if (streamType == mainType && clarity) send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", 0))
+                        thread { send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", if (streamType == mainType) 0 else 1)) }
                     }
                     PeerConnection.PeerConnectionState.FAILED -> main.post {
                         if (!closed) listener.onLost(if (gotAnswer) "Verbindung zur Kamera kam nicht zustande (ICE)" else "keine Antwort der Kamera")
@@ -308,7 +308,6 @@ class WebRtcLive(
 
     /** Switches between main stream (HD) and sub stream (SD) without reconnecting, if the camera can. */
     fun setHd(hd: Boolean): Boolean {
-        if (!clarity) return false
         thread { send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", if (hd) 0 else 1)) }
         return true
     }
