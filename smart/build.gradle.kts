@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.smart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = 7
+        versionName = "1.6"
     }
 
     // Same fixed key as the launcher, so updates install over earlier versions
@@ -50,6 +50,7 @@ dependencies {
     // Plays the live picture of cameras and video doorbells (HLS from the Tuya cloud)
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-exoplayer-hls:1.4.1")
+    implementation("androidx.media3:media3-exoplayer-rtsp:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
 }
 

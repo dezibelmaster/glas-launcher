@@ -133,9 +133,9 @@ class Tuya(private val clientId: String, private val secret: String, private val
     }
 
     /** Short-lived HLS address of a camera's live picture (cloud service "IoT Video Live Stream"). */
-    fun streamUrl(id: String): String {
+    fun streamUrl(id: String, type: String = "hls"): String {
         val r = call("POST", "/v1.0/devices/$id/stream/actions/allocate",
-            body = JSONObject().put("type", "hls").toString()) as JSONObject
+            body = JSONObject().put("type", type).toString()) as JSONObject
         return r.getString("url")
     }
 

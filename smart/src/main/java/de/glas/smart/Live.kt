@@ -10,7 +10,10 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Tracks
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -52,7 +55,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             })
         }
         idle()
-        setOnClickListener { if (player == null) start() }
+        setOnClickListener { if (player == null && message.text.let { it.startsWith("▶") || it.contains("Antippen") }) start() }
     }
 
     private fun overlayButton(label: String, onClick: () -> Unit) = context.text(18f).apply {
@@ -72,14 +75,44 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         sound.visibility = View.GONE
     }
 
+    // Tried in this order: HLS works on most cameras, RTSP is the fallback for those whose HLS stays black
+    private val types = listOf("hls", "rtsp")
+    private var attempt = 0
+    private var gotFrame = false
+    private val notes = ArrayList<String>()
+    private var info = ""
+    private val watchdog = Runnable { failed("kein Bild nach 20 s${if (info.isNotEmpty()) " ($info)" else ""}") }
+
     fun start() {
         if (player != null) return
-        message.text = "Verbinde mit der Kamera …"
+        attempt = 0
+        notes.clear()
+        connect()
+    }
+
+    private fun connect() {
+        val type = types[attempt]
+        gotFrame = false
+        info = ""
+        message.text = "Verbinde mit der Kamera (${type.uppercase()}) …"
         message.visibility = View.VISIBLE
         val api = Store(context).api()
-        async({ api.streamUrl(deviceId) }) { r ->
-            r.onFailure { message.text = "Kein Live-Bild\n\n${explain(it)}\n\nAntippen zum Wiederholen" }
-            r.onSuccess { url -> play(url) }
+        val device = Repo.find(deviceId)
+        async({
+            // Battery cameras sleep: wake them first if they offer it
+            if (device != null && "wireless_awake" in device.status && device.status["wireless_awake"] != true) {
+                runCatching { api.send(deviceId, listOf("wireless_awake" to true)) }
+                Thread.sleep(3000)
+            }
+            api.streamUrl(deviceId, type)
+        }) { r ->
+            r.onFailure {
+                if (it is TuyaException && (it.code == 28841105 || it.code == 1106) && attempt == 0) {
+                    stop()
+                    message.text = "Kein Live-Bild\n\n${explain(it)}\n\nAntippen zum Wiederholen"
+                } else failed(Tuya.explain(it))
+            }
+            r.onSuccess { url -> play(url, type) }
         }
     }
 
@@ -88,28 +121,69 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             "Im Tuya-Projekt unter Cloud services den Dienst „IoT Video Live Stream“ hinzufügen (kostenlos)."
         else Tuya.explain(e)
 
-    private fun play(url: String) {
-        val p = ExoPlayer.Builder(context).build()
+    private fun play(url: String, type: String) {
+        val renderers = DefaultRenderersFactory(context).setEnableDecoderFallback(true)
+        val p = ExoPlayer.Builder(context, renderers).build()
         player = p
         video.player = p
         p.volume = if (muted) 0f else 1f
-        p.setMediaItem(MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).build())
+        val item = MediaItem.Builder().setUri(url)
+        if (type == "hls") item.setMimeType(MimeTypes.APPLICATION_M3U8)
+        if (type == "rtsp") item.setMimeType(MimeTypes.APPLICATION_RTSP)
+        p.setMediaItem(item.build())
         p.addListener(object : Player.Listener {
+            override fun onRenderedFirstFrame() {
+                gotFrame = true
+                cancel(watchdog)
+                message.visibility = View.GONE
+                sound.visibility = View.VISIBLE
+            }
+
             override fun onPlaybackStateChanged(state: Int) {
-                if (state == Player.STATE_READY) {
-                    message.visibility = View.GONE
-                    sound.visibility = View.VISIBLE
+                if (!gotFrame && state == Player.STATE_BUFFERING) message.text = "Lade Bild (${type.uppercase()}) …"
+                if (!gotFrame && state == Player.STATE_READY) message.text = "Warte auf das erste Bild (${type.uppercase()}) …"
+            }
+
+            override fun onTracksChanged(tracks: Tracks) {
+                // Remember the video format, to explain a black picture (e.g. a codec the phone can't decode)
+                for (g in tracks.groups) {
+                    if (g.type != C.TRACK_TYPE_VIDEO) continue
+                    val f = g.getTrackFormat(0)
+                    info = "${f.sampleMimeType?.substringAfter('/') ?: "?"} ${f.width}×${f.height}" +
+                        if (!g.isTrackSupported(0)) ", vom Handy nicht unterstützt" else ""
                 }
+                if (tracks.groups.none { it.type == C.TRACK_TYPE_VIDEO } && tracks.groups.isNotEmpty()) info = "nur Ton, kein Video"
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                stop()
-                message.text = "Das Live-Bild ist abgebrochen.\nAntippen zum Wiederholen"
-                message.visibility = View.VISIBLE
+                failed(error.errorCodeName.removePrefix("ERROR_CODE_").lowercase().replace('_', ' '))
             }
         })
         p.playWhenReady = true
         p.prepare()
+        cancel(watchdog)
+        later(20_000, watchdog)
+    }
+
+    /** This way didn't work: note why and try the next one, or show all reasons. */
+    private fun failed(reason: String) {
+        notes += "${types[attempt].uppercase()}: $reason"
+        release()
+        attempt++
+        if (attempt < types.size) {
+            connect()
+            return
+        }
+        message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
+        message.visibility = View.VISIBLE
+    }
+
+    private fun release() {
+        cancel(watchdog)
+        player?.release()
+        player = null
+        video.player = null
+        sound.visibility = View.GONE
     }
 
     private fun toggleSound() {
@@ -119,9 +193,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     }
 
     fun stop() {
-        player?.release()
-        player = null
-        video.player = null
+        release()
+        attempt = types.size
         idle()
     }
 }
