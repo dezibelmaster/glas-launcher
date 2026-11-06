@@ -64,8 +64,7 @@ class WebActivity : Activity() {
                 // Pages of the box stay here; links to other sites open in the browser
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val host = request.url.host ?: return false
-                    val own = android.net.Uri.parse(FritzClient.baseUrl(store.host)).host
-                    if (host == own) return false
+                    if (host in ownHosts(store)) return false
                     runCatching { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)) }
                     return true
                 }
@@ -92,7 +91,7 @@ class WebActivity : Activity() {
         // Log in first; if that fails, show the normal login page of the box
         thread {
             val url = runCatching {
-                FritzClient(FritzClient.Config(store.host, store.user, store.password)).webUiUrl()
+                FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote)).webUiUrl()
             }.getOrElse { FritzClient.baseUrl(store.host) }
             runOnUiThread { if (!isFinishing) web.loadUrl(url) }
         }
@@ -100,13 +99,18 @@ class WebActivity : Activity() {
 
     private var loginTries = 0
 
+    /** Host names of the box: at home and, if set, the address for away. */
+    private fun ownHosts(store: Store) = listOfNotNull(
+        android.net.Uri.parse(FritzClient.baseUrl(store.host)).host,
+        runCatching { android.net.Uri.parse(FritzClient.remoteUrl(store.remote)).host }.getOrNull()?.takeIf { store.remote.isNotBlank() },
+    ).toSet()
+
     /**
      * Fallback when the box shows its login page anyway: fill in user and password and press "Anmelden".
      * Only on the box's own address, and at most twice, so a wrong password does not loop.
      */
     private fun autoLogin(view: WebView, url: String, store: Store) {
-        val own = android.net.Uri.parse(FritzClient.baseUrl(store.host)).host
-        if (android.net.Uri.parse(url).host != own || loginTries >= 2 || store.password.isEmpty()) return
+        if (android.net.Uri.parse(url).host !in ownHosts(store) || loginTries >= 2 || store.password.isEmpty()) return
         val user = org.json.JSONObject.quote(store.user)
         val pass = org.json.JSONObject.quote(store.password)
         val js = """

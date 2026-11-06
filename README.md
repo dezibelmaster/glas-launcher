@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.4** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.5** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -344,11 +344,20 @@ der FRITZ!Box unter *System → FRITZ!Box-Benutzer* das Recht **Smart Home**. Di
 Heimnetz (AHA-HTTP-Schnittstelle `webservices/homeautoswitch.lua`, Anmeldung über `login_sid.lua` mit PBKDF2, bei
 älterem FRITZ!OS MD5). Das Kennwort liegt verschlüsselt mit einem Schlüssel aus dem Android-Keystore des Handys. Im Feld erscheint es als Punkte; das Auge daneben blendet es kurz ein.
 
+**Von unterwegs (ab 1.5):** In den Einstellungen zusätzlich die *Adresse für unterwegs* eintragen, also die
+MyFRITZ!-Adresse mit Port, z. B. `xxxx.myfritz.net:44123` (steht in der FRITZ!Box unter *Internet → Freigaben →
+FRITZ!Box-Dienste*, dort auch „Internetzugriff über HTTPS“ einschalten). Der Benutzer braucht unter *System →
+FRITZ!Box-Benutzer* das Häkchen „Zugang auch aus dem Internet erlaubt“. Die App versucht immer zuerst die Adresse zu
+Hause; antwortet die FRITZ!Box dort nicht, nimmt sie die Adresse für unterwegs und prüft jede Minute, ob das Heimnetz
+wieder da ist. Unterwegs geht nur `https://`, damit das Kennwort nie unverschlüsselt durchs Internet geht. Oben in
+der App steht „Zuhause“ oder „Unterwegs über MyFRITZ!“. Ohne MyFRITZ! geht es auch mit einem VPN zur FRITZ!Box
+(WireGuard); dann reicht `fritz.box`.
+
 **Bauen und installieren:**
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.4.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.5.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).

@@ -15,31 +15,78 @@ import javax.crypto.spec.SecretKeySpec
 import javax.net.ssl.SSLException
 
 /** An error with a text the user can read as it is. */
-class FritzException(msg: String) : Exception(msg)
+open class FritzException(msg: String) : Exception(msg)
+
+/** The box could not be reached at all at this address (no name, no answer); another address may still work. */
+class UnreachableException(msg: String) : FritzException(msg)
 
 /**
  * Talks to the FRITZ!Box: logs in with `login_sid.lua` (PBKDF2, MD5 on older boxes) and sends
  * commands to the AHA interface `webservices/homeautoswitch.lua`.
  */
 class FritzClient(private val config: Config) {
-    data class Config(val host: String, val user: String, val password: String)
+    /** [remote]: optional MyFRITZ! address (https only), used when [host] cannot be reached, e.g. away from home. */
+    data class Config(val host: String, val user: String, val password: String, val remote: String = "")
 
     @Volatile private var sid: String? = null
 
-    private val base: String get() = baseUrl(config.host)
+    /** True while the box is reached over the [Config.remote] address instead of the home network. */
+    @Volatile var remoteActive = false
+        private set
+    private var localCheckedAt = 0L
+    private val hasRemote get() = config.remote.isNotBlank()
+
+    private val base: String get() = if (remoteActive) remoteUrl(config.remote) else baseUrl(config.host)
+
+    /**
+     * Runs [block] at home first and, when the box is not reachable there, over the address for away.
+     * While away it looks every minute whether home is back (short timeout), so the faster way wins again.
+     */
+    private fun <T> route(block: () -> T): T {
+        if (!hasRemote) return block()
+        if (remoteActive && System.currentTimeMillis() - localCheckedAt > 60_000) {
+            localCheckedAt = System.currentTimeMillis()
+            val home = runCatching { http("${baseUrl(config.host)}/login_sid.lua?version=2", timeout = 2500) }.getOrNull()
+            if (home != null && home.second.contains("<Challenge>")) { remoteActive = false; sid = null }
+        }
+        return try {
+            block()
+        } catch (e: UnreachableException) {
+            if (remoteActive) throw e
+            val homeError = e.message
+            remoteActive = true
+            sid = null
+            localCheckedAt = System.currentTimeMillis()
+            try {
+                block()
+            } catch (e2: UnreachableException) {
+                remoteActive = false
+                throw UnreachableException("Weder zu Hause noch unterwegs erreichbar.\nZuhause: $homeError\nUnterwegs: ${e2.message}")
+            }
+        }
+    }
 
     /** Model and FRITZ!OS version from `jason_boxinfo.xml`, which the box gives out without a login; null if it does not. */
-    fun boxInfo(): Pair<String, String>? = runCatching {
-        val x = XNode.parse(http("$base/jason_boxinfo.xml").second)
+    fun boxInfo(): Pair<String, String>? = runCatching { route { boxInfoAt() } }.getOrNull()
+
+    private fun boxInfoAt(): Pair<String, String>? {
+        // Not reachable here: let route() try the other address
+        val body = http("$base/jason_boxinfo.xml").second
+        return runCatching { boxInfoOf(body) }.getOrNull()
+    }
+
+    private fun boxInfoOf(body: String): Pair<String, String>? {
+        val x = XNode.parse(body)
         val name = x.text("j:Name") ?: return null
         // "154.08.25" is model 154 with FRITZ!OS 8.25
         val version = x.text("j:Version")?.split('.')?.drop(1)?.joinToString(".")?.trimStart('0') ?: ""
-        name to version
-    }.getOrNull()
+        return name to version
+    }
 
     private fun http(
         url: String, post: String? = null, method: String = if (post != null) "POST" else "GET",
         contentType: String = "application/x-www-form-urlencoded", headers: Map<String, String> = emptyMap(),
+        timeout: Int = 6000,
     ): Pair<Int, String> {
         val host = runCatching { URL(url).host }.getOrDefault(config.host)
         val c = try {
@@ -47,7 +94,7 @@ class FritzClient(private val config: Config) {
         } catch (e: Exception) {
             throw FritzException("Die Adresse „${config.host}“ ist ungültig.")
         }
-        c.connectTimeout = 6000
+        c.connectTimeout = timeout
         c.readTimeout = 15000
         try {
             c.requestMethod = method
@@ -62,20 +109,28 @@ class FritzClient(private val config: Config) {
             val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
             return code to body
         } catch (e: UnknownHostException) {
-            throw FritzException("„$host“ nicht gefunden. Ist das Handy im WLAN der FRITZ!Box?")
+            throw UnreachableException(
+                if (url.startsWith("https://") && host.endsWith("myfritz.net")) "„$host“ nicht gefunden. Hat das Handy Internet?"
+                else "„$host“ nicht gefunden. Ist das Handy im WLAN der FRITZ!Box?"
+            )
         } catch (e: SocketTimeoutException) {
-            throw FritzException("Die FRITZ!Box antwortet nicht.")
+            throw UnreachableException("Die FRITZ!Box antwortet nicht.")
         } catch (e: SSLException) {
-            throw FritzException("Sichere Verbindung fehlgeschlagen. Adresse mit http:// versuchen.")
+            throw FritzException(
+                if (url.startsWith("https://")) "Das Zertifikat von „$host“ wird nicht anerkannt. In der FRITZ!Box unter Internet → Freigaben → FRITZ!Box-Dienste das Let's-Encrypt-Zertifikat für MyFRITZ! einschalten."
+                else "Sichere Verbindung fehlgeschlagen."
+            )
         } catch (e: IOException) {
-            throw FritzException("Keine Verbindung zur FRITZ!Box (${e.message ?: e.javaClass.simpleName}).")
+            throw UnreachableException("Keine Verbindung zur FRITZ!Box (${e.message ?: e.javaClass.simpleName}).")
         } finally {
             c.disconnect()
         }
     }
 
-    /** Logs in and returns the session id. */
-    fun login(): String {
+    /** Logs in and returns the session id (at home, or over the address for away). */
+    fun login(): String = route { loginAt() }
+
+    private fun loginAt(): String {
         val info = XNode.parse(http("$base/login_sid.lua?version=2").second)
         val challenge = info.text("Challenge")
             ?: throw FritzException("Unerwartete Antwort. Ist unter „${config.host}“ eine FRITZ!Box?")
@@ -107,16 +162,18 @@ class FritzClient(private val config: Config) {
     }
 
     /** A valid session id, logging in when there is none yet. */
-    fun session(): String = sid ?: login()
+    fun session(): String = sid ?: loginAt()
 
     /** Web interface address that opens already logged in with this app's session. */
-    fun webUiUrl(): String = "$base/?sid=" + login()
+    fun webUiUrl(): String = route { val s = loginAt(); "$base/?sid=$s" }
 
     /**
      * Calls the Smart Home REST API of FRITZ!OS 8.20 and newer (`/api/v0/smarthome/...`), with the session id in the
      * header `Authorization: AVM-SID <sid>`. Returns the JSON answer; logs in again once when the session expired.
      */
-    fun rest(method: String, path: String, json: String? = null): String {
+    fun rest(method: String, path: String, json: String? = null): String = route { restAt(method, path, json) }
+
+    private fun restAt(method: String, path: String, json: String?): String {
         repeat(2) { attempt ->
             val s = session()
             val (code, body) = http(
@@ -143,9 +200,11 @@ class FritzClient(private val config: Config) {
     }.getOrNull() ?: "."
 
     /** Sends one AHA command and returns the answer. Logs in again once when the session has expired. */
-    fun aha(cmd: String, ain: String? = null, params: Map<String, String> = emptyMap()): String {
+    fun aha(cmd: String, ain: String? = null, params: Map<String, String> = emptyMap()): String = route { ahaAt(cmd, ain, params) }
+
+    private fun ahaAt(cmd: String, ain: String?, params: Map<String, String>): String {
         repeat(2) { attempt ->
-            val s = sid ?: login()
+            val s = sid ?: loginAt()
             val q = StringBuilder("$base/webservices/homeautoswitch.lua?sid=$s&switchcmd=$cmd")
             if (ain != null) q.append("&ain=").append(enc(ain))
             for ((k, v) in params) q.append('&').append(k).append('=').append(enc(v))
@@ -169,6 +228,13 @@ class FritzClient(private val config: Config) {
             var b = host.trim().trimEnd('/').ifEmpty { "fritz.box" }
             if (!b.startsWith("http://") && !b.startsWith("https://")) b = "http://$b"
             return b
+        }
+
+        /** Address for away: https is required, so the password never crosses the internet unencrypted. */
+        fun remoteUrl(host: String): String {
+            val b = host.trim().trimEnd('/')
+            if (b.startsWith("http://")) throw FritzException("Unterwegs geht nur eine sichere Adresse mit https://.")
+            return if (b.startsWith("https://")) b else "https://$b"
         }
 
         private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")

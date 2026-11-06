@@ -18,6 +18,7 @@ import kotlin.concurrent.thread
 class SetupActivity : Activity() {
     private lateinit var store: Store
     private lateinit var host: EditText
+    private lateinit var remote: EditText
     private lateinit var user: EditText
     private lateinit var password: EditText
     private lateinit var message: TextView
@@ -60,6 +61,12 @@ class SetupActivity : Activity() {
         if (store.configured && !store.demo) col.addView(boxCard(), lp().margins(t = dp(22)))
 
         host = field("Adresse", "fritz.box", store.host.ifEmpty { "fritz.box" }, InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI, col)
+        remote = field("Adresse für unterwegs (optional)", "xxxx.myfritz.net:44123", store.remote,
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI, col)
+        col.addView(label(12.5f, C.MUTED).apply {
+            text = "Deine MyFRITZ!-Adresse mit Port. Ist die FRITZ!Box zu Hause nicht erreichbar, nimmt die App automatisch diese Adresse, immer verschlüsselt (https)."
+            setLineSpacing(0f, 1.2f)
+        }, lp().margins(t = dp(6), l = dp(4), r = dp(4)))
         user = field("Benutzername", "leer lassen für den Standardbenutzer", store.user, InputType.TYPE_CLASS_TEXT, col)
         password = field("Kennwort", "FRITZ!Box-Kennwort", store.password,
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD, col)
@@ -106,6 +113,8 @@ class SetupActivity : Activity() {
             "Das Handy muss im WLAN der FRITZ!Box sein (oder per VPN verbunden).",
             "Unter fritz.box → System → FRITZ!Box-Benutzer einen Benutzer mit dem Recht „Smart Home“ anlegen oder einen vorhandenen nehmen.",
             "Nur mit Kennwort angemeldet? Dann den Benutzernamen leer lassen.",
+            "Für unterwegs: MyFRITZ!-Adresse und Port stehen in der FRITZ!Box unter Internet → Freigaben → FRITZ!Box-Dienste (dort auch „Internetzugriff über HTTPS“ einschalten). Der Benutzer braucht unter System → FRITZ!Box-Benutzer das Häkchen „Zugang auch aus dem Internet erlaubt“.",
+            "Alternativ geht unterwegs auch ein VPN zur FRITZ!Box (WireGuard); dann reicht fritz.box.",
             "Vorlagen aus Smart Home → Vorlagen erscheinen in der App als Szenen.",
         )) {
             help.addView(label(13.5f, C.MUTED).apply { text = "•  $t"; setLineSpacing(0f, 1.2f) }, lp().margins(t = dp(10)))
@@ -136,15 +145,17 @@ class SetupActivity : Activity() {
             setOnClickListener { openWebUi() }
         }
         addView(open)
-        val url = FritzClient.baseUrl(store.host)
-        val client = FritzClient(FritzClient.Config(store.host, store.user, store.password))
+        val client = FritzClient(FritzClient.Config(store.host, store.user, store.password, store.remote))
         thread {
             val info = client.boxInfo()
+            val away = client.remoteActive
+            val url = if (away) runCatching { FritzClient.remoteUrl(store.remote) }.getOrDefault(store.remote) else FritzClient.baseUrl(store.host)
             runOnUiThread {
                 if (isFinishing) return@runOnUiThread
                 if (info != null) name.text = info.first
                 sub.text = listOfNotNull(
                     info?.second?.takeIf { it.isNotEmpty() }?.let { "FRITZ!OS $it" },
+                    if (store.remote.isBlank()) null else if (away) "Unterwegs" else "Zuhause",
                     url.removePrefix("http://").removePrefix("https://"),
                 ).joinToString(" · ")
             }
@@ -210,15 +221,30 @@ class SetupActivity : Activity() {
         val h = host.text.toString().trim().ifEmpty { "fritz.box" }
         val u = user.text.toString().trim()
         val p = password.text.toString()
+        val r = remote.text.toString().trim()
+        if (r.isNotEmpty()) {
+            val err = runCatching { FritzClient.remoteUrl(r) }.exceptionOrNull()
+            if (err != null) {
+                message.text = err.message
+                message.visibility = View.VISIBLE
+                return
+            }
+        }
         busy = true
         connect.text = "Verbinde …"
         connect.alpha = .7f
         message.visibility = View.GONE
         thread {
+            // The address for away is checked on its own too, so a typo shows up now and not when away from home
+            var warning: String? = null
             val err = try {
-                val c = FritzClient(FritzClient.Config(h, u, p))
+                val c = FritzClient(FritzClient.Config(h, u, p, r))
                 c.login()
                 c.aha("getdevicelistinfos")
+                if (r.isNotEmpty() && !c.remoteActive) {
+                    warning = runCatching { FritzClient(FritzClient.Config(FritzClient.remoteUrl(r), u, p)).login(); null }
+                        .getOrElse { "Gespeichert. Die Adresse für unterwegs antwortet gerade nicht: ${it.message}" }
+                }
                 null
             } catch (e: FritzException) {
                 e.message
@@ -231,9 +257,11 @@ class SetupActivity : Activity() {
                 connect.alpha = 1f
                 if (err == null) {
                     store.host = h
+                    store.remote = r
                     store.user = u
                     store.password = p
                     store.demo = false
+                    warning?.let { android.widget.Toast.makeText(this, it, android.widget.Toast.LENGTH_LONG).show() }
                     finish()
                 } else {
                     message.text = err

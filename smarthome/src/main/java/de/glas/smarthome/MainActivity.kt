@@ -228,12 +228,17 @@ class MainActivity : Activity() {
         listOf(summary, alerts, scenesTitle, scenesScroll, modes, chipsScroll, gridNote, grid).forEach { it.visibility = if (connected) View.VISIBLE else View.GONE }
 
         spinner(Home.loading)
-        status.setTextColor(if (Home.error != null) C.RED else C.FAINT)
+        status.setTextColor(if (Home.error != null) C.RED else if (Home.remote && !store.demo) C.ACCENT else C.FAINT)
         status.text = when {
             !connected -> "Nicht verbunden"
             Home.error != null -> Home.error + "  ·  Tippen zum Wiederholen"
             Home.updated == 0L -> if (store.demo) "Demo wird geladen …" else "Verbinde mit ${store.host} …"
-            else -> (if (store.demo) "Demo-Modus · " else "") + "Aktualisiert " + SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date(Home.updated))
+            else -> (if (store.demo) "Demo-Modus · " else "") + "Aktualisiert " + SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date(Home.updated)) +
+                when {
+                    store.demo || store.remote.isBlank() -> ""
+                    Home.remote -> "  ·  Unterwegs über MyFRITZ!"
+                    else -> "  ·  Zuhause"
+                }
         }
         if (!connected) return
 

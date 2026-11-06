@@ -34,6 +34,8 @@ interface Backend {
 
 class FritzBackend(config: FritzClient.Config) : Backend {
     private val c = FritzClient(config)
+    /** The box is reached over the address for away (MyFRITZ!). */
+    val remote get() = c.remoteActive
     private var templates: List<Template> = emptyList()
     private var templatesAt = 0L
 
@@ -135,6 +137,9 @@ object Home {
         private set
     var loading = false
         private set
+    /** Last answer came over the address for away. */
+    var remote = false
+        private set
     /** Values just set on the phone win over the box for a few seconds, until the box has caught up. */
     private val overrides = HashMap<String, Pair<Long, Device>>()
     val listeners = LinkedHashSet<() -> Unit>()
@@ -143,7 +148,7 @@ object Home {
     fun configure(store: Store) {
         val k = when {
             store.demo -> "demo"
-            store.configured -> "${store.host}|${store.user}|${store.password.hashCode()}"
+            store.configured -> "${store.host}|${store.remote}|${store.user}|${store.password.hashCode()}"
             else -> ""
         }
         if (k == key) return
@@ -151,7 +156,7 @@ object Home {
         devices = emptyList(); templates = emptyList(); error = null; updated = 0; overrides.clear(); loading = false
         backend = when {
             store.demo -> DemoBackend()
-            store.configured -> FritzBackend(FritzClient.Config(store.host, store.user, store.password))
+            store.configured -> FritzBackend(FritzClient.Config(store.host, store.user, store.password, store.remote))
             else -> null
         }
         changed()
@@ -177,6 +182,7 @@ object Home {
                     devices = s.devices.map { overrides[it.id]?.second ?: it }
                     templates = s.templates
                     updated = System.currentTimeMillis()
+                    remote = (b as? FritzBackend)?.remote == true
                     error = null
                 }.onFailure { error = message(it) }
                 changed()
@@ -224,6 +230,10 @@ class Store(ctx: Context) {
     var host: String
         get() = p.getString("host", "") ?: ""
         set(v) = p.edit().putString("host", v.trim()).apply()
+    /** MyFRITZ! address for away, e.g. https://xxxx.myfritz.net:44123; empty when not used. */
+    var remote: String
+        get() = p.getString("remote", "") ?: ""
+        set(v) = p.edit().putString("remote", v.trim()).apply()
     var user: String
         get() = p.getString("user", "") ?: ""
         set(v) = p.edit().putString("user", v.trim()).apply()
@@ -244,7 +254,7 @@ class Store(ctx: Context) {
 
     val configured get() = host.isNotBlank()
 
-    fun logout() = p.edit().remove("host").remove("user").remove("password").putBoolean("demo", false).apply()
+    fun logout() = p.edit().remove("host").remove("remote").remove("user").remove("password").putBoolean("demo", false).apply()
 
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
