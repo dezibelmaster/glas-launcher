@@ -74,12 +74,17 @@ class Device(
             "cobj", "co2bj", "rqbj", "jwbj" -> "⚠️"
             "cl", "clkg" -> "🪟"
             "fs", "fsd" -> "🌀"
-            "sp" -> "📷"
+            "sp", "spsxj" -> "📷"
+            "dghsxj" -> "🔔"
             "wk", "wkf" -> "🔥"
             "ms" -> "🔒"
             "kt" -> "❄️"
             else -> kind.emoji
         }
+
+    /** Camera or video doorbell, which can show a live picture. */
+    val isCamera: Boolean
+        get() = category in setOf("sp", "dghsxj", "spsxj", "sp_wnq") || "basic_osd" in status || "sd_status" in status
 
     fun bool(code: String) = status[code] as? Boolean
     fun int(code: String) = (status[code] as? Number)?.toInt()
@@ -328,7 +333,44 @@ object Labels {
         "fan_speed_percent" to "Lüfterstufe",
         "temp_set" to "Solltemperatur",
         "mode" to "Modus",
+        // Cameras and video doorbells
+        "basic_indicator" to "Statusleuchte",
+        "basic_flip" to "Bild um 180° drehen",
+        "basic_osd" to "Zeitstempel im Bild",
+        "basic_private" to "Privatmodus (Kamera aus)",
+        "basic_nightvision" to "Nachtsicht",
+        "basic_wdr" to "Gegenlichtausgleich (WDR)",
+        "basic_anti_flicker" to "Flimmerschutz",
+        "basic_device_volume" to "Lautstärke",
+        "motion_switch" to "Bewegungserkennung",
+        "motion_sensitivity" to "Empfindlichkeit Bewegung",
+        "motion_tracking" to "Bewegung verfolgen",
+        "motion_area_switch" to "Bewegungsbereich",
+        "decibel_switch" to "Geräuscherkennung",
+        "decibel_sensitivity" to "Empfindlichkeit Geräusch",
+        "record_switch" to "Aufnahme auf SD-Karte",
+        "record_mode" to "Aufnahmemodus",
+        "sd_status" to "SD-Karte",
+        "chime_ring_volume" to "Lautstärke Gong",
+        "chime_ring_tune" to "Klingelton Gong",
+        "wireless_electricity" to "Batterie",
+        "wireless_powermode" to "Stromversorgung",
+        "humanoid_filter" to "Nur Personen melden",
+        "ipc_auto_siren" to "Sirene bei Bewegung",
+        "siren_switch" to "Sirene",
     )
+
+    // Enum values that only make sense for one data point, e.g. "0" for night vision means automatic
+    private val enumsByCode = mapOf(
+        "basic_nightvision" to mapOf("0" to "Automatisch", "1" to "Aus", "2" to "An"),
+        "motion_sensitivity" to mapOf("0" to "Niedrig", "1" to "Mittel", "2" to "Hoch"),
+        "decibel_sensitivity" to mapOf("0" to "Niedrig", "1" to "Hoch"),
+        "record_mode" to mapOf("1" to "Nur bei Ereignis", "2" to "Durchgehend"),
+        "basic_anti_flicker" to mapOf("0" to "Aus", "1" to "50 Hz", "2" to "60 Hz"),
+        "wireless_powermode" to mapOf("0" to "Batterie", "1" to "Netzteil"),
+    )
+
+    fun enumLabel(code: String, v: String) = enumsByCode[code]?.get(v) ?: enumValue(v)
 
     private val enumValues = mapOf(
         "white" to "Weiß", "colour" to "Farbe", "scene" to "Szene", "music" to "Musik",
@@ -358,6 +400,14 @@ object Labels {
             "watersensor_state" -> return if (raw == "alarm" || raw == "1" || raw == true) "Wasser erkannt!" else "Trocken"
             "pir" -> return if (raw == "pir" || raw == true) "Bewegung" else "Keine Bewegung"
             "presence_state" -> return if (raw == "presence") "Anwesend" else "Niemand da"
+            "sd_status" -> return when ((raw as? Number)?.toInt() ?: raw.toString().toIntOrNull()) {
+                1 -> "In Ordnung"
+                2 -> "Fehler"
+                3 -> "Voll"
+                4 -> "Wird formatiert"
+                5 -> "Keine Karte"
+                else -> raw.toString()
+            }
             "smoke_sensor_status", "smoke_sensor_state", "gas_sensor_status", "co_status" ->
                 return if (raw == "alarm" || raw == "1" || raw == true) "Alarm!" else "Normal"
         }
@@ -375,7 +425,7 @@ object Labels {
                 }
                 if (unit.isBlank()) shown else "$shown ${unit.replace("℃", "°C")}"
             }
-            is String -> enumValue(raw)
+            is String -> enumLabel(code, raw)
             null -> "–"
             else -> raw.toString()
         }

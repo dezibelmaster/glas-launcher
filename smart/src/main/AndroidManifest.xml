@@ -27,6 +27,8 @@
         </activity>
         <activity android:name=".DeviceActivity" android:exported="false" />
         <activity android:name=".FamilyActivity" android:exported="false" />
+        <activity android:name=".LiveActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <!-- Opens setup links glassmart://setup?... from the family page of another phone -->
         <activity android:name=".SetupActivity" android:exported="true"
             android:windowSoftInputMode="adjustResize">

@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.smart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
     }
 
     // Same fixed key as the launcher, so updates install over earlier versions
@@ -47,6 +47,10 @@ android {
 dependencies {
     // Draws the QR code for setting up another phone (pure Java, no Google services)
     implementation("com.google.zxing:core:3.5.3")
+    // Plays the live picture of cameras and video doorbells (HLS from the Tuya cloud)
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
 }
 
 // APK named with its version, e.g. GlasSmart-1.0.apk

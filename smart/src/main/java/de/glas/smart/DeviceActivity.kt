@@ -14,6 +14,8 @@ import kotlin.math.roundToInt
 class DeviceActivity : Activity() {
     private lateinit var store: Store
     private lateinit var root: LinearLayout
+    private lateinit var headBox: LinearLayout
+    private var live: LiveView? = null
     private lateinit var device: Device
     private var spec: Spec? = null
     private var shownStatus: Map<String, Any?> = emptyMap()
@@ -30,6 +32,10 @@ class DeviceActivity : Activity() {
         "scene_data", "scene_data_v2", "music_data", "control_data", "flash_scene_1", "flash_scene_2", "flash_scene_3",
         "flash_scene_4", "rhythm_mode", "sleep_mode", "wakeup_mode", "power_memory", "cycle_time", "random_time",
         "switch_inching", "dreamlight_scene_mode", "dreamlightmic_music_data", "lightpixel_number_set",
+        // Cameras: actions that erase or restart, and raw data that only the camera app understands
+        "sd_format", "sd_format_state", "sd_umount", "sd_storge", "device_restart", "factory_reset", "ptz_control",
+        "ptz_stop", "movement_detect_pic", "doorbell_pic", "alarm_message", "initiative_message", "doorbell_active",
+        "record_switch_sd", "ipc_object_outline", "motion_area", "flight_pull_wire", "flight_warn_switch",
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,8 +51,23 @@ class DeviceActivity : Activity() {
         spec = Repo.spec(store, d.id)
 
         val scroll = ScrollView(this)
-        root = vertical().apply { setPadding(dp(16), dp(12), dp(16), dp(32)) }
-        scroll.addView(root)
+        val outer = vertical().apply { setPadding(dp(16), dp(12), dp(16), dp(32)) }
+        headBox = vertical()
+        root = vertical()
+        outer.addView(headBox, matchWrap())
+        // The live picture stays put while the controls below are redrawn
+        if (d.isCamera) {
+            val lv = LiveView(this, d.id)
+            live = lv
+            outer.addView(lv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0).margins(b = dp(12)))
+            lv.post { lv.layoutParams = lv.layoutParams.apply { height = lv.width * 9 / 16 } }
+            lv.clipToOutline = true
+            lv.outlineProvider = object : android.view.ViewOutlineProvider() {
+                override fun getOutline(v: View, o: android.graphics.Outline) = o.setRoundRect(0, 0, v.width, v.height, dp(22f))
+            }
+        }
+        outer.addView(root, matchWrap())
+        scroll.addView(outer)
         fitBars(scroll)
         setContentView(scroll)
         render()
@@ -65,11 +86,13 @@ class DeviceActivity : Activity() {
     override fun onResume() {
         super.onResume()
         if (::device.isInitialized) later(10_000, poll)
+        live?.start()
     }
 
     override fun onPause() {
         super.onPause()
         cancel(poll)
+        live?.stop()
     }
 
     private fun refreshStatus() {
@@ -95,6 +118,7 @@ class DeviceActivity : Activity() {
         val s = spec
         shownStatus = HashMap(d.status)
         root.removeAllViews()
+        headBox.removeAllViews()
 
         // Header with back arrow
         val head = horizontal()
@@ -110,7 +134,7 @@ class DeviceActivity : Activity() {
                 .filterNotNull().joinToString(" · ")
         })
         head.addView(titles, weight())
-        root.addView(head, matchWrap().margins(t = dp(8), b = dp(12)))
+        headBox.addView(head, matchWrap().margins(t = dp(8), b = dp(12)))
 
         val enabled = d.online
         val accent = if (d.kind == Kind.LIGHT) AMBER else GREEN
@@ -259,7 +283,7 @@ class DeviceActivity : Activity() {
         val modeFn = s?.fn("work_mode")
         if (modeFn != null && modeFn.range.size > 1) {
             box.addView(text(17f).apply { text = "Modus" }, matchWrap().margins(t = dp(16), b = dp(8)))
-            box.addView(chips(modeFn.range.map { it to Labels.enumValue(it) }, mode, AMBER) { if (enabled) send("work_mode" to it) }, matchWrap())
+            box.addView(chips(modeFn.range.map { it to Labels.enumLabel("work_mode", it) }, mode, AMBER) { if (enabled) send("work_mode" to it) }, matchWrap())
         }
 
         if (box.childCount > 0) root.addView(panel(null, box), matchWrap().margins(b = dp(12)))
@@ -292,7 +316,7 @@ class DeviceActivity : Activity() {
                 if (fn.range.isEmpty()) return null
                 vertical().apply {
                     addView(text(17f).apply { text = Labels.name(code) }, matchWrap().margins(b = dp(8)))
-                    addView(chips(fn.range.map { it to Labels.enumValue(it) }, value as? String, GREEN) { if (enabled) send(code to it) })
+                    addView(chips(fn.range.map { it to Labels.enumLabel(code, it) }, value as? String, GREEN) { if (enabled) send(code to it) })
                 }
             }
             "Integer" -> {
