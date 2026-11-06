@@ -407,11 +407,17 @@ class MainActivity : Activity() {
             val shown = all.filter(::hasBattery).sortedBy { if (it.anyBatteryLow) -1 else it.batteryLevel ?: 101 }
             val low = shown.count { it.anyBatteryLow || (it.batteryLevel ?: 100) <= 20 }
             gridNote.visibility = View.VISIBLE
-            gridNote.text = "${shown.size} Geräte mit Batterie · " + if (low == 0) "alle in Ordnung" else "$low schwach"
+            gridNote.text = "${shown.size} Geräte mit Batterie · " + (if (low == 0) "alle in Ordnung" else "$low schwach") +
+                (stand()?.let { " · Stand $it" } ?: "")
             gridNote.setTextColor(if (low == 0) C.MUTED else C.RED)
             fill(shown.map { d ->
-                val c = cards["b" + d.id]
-                val v = if (c != null && c.first == d) c.second else batteryCard(d).also { cards["b" + d.id] = d to it }
+                // The card shows the time of the data, so it is rebuilt when a newer answer of the box arrives
+                val key = "b" + d.id + "@" + Home.updated
+                val c = cards[key]
+                val v = if (c != null && c.first == d) c.second else batteryCard(d).also {
+                    cards.keys.removeAll { k -> k.startsWith("b" + d.id + "@") }
+                    cards[key] = d to it
+                }
                 (v.parent as? ViewGroup)?.removeView(v)
                 v
             })
@@ -489,6 +495,24 @@ class MainActivity : Activity() {
 
     // ---- Cards --------------------------------------------------------------------------------
 
+    /**
+     * When the battery levels were last read from the FRITZ!Box: "17:42" today, "gestern 17:42", otherwise "4.11. 17:42".
+     * The box itself gives no time per device; the controllers report their battery to it every few minutes.
+     */
+    private fun stand(): String? {
+        if (Home.updated == 0L) return null
+        val then = Calendar.getInstance().apply { timeInMillis = Home.updated }
+        val now = Calendar.getInstance()
+        val time = SimpleDateFormat("HH:mm", Locale.GERMANY).format(then.time)
+        val days = ((now.timeInMillis / 86_400_000L) - (then.timeInMillis / 86_400_000L)).toInt()
+        val sameDay = now.get(Calendar.YEAR) == then.get(Calendar.YEAR) && now.get(Calendar.DAY_OF_YEAR) == then.get(Calendar.DAY_OF_YEAR)
+        return when {
+            sameDay -> time
+            days <= 1 -> "gestern $time"
+            else -> SimpleDateFormat("d.M. HH:mm", Locale.GERMANY).format(then.time)
+        }
+    }
+
     /** Card for the battery view: charge level big, with a battery that fills accordingly. */
     private fun batteryCard(d: Device): View {
         val level = d.batteryLevel
@@ -515,7 +539,8 @@ class MainActivity : Activity() {
             setLineSpacing(0f, 1.1f)
         }, lp().margins(t = dp(14)))
         c.addView(label(12.5f, C.MUTED).apply {
-            text = d.product.ifEmpty { "Batterie" }
+            // Time first, so a long model name cannot push it out of the line
+            text = listOfNotNull(stand()?.let { "Stand $it" }, d.product.ifEmpty { null }).joinToString(" · ").ifEmpty { "Batterie" }
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }, lp().margins(t = dp(5)))

@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.7** (Handy-App, siehe unten).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart Home 1.8** (Handy-App, siehe unten).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -323,6 +323,8 @@ im gleichen dunklen Milchglas-Stil wie der Launcher.
   bei Lampen die Helligkeit; bei Rollläden Öffnen, Stopp, Schließen und Position.
 - **Batterie-Ansicht (ab 1.1):** Umschalter *Temperatur / Batterie* über den Karten. In der Batterie-Ansicht zeigen alle
   Geräte mit Batterie ihren Ladestand, die schwächsten zuerst, rot ab 20 % mit „Wechseln“. Die Wahl bleibt gespeichert.
+  Oben und auf jeder Kachel steht, wann die Werte zuletzt von der FRITZ!Box abgefragt wurden (*Stand 17:42*,
+  *gestern 17:42* oder mit Datum).
 - **Benutzeroberfläche aufrufen:** unter ⚙ *Einstellungen* stehen Modell, FRITZ!OS-Version und Adresse der
   FRITZ!Box. „Benutzeroberfläche aufrufen“ öffnet die Oberfläche der FRITZ!Box in der App, schon angemeldet: Die App
   meldet sich mit dem gespeicherten Benutzer an und übergibt die Sitzung (`?sid=`). Erscheint trotzdem die
@@ -364,7 +366,7 @@ Tippen auf „Verbinden“ zu Hause, oder von selbst beim nächsten Öffnen zu H
 
 ```
 gradle :smarthome:assembleDebug
-adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.7.apk
+adb install -r smarthome/build/outputs/apk/debug/GlasSmartHome-1.8.apk
 ```
 
 Oder die APK aufs Handy kopieren und dort öffnen („Unbekannte Apps installieren“ erlauben).
