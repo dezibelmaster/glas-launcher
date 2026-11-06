@@ -84,6 +84,7 @@ class WebRtcLive(
     private var gotAnswer = false
     private var clarity = false
     private var mainType = 0
+    private var wantHd = false
     private var subType = 1
     /** What the camera reported about itself, shown when something goes wrong. */
     @Volatile var info = ""
@@ -171,7 +172,8 @@ class WebRtcLive(
         } + (if (lowPower) ", Stromsparmodus" else "") + ", WebRTC ${skill.optInt("webrtc")}"
         step = "Verbindungsaufbau"
 
-        main.post { createPeer(if (hd) mainType else subType) }
+        wantHd = hd
+        main.post { createPeer(subType) }
     }
 
     private fun createPeer(streamType: Int) {
@@ -192,7 +194,7 @@ class WebRtcLive(
             override fun onConnectionChange(state: PeerConnection.PeerConnectionState) {
                 when (state) {
                     PeerConnection.PeerConnectionState.CONNECTED -> {
-                        thread { send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", if (streamType == mainType) 0 else 1)) }
+                        if (wantHd) thread { send("resolution", 312, JSONObject().put("mode", "webrtc").put("cmdValue", 0)) }
                     }
                     PeerConnection.PeerConnectionState.FAILED -> main.post {
                         if (!closed) listener.onLost(if (gotAnswer) "Verbindung zur Kamera kam nicht zustande (ICE)" else "keine Antwort der Kamera")
@@ -299,7 +301,7 @@ class WebRtcLive(
                     // 93 and 100 came while Smart Life or the web viewer were showing the doorbell: it allows one viewer
                     val code = body.optInt("close_reason", -1)
                     listener.onLost(if (!gotAnswer && (code == 93 || code == 100))
-                        "Kamera hat beendet: belegt (Code $code). Läuft das Bild gerade in Smart Life oder im Browser?"
+                        "Kamera lehnt ab (Code $code). Läuft das Bild gerade in Smart Life oder im Browser?"
                     else "Kamera hat beendet${if (gotAnswer) "" else " ohne Antwort"} (${body.toString().take(160)})")
                 }
             }

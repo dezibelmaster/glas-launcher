@@ -181,7 +181,11 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         rtcTries = 0
         message.visibility = View.GONE
         sound.visibility = View.VISIBLE
-        onQuality?.invoke(true)
+        onQuality?.invoke(!hdUnsupported)
+        if (hd && !hdUnsupported) {
+            cancel(qualityCheck)
+            later(8000, qualityCheck)
+        }
         onStatus?.invoke(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "")
         cancel(snapshots)
         later(2000, snapshots)
@@ -191,10 +195,10 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun rtcFailed(reason: String) {
         if (rtc == null) return
         val info = rtc?.info ?: ""
-        if (!gotFrame && reason.startsWith("Kamera hat beendet") && ++rtcRefusals <= 4) {
+        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 4) {
             releaseRtc()
             val uid = Repo.find(deviceId)?.uid ?: ""
-            message.text = "Kamera ist belegt, neuer Versuch ($rtcRefusals/4) …\nBild in Smart Life oder im Browser schließen"
+            message.text = "Kamera lehnt ab, neuer Versuch ($rtcRefusals/4) …\nLäuft das Bild noch in Smart Life oder im Browser?"
             message.visibility = View.VISIBLE
             onStatus?.invoke("WebRTC: $reason")
             later(3000L * rtcRefusals) { if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid) }
@@ -221,37 +225,25 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (wantHd == hd) return
         hd = wantHd
         val session = rtc ?: return
-        // First ask the running connection to switch; only if the picture stays the same, reconnect
+        // Ask the running connection to switch; if the picture stays SD, HD is not offered over WebRTC
         session.setHd(wantHd)
         cancel(qualityCheck)
         later(6000, qualityCheck)
     }
 
-    private var qualityReconnected = false
+    /** Set once the camera ignored the HD request: then the HD/SD choice is hidden for good. */
+    private var hdUnsupported: Boolean
+        get() = prefs.getBoolean("hd_unsupported_$deviceId", false)
+        set(v) = prefs.edit().putBoolean("hd_unsupported_$deviceId", v).apply()
 
     private fun checkQuality() {
-        if (rtc == null || !gotFrame) return
-        val isHd = frameHeight >= 720
-        if (isHd == hd) {
-            qualityReconnected = false
-            return
-        }
-        if (qualityReconnected) {
-            onStatus?.invoke("Die Kamera liefert per WebRTC nur ${if (frameHeight >= 720) "HD" else "SD"} ($frameHeight Zeilen).")
-            qualityReconnected = false
-            return
-        }
-        // The doorbell allows one viewer: give it a moment to let the old session go before reconnecting
-        qualityReconnected = true
-        val uid = Repo.find(deviceId)?.uid ?: return
-        releaseRtc()
-        message.text = "Wechsle auf ${if (hd) "HD" else "SD"} …"
-        message.visibility = View.VISIBLE
-        later(3000) {
-            if (rtc == null && player == null && attempt == 0) {
-                startRtc(uid)
-                later(31_000, qualityCheck)
-            }
+        if (rtc == null || !gotFrame || frameHeight <= 0) return
+        if (hd && frameHeight < 720) {
+            // Reconnecting with the main stream gets refused, so don't: stay on SD and say why
+            hdUnsupported = true
+            hd = false
+            onQuality?.invoke(false)
+            onStatus?.invoke("Die Klingel liefert per WebRTC nur SD ($frameHeight Zeilen). HD gibt es nur in Smart Life.")
         }
     }
 
