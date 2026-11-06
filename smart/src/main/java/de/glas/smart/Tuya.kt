@@ -36,6 +36,12 @@ class Tuya(private val clientId: String, private val secret: String, private val
         private var tokenUntil = 0L
         private var tokenFor = ""
 
+        // Homes of the linked accounts, including shared ones, for devices the account doesn't own
+        private var homesCache: List<Home> = emptyList()
+        private var homesAt = 0L
+        private var homesFor = ""
+        private val refusedHomes = HashSet<String>()
+
         @Synchronized
         fun forgetToken() {
             token = null
@@ -76,7 +82,40 @@ class Tuya(private val clientId: String, private val secret: String, private val
             for (i in 0 until list.length()) out.add(Device.from(list.getJSONObject(i)))
             lastRow = r.optString("last_row_key", "")
         } while (r.optBoolean("has_more", false) && lastRow.isNotEmpty() && out.size < 2000)
+        addMemberHomeDevices(out)
         return out
+    }
+
+    /**
+     * Devices in homes where the linked account is only a member (shared with it in Smart Life).
+     * The call above lists only the account's own devices, so ask each home for its devices too.
+     * Homes that refuse are skipped until the app restarts, to spare the API quota.
+     */
+    private fun addMemberHomeDevices(out: MutableList<Device>) {
+        val now = System.currentTimeMillis()
+        if (now - homesAt > 6 * 3600_000L || homesFor != host + clientId) {
+            val uids = out.map { it.uid }.filter { it.isNotEmpty() }.distinct()
+            homesCache = uids.flatMap { uid -> runCatching { homes(uid) }.getOrDefault(emptyList()) }.distinctBy { it.id }
+            homesAt = now
+            homesFor = host + clientId
+        }
+        val known = out.map { it.id }.toHashSet()
+        for (home in homesCache) {
+            if (home.id in refusedHomes) continue
+            val arr = try {
+                call("GET", "/v1.0/homes/${home.id}/devices") as? JSONArray ?: continue
+            } catch (e: TuyaException) {
+                if (e.code == 1106 || e.code == 28841105) refusedHomes += home.id
+                continue
+            } catch (e: Exception) {
+                continue
+            }
+            for (i in 0 until arr.length()) {
+                val d = Device.from(arr.getJSONObject(i))
+                d.homeName = home.name
+                if (d.id.isNotEmpty() && known.add(d.id)) out.add(d)
+            }
+        }
     }
 
     fun status(id: String): Map<String, Any?> {

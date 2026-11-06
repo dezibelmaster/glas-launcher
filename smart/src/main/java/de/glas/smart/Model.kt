@@ -22,16 +22,19 @@ class Device(
     val product: String,
     val status: MutableMap<String, Any?>,
 ) {
+    /** Name of the shared home the device comes from, if the account is only a member there. */
+    var homeName = ""
+
     companion object {
         fun from(o: JSONObject) = Device(
-            id = o.optString("id"),
+            id = o.optString("id").ifBlank { o.optString("dev_id") },
             name = o.optString("name").ifBlank { o.optString("product_name", "Gerät") },
             category = o.optString("category"),
             online = if (o.has("online")) o.optBoolean("online") else o.optBoolean("is_online", true),
             uid = o.optString("uid"),
             product = o.optString("product_name"),
             status = statusMap(o.optJSONArray("status") ?: JSONArray()).toMutableMap(),
-        )
+        ).also { it.homeName = o.optString("home_name") }
 
         fun statusMap(arr: JSONArray): Map<String, Any?> {
             val m = LinkedHashMap<String, Any?>()

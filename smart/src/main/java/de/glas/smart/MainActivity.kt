@@ -46,7 +46,7 @@ object Repo {
             val st = JSONArray()
             d.status.forEach { (k, v) -> st.put(JSONObject().put("code", k).put("value", v ?: JSONObject.NULL)) }
             arr.put(JSONObject().put("id", d.id).put("name", d.name).put("category", d.category).put("online", d.online)
-                .put("uid", d.uid).put("product_name", d.product).put("status", st))
+                .put("uid", d.uid).put("product_name", d.product).put("home_name", d.homeName).put("status", st))
         }
         store.saveDevices(arr.toString())
     }
@@ -221,7 +221,7 @@ class MainActivity : Activity() {
                 for (h in homes) {
                     if (homeName.isEmpty()) homeName = h.name
                     runCatching { api.rooms(h.id) }.getOrDefault(emptyList()).forEach {
-                        rooms.put(JSONObject().put("name", it.name).put("devices", JSONArray(it.deviceIds)))
+                        rooms.put(JSONObject().put("name", if (homes.size > 1) "${h.name} · ${it.name}" else it.name).put("devices", JSONArray(it.deviceIds)))
                     }
                     runCatching { api.scenes(h.id) }.getOrDefault(emptyList()).forEach {
                         scenes.put(JSONObject().put("home", it.homeId).put("id", it.id).put("name", it.name))
@@ -292,7 +292,10 @@ class MainActivity : Activity() {
                 placed += ids
                 if (list.isNotEmpty()) groups += room.getString("name") to list
             }
-            shown.filter { it.id !in placed }.takeIf { it.isNotEmpty() }?.let { groups += "Ohne Raum" to it }
+            val rest = shown.filter { it.id !in placed }
+            // Devices from shared homes whose rooms Tuya doesn't reveal: grouped under the home's name
+            for ((home, list) in rest.filter { it.homeName.isNotEmpty() }.groupBy { it.homeName }) groups += "🏠 $home" to list
+            rest.filter { it.homeName.isEmpty() }.takeIf { it.isNotEmpty() }?.let { groups += "Ohne Raum" to it }
         } else {
             for (k in Kind.values()) {
                 val list = shown.filter { it.kind == k }
