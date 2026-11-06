@@ -95,14 +95,20 @@ class FamilyActivity : Activity() {
         homesBox.addView(sectionTitle("🏠 ${home.name.ifBlank { "Zuhause" }}"))
         val box = vertical()
         members.onFailure {
-            box.addView(text(15f, RED).apply { text = Tuya.explain(it) })
+            box.addView(text(15f, if (denied(it)) MUTED else RED).apply {
+                text = if (denied(it)) "Die Mitglieder dieses Zuhauses gibt Tuya nicht heraus, z. B. weil du hier nur " +
+                    "Mitglied und nicht Besitzer bist. Verwalten geht nur in Smart Life."
+                else Tuya.explain(it)
+                setLineSpacing(0f, 1.15f)
+            }, matchWrap().margins(b = dp(10)))
         }
         members.onSuccess { list ->
             for (m in list.sortedWith(compareBy({ !it.owner }, { !it.admin }, { it.name.lowercase() }))) {
                 box.addView(memberRow(home, m), matchWrap().margins(b = dp(8)))
             }
         }
-        box.addView(pill("＋ Mitglied einladen", AMBER) { invite(home) }, wrap().margins(t = dp(6)))
+        if (members.isSuccess) box.addView(pill("＋ Mitglied einladen", AMBER) { invite(home) }, wrap().margins(t = dp(6)))
+        else box.addView(pill("In Smart Life verwalten", null) { openSmartLife() }, wrap().margins(t = dp(6)))
         homesBox.addView(panel(null, box), matchWrap())
     }
 
@@ -186,10 +192,27 @@ class FamilyActivity : Activity() {
                 loadHomes()
             }
             r.onFailure {
+                if (denied(it)) {
+                    // Tuya lets cloud projects read homes of Smart Life accounts, but not change their members
+                    AlertDialog.Builder(this).setTitle("Nur in Smart Life möglich")
+                        .setMessage("Tuya erlaubt fremden Apps nicht, Mitglieder eines Smart-Life-Zuhauses zu ändern. " +
+                            "Das geht nur einmalig in der Smart-Life-App:\n\nIch → Haushaltsverwaltung → Zuhause wählen → " +
+                            "Mitglied hinzufügen.\n\nDanach erscheint das Mitglied hier in der Liste.")
+                        .setPositiveButton("Smart Life öffnen") { _, _ -> openSmartLife() }
+                        .setNegativeButton("Schließen", null).show()
+                    return@onFailure
+                }
                 val msg = Tuya.explain(it) + (failHint?.let { h -> "\n\n$h" } ?: "")
                 AlertDialog.Builder(this).setTitle("Hat nicht geklappt").setMessage(msg).setPositiveButton("OK", null).show()
             }
         }
+    }
+
+    private fun denied(e: Throwable) = e is TuyaException && (e.code == 1106 || e.code == 28841105)
+
+    private fun openSmartLife() {
+        val launch = packageManager.getLaunchIntentForPackage("com.tuya.smartlife")
+        if (launch != null) startActivity(launch) else toast("Die Smart-Life-App ist nicht installiert.")
     }
 
     // ---- Another phone ----

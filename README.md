@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.2** (Handy-App für Smart-Life-Geräte).
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.3** (Handy-App für Smart-Life-Geräte).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -282,6 +282,7 @@ Sie ersetzt die Smart-Life-App im Alltag; zum Anlernen neuer Geräte bleibt Smar
 - **Alles Weitere:** Die App liest die Funktionen jedes Geräts aus und bietet dafür Schalter, Regler und Auswahl an.
 - **Familie (👪 oben):** Mitglieder des Zuhauses wie in Smart Life sehen, per E-Mail oder Handynummer ihres
   Smart-Life-Kontos einladen, zum Admin machen oder entfernen. Braucht den Dienst „Smart Home Basic Service“ im Tuya-Projekt.
+  Lehnt Tuya das Ändern ab (Code 1106, bei Smart-Life-Konten üblich), führt die App zur Haushaltsverwaltung in Smart Life.
 - **Weiteres Handy:** Unter *Familie* einen QR-Code oder Link erzeugen, der Glas Smart auf einem anderen Handy ohne
   erneute Einrichtung verbindet (Link öffnen oder in den Einstellungen „Einrichtungslink einfügen“). Der Link enthält den
   Tuya-Zugang, also nur innerhalb der Familie weitergeben.
@@ -301,8 +302,8 @@ Der kostenlose IoT-Core-Dienst läuft nach einer Weile ab und lässt sich unter 
 kostenlos verlängern; die App weist darauf hin. Zugangsdaten und Zwischenspeicher bleiben auf dem Handy
 (keine Android-Sicherung) und gehen nur an die Tuya-Cloud.
 
-Installieren: `GlasSmart-1.2.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
-`adb install -r GlasSmart-1.2.apk`.
+Installieren: `GlasSmart-1.3.apk` aufs Handy kopieren und öffnen (Installation aus unbekannten Quellen erlauben), oder
+`adb install -r GlasSmart-1.3.apk`.
 
 ## Projectivy-Plugins
 

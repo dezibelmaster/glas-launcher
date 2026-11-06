@@ -3,6 +3,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- To open the Smart Life app for things only it may do, such as inviting family members -->
+    <queries>
+        <package android:name="com.tuya.smartlife" />
+    </queries>
+
     <!-- Access data stays on the phone: no cloud backup of the Tuya secret -->
     <application
         android:label="Glas Smart"
