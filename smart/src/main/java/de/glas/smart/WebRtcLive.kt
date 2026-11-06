@@ -97,13 +97,16 @@ class WebRtcLive(
             try {
                 connect(hd)
             } catch (e: Exception) {
-                fail(if (e is TuyaException) Tuya.explain(e) else (e.message ?: e.javaClass.simpleName))
+                fail("$step: " + if (e is TuyaException) Tuya.explain(e) else (e.message ?: e.javaClass.simpleName))
             }
         }
     }
 
+    private var step = ""
+
     private fun connect(hd: Boolean) {
         val api = Store(ctx).api()
+        step = "WebRTC-Daten"
         val conf = api.webrtcConfig(uid, deviceId)
         if (!conf.optBoolean("supports_webrtc", true)) throw Exception("Kamera kann kein WebRTC")
         auth = conf.optString("auth")
@@ -129,12 +132,14 @@ class WebRtcLive(
         mainType = mqttType(best?.optInt("streamType", 2) ?: 2)
         subType = mqttType(worst?.optInt("streamType", 4) ?: 4)
 
+        step = "MQTT-Zugang"
         val hub = api.hubConfig(uid)
         val subscribe = hub.optJSONObject("source_topic")?.optString("ipc") ?: throw Exception("Kein MQTT-Thema")
         publishTopic = (hub.optJSONObject("sink_topic")?.optString("ipc") ?: "")
             .replace("moto_id", motoId).replace("{device_id}", deviceId)
         from = subscribe.split("/").getOrElse(3) { uid }
 
+        step = "MQTT-Verbindung (${hub.optString("url")})"
         val client = MqttClient(hub.getString("url"), hub.getString("client_id"), MemoryPersistence())
         mqtt = client
         client.connect(MqttConnectOptions().apply {
@@ -146,6 +151,7 @@ class WebRtcLive(
         })
         client.subscribe(subscribe, 1) { _, msg -> onMqtt(msg) }
         if (closed) return
+        step = "Verbindungsaufbau"
 
         main.post { createPeer(if (hd) mainType else subType) }
     }

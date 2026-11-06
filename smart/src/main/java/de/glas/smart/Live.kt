@@ -176,6 +176,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun rtcFailed(reason: String) {
         if (rtc == null) return
         notes += "WebRTC: $reason"
+        // Show why, so a fallback to HLS isn't a mystery
+        context.toast("WebRTC: $reason – versuche HLS")
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)
