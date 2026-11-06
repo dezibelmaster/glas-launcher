@@ -85,6 +85,8 @@ class WebRtcLive(
     private var clarity = false
     private var mainType = 0
     private var subType = 1
+    /** What the camera reported about itself, shown when something goes wrong. */
+    @Volatile var info = ""
     var muted = true
         set(v) {
             field = v
@@ -113,6 +115,8 @@ class WebRtcLive(
         motoId = conf.optString("moto_id")
         ices = conf.optJSONObject("p2p_config")?.optJSONArray("ices") ?: JSONArray()
         val skill = JSONObject(conf.optString("skill", "{}").ifBlank { "{}" })
+        val lowPower = skill.optInt("lowPower") > 0
+        val localKey = conf.optString("local_key")
         clarity = (skill.optInt("webrtc") and (1 shl 5)) != 0
 
         // Main stream = highest resolution, sub stream = lowest; HEVC needs a data channel we don't support
@@ -151,6 +155,20 @@ class WebRtcLive(
         })
         client.subscribe(subscribe, 1) { _, msg -> onMqtt(msg) }
         if (closed) return
+
+        // Battery doorbells sleep: wake them like go2rtc does (CRC32 of the local key to m/w/<device>)
+        if (lowPower && localKey.isNotEmpty()) {
+            step = "Aufwecken"
+            val crc = java.util.zip.CRC32().apply { update(localKey.toByteArray()) }.value
+            val payload = byteArrayOf((crc shr 24).toByte(), (crc shr 16).toByte(), (crc shr 8).toByte(), crc.toByte())
+            runCatching { client.publish("m/w/$deviceId", payload, 1, false) }
+            Thread.sleep(2000)
+        }
+        info = "Kamera: " + (0 until videos.length()).joinToString(", ") { i ->
+            val v = videos.getJSONObject(i)
+            "Typ ${v.optInt("streamType")} ${v.optInt("width")}×${v.optInt("height")} " +
+                (if (v.optInt("codecType") == 4) "H.265" else "H.264")
+        } + (if (lowPower) ", Stromsparmodus" else "") + ", WebRTC ${skill.optInt("webrtc")}"
         step = "Verbindungsaufbau"
 
         main.post { createPeer(if (hd) mainType else subType) }
@@ -214,11 +232,13 @@ class WebRtcLive(
         runCatching {
             val f = factory(ctx)
             val v = f.getRtpReceiverCapabilities(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO).codecs
-                .filter { it.name.equals("H264", true) }
-                .sortedBy { if (it.parameters["packetization-mode"] == "1" && it.parameters["profile-level-id"]?.startsWith("42e0") == true) 0 else 1 }
+                .filter { it.name.equals("H264", true) && it.parameters["packetization-mode"] == "1" &&
+                    it.parameters["profile-level-id"] in setOf("42001f", "42e01f", "640032", "640c1f", "4d001f") }
+                .sortedBy { listOf("42001f", "42e01f", "640032").indexOf(it.parameters["profile-level-id"]).let { i -> if (i < 0) 9 else i } }
             if (v.isNotEmpty()) videoT.setCodecPreferences(v)
             val a = f.getRtpReceiverCapabilities(MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO).codecs
                 .filter { it.name.uppercase() in setOf("PCMA", "PCMU", "OPUS") }
+                .sortedBy { listOf("OPUS", "PCMU", "PCMA").indexOf(it.name.uppercase()) }
             if (a.isNotEmpty()) audioT.setCodecPreferences(a)
         }
 

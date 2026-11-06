@@ -181,7 +181,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         if (rtc == null) return
         notes += "WebRTC: $reason"
         // Show why, so a fallback to HLS isn't a mystery
-        onStatus?.invoke("WebRTC: $reason")
+        onStatus?.invoke("WebRTC: $reason" + (rtc?.info?.takeIf { it.isNotEmpty() }?.let { "\n$it" } ?: ""))
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)
