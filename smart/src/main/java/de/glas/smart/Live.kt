@@ -64,10 +64,11 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         visibility = View.GONE
         setOnClickListener { toggleQuality() }
     }
-    private var sd = false
+    // Quality: automatic (the player picks what the connection carries) or forced HD
+    private var hd = false
+    private val stalls = ArrayList<Long>()
     private var heights: List<Int> = emptyList()
     private var videoTracks = 0
-    private var hdRetried = false
 
     init {
         setBackgroundColor(Color.BLACK)
@@ -142,7 +143,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         val preferred = prefs.getString("stream_$deviceId", null)
         types = listOf("hls", "rtsp").sortedBy { if (it == preferred) 0 else 1 }
         reconnects = 0
-        hdRetried = false
+        stalls.clear()
         attempt = 0
         notes.clear()
         connect()
@@ -187,9 +188,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         video.player = p
         video.visibility = View.VISIBLE
         p.volume = if (muted) 0f else 1f
-        // Start straight in the best quality: live streams are too short for the player to work its way up
-        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
-            .setForceHighestSupportedBitrate(!sd).setForceLowestBitrate(sd).build()
+        if (hd) p.trackSelectionParameters = p.trackSelectionParameters.buildUpon().setForceHighestSupportedBitrate(true).build()
         if (type == "rtsp") {
             // rtsps:// goes through a small TLS proxy on the phone; media is carried inside the RTSP connection
             var playUrl = url
@@ -285,6 +284,24 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun reconnect() {
         release()
         reconnects++
+        // Picture keeps freezing: in HD go back to automatic, otherwise stop instead of loading forever
+        val now = System.currentTimeMillis()
+        stalls.removeAll { now - it > 90_000 }
+        stalls += now
+        if (stalls.size >= 3) {
+            stalls.clear()
+            if (hd) {
+                hd = false
+                context.toast("HD läuft über die Cloud nicht stabil, zurück auf Automatisch.")
+            } else {
+                notes += "${types[attempt].uppercase()}: Bild bleibt ständig hängen"
+                attempt = types.size
+                message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
+                message.visibility = View.VISIBLE
+                smartLife.visibility = View.VISIBLE
+                return
+            }
+        }
         if (reconnects > 3) {
             failed("Verbindung bricht immer wieder ab")
             return
@@ -297,18 +314,10 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun showQuality() {
         val h = player?.videoSize?.height ?: 0
         if (h <= 0 || !gotFrame) return
-        // The cloud sometimes starts in SD: ask once for a fresh stream, which often comes in HD
-        if (h < 720 && !sd && videoTracks < 2 && !hdRetried) {
-            hdRetried = true
-            later(1500) { if (player != null) reconnect() }
-        }
         val switchable = videoTracks > 1 || heights.size > 1
         val way = types.getOrNull(attempt)?.uppercase() ?: ""
-        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" + when {
-            switchable -> "  ⇅"
-            h < 720 -> "  · HD ↻"
-            else -> ""
-        }
+        quality.text = (if (h >= 720) "HD" else "SD") + " ${h}p · $way" +
+            if (switchable) (if (hd) " · HD" else " · Auto") + "  ⇅" else ""
         quality.isClickable = true
         quality.visibility = View.VISIBLE
     }
@@ -316,16 +325,13 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun toggleQuality() {
         val p = player ?: return
         if (videoTracks < 2 && heights.size < 2) {
-            // Only one quality in this stream: in SD, fetch a new stream in the hope of HD
-            if ((p.videoSize.height) < 720) {
-                context.toast("Fordere HD an …")
-                reconnect()
-            } else context.toast("Die Kamera liefert über die Cloud nur diese Auflösung.")
+            context.toast("Die Kamera liefert über die Cloud nur diese Auflösung.")
             return
         }
-        sd = !sd
-        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
-            .setForceHighestSupportedBitrate(!sd).setForceLowestBitrate(sd).build()
+        hd = !hd
+        stalls.clear()
+        context.toast(if (hd) "HD erzwingen" else "Automatische Qualität")
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon().setForceHighestSupportedBitrate(hd).build()
     }
 
     private fun release() {
