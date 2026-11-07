@@ -169,7 +169,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         })
         session.muted = muted
         rtc = session
-        session.start(hd)
+        session.start(hd, nudge = rtcRefusals > 0)
         cancel(rtcWatchdog)
         later(25_000, rtcWatchdog)
     }
@@ -195,13 +195,21 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private fun rtcFailed(reason: String) {
         if (rtc == null) return
         val info = rtc?.info ?: ""
-        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 4) {
+        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 6) {
             releaseRtc()
             val uid = Repo.find(deviceId)?.uid ?: ""
-            message.text = "Kamera lehnt ab, neuer Versuch ($rtcRefusals/4) …\nLäuft das Bild noch in Smart Life oder im Browser?"
+            message.text = "Kamera wird geweckt, neuer Versuch ($rtcRefusals/6) …"
             message.visibility = View.VISIBLE
             onStatus?.invoke("WebRTC: $reason")
-            later(3000L * rtcRefusals) { if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid) }
+            // After a pause the doorbell refuses the first requests (Smart Life too). Asking the cloud for a
+            // stream address makes it start its video service; the next WebRTC attempt also sends a wake-up call.
+            if (rtcRefusals == 1 || rtcRefusals == 3) {
+                val api = Store(context).api()
+                async({ api.streamUrl(deviceId, "hls") }) { }
+            }
+            later(if (rtcRefusals == 1) 2000L else 3000L) {
+                if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid)
+            }
             return
         }
         notes += "WebRTC: $reason"

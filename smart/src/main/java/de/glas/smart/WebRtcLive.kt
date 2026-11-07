@@ -85,6 +85,7 @@ class WebRtcLive(
     private var clarity = false
     private var mainType = 0
     private var wantHd = false
+    private var nudge = false
     private var subType = 1
     /** What the camera reported about itself, shown when something goes wrong. */
     @Volatile var info = ""
@@ -95,7 +96,9 @@ class WebRtcLive(
         }
 
     /** Starts the connection; [hd] chooses the main stream, otherwise the sub stream. */
-    fun start(hd: Boolean) {
+    /** [nudge]: the camera refused before; send the wake-up call even if it doesn't report a power-saving mode. */
+    fun start(hd: Boolean, nudge: Boolean = false) {
+        this.nudge = nudge
         thread(name = "webrtc-start") {
             try {
                 connect(hd)
@@ -158,7 +161,7 @@ class WebRtcLive(
         if (closed) return
 
         // Battery doorbells sleep: wake them like go2rtc does (CRC32 of the local key to m/w/<device>)
-        if (lowPower && localKey.isNotEmpty()) {
+        if ((lowPower || nudge) && localKey.isNotEmpty()) {
             step = "Aufwecken"
             val crc = java.util.zip.CRC32().apply { update(localKey.toByteArray()) }.value
             val payload = byteArrayOf((crc shr 24).toByte(), (crc shr 16).toByte(), (crc shr 8).toByte(), crc.toByte())
