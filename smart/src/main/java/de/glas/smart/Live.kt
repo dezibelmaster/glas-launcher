@@ -364,7 +364,12 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             connect()
             return
         }
-        message.text = "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
+        // Refusals mean standby: only Smart Life's own connection wakes this doorbell (seen with the LSC Bell 8S)
+        val standby = rtcRefusals > 0
+        message.text = if (standby) "Die Klingel ist im Standby.\n\nTippe unten auf „In Smart Life öffnen“, starte dort das Bild " +
+            "und komm zurück – dann klappt es hier sofort.\n\nOder antippen zum Wiederholen"
+        else "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
+        if (standby) onStatus?.invoke(notes.joinToString("\n"))
         message.visibility = View.VISIBLE
     }
 
