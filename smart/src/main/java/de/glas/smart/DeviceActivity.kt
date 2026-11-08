@@ -71,7 +71,9 @@ class DeviceActivity : Activity() {
             drawQuality()
             lv.onQuality = { available -> qualityBox.visibility = if (available) View.VISIBLE else View.GONE }
             row.addView(qualityBox)
-            row.addView(pill("In Smart Life öffnen", null) { openSmartLife() })
+            row.addView(pill("In Smart Life öffnen", null) { openSmartLife() }, wrap().margins(r = dp(8)))
+            // Like Smart Life's home screen icon: opens the live picture straight away
+            row.addView(pill("📌", null) { pinLiveShortcut(d) })
             outer.addView(row, matchWrap().margins(b = dp(6)))
             val status = text(12f, MUTED).apply { visibility = View.GONE; setTextIsSelectable(true) }
             lv.onStatus = { msg ->
@@ -112,6 +114,22 @@ class DeviceActivity : Activity() {
         super.onPause()
         cancel(poll)
         live?.stop()
+    }
+
+    /** Puts an icon on the home screen that opens this camera's live picture in full screen. */
+    private fun pinLiveShortcut(d: Device) {
+        val sm = getSystemService(android.content.pm.ShortcutManager::class.java)
+        if (sm == null || !sm.isRequestPinShortcutSupported) {
+            toast("Dein Startbildschirm unterstützt keine App-Verknüpfungen.")
+            return
+        }
+        val intent = android.content.Intent(this, LiveActivity::class.java)
+            .setAction(android.content.Intent.ACTION_VIEW).putExtra("id", d.id)
+        val info = android.content.pm.ShortcutInfo.Builder(this, "live_${d.id}")
+            .setShortLabel(d.name.take(24)).setLongLabel("${d.name} – Live-Bild")
+            .setIcon(android.graphics.drawable.Icon.createWithResource(this, R.drawable.icon_camera))
+            .setIntent(intent).build()
+        sm.requestPinShortcut(info, null)
     }
 
     private fun refreshStatus() {

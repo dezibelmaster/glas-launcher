@@ -47,7 +47,7 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_camera_info" />
         </receiver>
-        <activity android:name=".LiveActivity" android:exported="false"
+        <activity android:name=".LiveActivity" android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <!-- Opens setup links glassmart://setup?... from the family page of another phone -->
         <activity android:name=".SetupActivity" android:exported="true"
