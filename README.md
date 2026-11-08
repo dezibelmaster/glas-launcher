@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**, **Glas Smart 1.0** (Wear OS).
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -45,6 +45,38 @@ Aktuelle Versionen: **Glas Launcher 2.38**, **Glas Natur-Videos 1.2**.
 - **Bildschirmschoner:** große Uhr mit Datum und Wetter, wandert gegen Einbrennen.
 - **Wetter:** Open-Meteo, beliebige Orte, hohe Schleierwolken werden herausgerechnet.
 - **Startbildschirm:** ersetzt die Google-TV-Oberfläche, auch nach einem Neustart.
+
+## Glas Smart (Wear OS)
+
+App für Smartwatches mit Wear OS 3 oder neuer (z. B. Pixel Watch, Galaxy Watch 4 und neuer), im selben Milchglas-Stil.
+Läuft ohne App auf dem Handy.
+
+- **Wetter:** Temperatur, Wetterlage, Höchst- und Tiefstwert, die nächsten 8 Stunden, gefühlte Temperatur, Wind und
+  Böen, Luftfeuchte, Sonnenauf- und -untergang, 7 Tage. Open-Meteo wie im Launcher, hohe Schleierwolken herausgerechnet.
+  Hintergrundfarbe passend zum Wetter.
+- **Warnungen** für die nächsten 24 Stunden aus der Vorhersage: Gewitter, Sturmböen, Glätte, Starkregen, Schneefall, Hitze.
+- **Kachel „Glas Wetter“:** Wetter auf einen Blick, wird jede halbe Stunde erneuert; antippen öffnet die App.
+  Hinzufügen: auf dem Zifferblatt nach links wischen → ganz rechts *+* → „Glas Wetter“.
+- **Fernbedienung** für den Fernseher: Pfeiltasten, OK, Zurück, Home (öffnet den Glas Launcher), Ton aus,
+  Wiedergabe/Pause; **Krone bzw. Lünette drehen** ändert die Lautstärke. Verbindet sich wie Bugjaeger mit dem
+  Debugging-Zugang des Fernsehers (Port 5555). Voraussetzungen: USB-Debugging am Fernseher an, Uhr im selben WLAN.
+  Beim ersten Mal fragt der Fernseher „USB-Debugging zulassen?“ → „Immer zulassen“ und „Zulassen“.
+  Die Uhr schaltet für die Fernbedienung selbst auf WLAN, auch wenn sie sonst über das Handy online ist.
+- **Einstellungen:** Ort suchen (Tastatur oder Spracheingabe) oder aktuellen Standort nehmen, Adresse des Fernsehers
+  (Standard `192.168.178.173`).
+- **Sprachen:** Deutsch und Englisch, wie auf der Uhr eingestellt.
+
+**Installieren:** Auf der Uhr *Einstellungen → System → Info* → 7× auf *Build-Nummer* (bzw. *Softwareversion*),
+dann unter *Entwickleroptionen* **ADB-Debugging** und **Debugging über WLAN** einschalten. Die dort angezeigte Adresse
+in Bugjaeger verbinden (Port wie angezeigt) oder am Computer:
+
+```
+adb connect <Adresse der Uhr>:<Port>
+adb install -r GlasSmart-1.0.apk
+```
+
+Bei neueren Uhren muss die Uhr zuerst gekoppelt werden (*Debugging über WLAN → Neues Gerät koppeln*, am Computer
+`adb pair <Adresse>:<Port>` mit dem angezeigten Code).
 
 ## Bedienung auf dem Fernseher
 
@@ -93,6 +125,7 @@ gradle assembleDebug
 
 - Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.38.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
+- Uhr: `wear/build/outputs/apk/debug/GlasSmart-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
 
