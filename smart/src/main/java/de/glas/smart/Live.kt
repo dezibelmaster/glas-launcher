@@ -55,6 +55,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private val qualityCheck = Runnable { checkQuality() }
     // The doorbell refuses while an earlier session is still winding down: ask again a few times first
     private var rtcRefusals = 0
+    private var rtspReport = ""
     private var rendererReady = false
     private val renderer = org.webrtc.SurfaceViewRenderer(ctx).apply { visibility = View.GONE }
     private val rtcWatchdog = Runnable { rtcFailed("kein Bild nach 25 s") }
@@ -128,6 +129,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         newStreams = 0
         rtcTries = 0
         rtcRefusals = 0
+        rtspReport = ""
         attempt = 0
         notes.clear()
         val uid = Repo.find(deviceId)?.uid ?: ""
@@ -144,7 +146,8 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                     post {
                         frameHeight = if (r % 180 == 0) h else w
                         // Show what really arrives, so HD/SD can be checked
-                        if (rtc != null) onStatus?.invoke("Bild: ${if (r % 180 == 0) "$w×$h" else "$h×$w"} über WebRTC")
+                        if (rtc != null) onStatus?.invoke("Bild: ${if (r % 180 == 0) "$w×$h" else "$h×$w"} über WebRTC" +
+                            if (rtspReport.isNotEmpty()) "\n$rtspReport, danach Versuch $rtcRefusals" else "")
                     }
                 }
             })
@@ -186,7 +189,9 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             cancel(qualityCheck)
             later(8000, qualityCheck)
         }
-        onStatus?.invoke(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "")
+        // Keep the wake-up report visible, so it shows whether waking helped
+        onStatus?.invoke(listOf(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "",
+            if (rtspReport.isNotEmpty()) "$rtspReport, danach Versuch $rtcRefusals" else "").filter { it.isNotEmpty() }.joinToString("\n"))
         cancel(snapshots)
         later(2000, snapshots)
     }
@@ -201,13 +206,24 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             message.text = "Kamera wird geweckt, neuer Versuch ($rtcRefusals/6) …"
             message.visibility = View.VISIBLE
             onStatus?.invoke("WebRTC: $reason")
-            // After a pause the doorbell refuses the first requests (Smart Life too). Asking the cloud for a
-            // stream address makes it start its video service; the next WebRTC attempt also sends a wake-up call.
-            if (rtcRefusals == 1 || rtcRefusals == 3) {
+            // After a pause the doorbell refuses (Smart Life too). Playing its RTSP stream for a few seconds makes
+            // Tuya's media server pull from the camera, which may wake it; the next WebRTC attempt also sends a wake-up call.
+            if (rtcRefusals == 1 || rtcRefusals == 4) {
+                message.text = "Kamera wird per RTSP geweckt …"
                 val api = Store(context).api()
-                async({ api.streamUrl(deviceId, "hls") }) { }
+                val tryNo = rtcRefusals
+                async({ RtspWake.run(api.streamUrl(deviceId, "rtsp")) }) { r ->
+                    val report = r.getOrElse { Tuya.explain(it) }
+                    rtspReport = "RTSP-Weckruf: $report"
+                    onStatus?.invoke("WebRTC: $reason\n$rtspReport")
+                    if (rtc == null && player == null && attempt == 0 && rtcRefusals == tryNo && uid.isNotEmpty()) {
+                        message.text = "Kamera wird geweckt, neuer Versuch ($rtcRefusals/6) …"
+                        startRtc(uid)
+                    }
+                }
+                return
             }
-            later(if (rtcRefusals == 1) 2000L else 3000L) {
+            later(3000L) {
                 if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid)
             }
             return
@@ -369,7 +385,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.text = if (standby) "Die Klingel ist im Standby.\n\nTippe unten auf „In Smart Life öffnen“, starte dort das Bild " +
             "und komm zurück – dann klappt es hier sofort.\n\nOder antippen zum Wiederholen"
         else "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
-        if (standby) onStatus?.invoke(notes.joinToString("\n"))
+        if (standby) onStatus?.invoke((notes + listOf(rtspReport).filter { it.isNotEmpty() }).joinToString("\n"))
         message.visibility = View.VISIBLE
     }
 
