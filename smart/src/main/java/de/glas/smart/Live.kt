@@ -55,7 +55,6 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     private val qualityCheck = Runnable { checkQuality() }
     // The doorbell refuses while an earlier session is still winding down: ask again a few times first
     private var rtcRefusals = 0
-    private var rtspReport = ""
     private var rendererReady = false
     private val renderer = org.webrtc.SurfaceViewRenderer(ctx).apply { visibility = View.GONE }
     private val rtcWatchdog = Runnable { rtcFailed("kein Bild nach 25 s") }
@@ -129,7 +128,6 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         newStreams = 0
         rtcTries = 0
         rtcRefusals = 0
-        rtspReport = ""
         attempt = 0
         notes.clear()
         val uid = Repo.find(deviceId)?.uid ?: ""
@@ -146,8 +144,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
                     post {
                         frameHeight = if (r % 180 == 0) h else w
                         // Show what really arrives, so HD/SD can be checked
-                        if (rtc != null) onStatus?.invoke("Bild: ${if (r % 180 == 0) "$w×$h" else "$h×$w"} über WebRTC" +
-                            if (rtspReport.isNotEmpty()) "\n$rtspReport, danach Versuch $rtcRefusals" else "")
+                        if (rtc != null) onStatus?.invoke("Bild: ${if (r % 180 == 0) "$w×$h" else "$h×$w"} über WebRTC")
                     }
                 }
             })
@@ -189,39 +186,24 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
             cancel(qualityCheck)
             later(8000, qualityCheck)
         }
-        // Keep the wake-up report visible, so it shows whether waking helped
-        onStatus?.invoke(listOf(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "",
-            if (rtspReport.isNotEmpty()) "$rtspReport, danach Versuch $rtcRefusals" else "").filter { it.isNotEmpty() }.joinToString("\n"))
+        onStatus?.invoke(if (frameHeight > 0) "Bild: $frameHeight Zeilen über WebRTC" else "")
         cancel(snapshots)
         later(2000, snapshots)
     }
 
     /** WebRTC didn't work: note why and fall back to HLS. */
-    private fun rtcFailed(reason: String) {
+    private fun rtcFailed(why: String) {
+        var reason = why
         if (rtc == null) return
-        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 1) {
-            // After a pause the doorbell refuses (Smart Life too). Play its RTSP stream for a few seconds so Tuya's
-            // media server pulls from the camera, then try WebRTC once more. If that is refused too, HLS takes over
-            // right away: it got a picture within seconds in tests, and WebRTC only delivers SD on this doorbell anyway.
-            releaseRtc()
-            val uid = Repo.find(deviceId)?.uid ?: ""
-            message.text = "Kamera wird per RTSP geweckt …"
-            message.visibility = View.VISIBLE
-            onStatus?.invoke("WebRTC: $reason")
-            val api = Store(context).api()
-            async({ RtspWake.run(api.streamUrl(deviceId, "rtsp")) }) { r ->
-                rtspReport = "RTSP-Weckruf: " + r.getOrElse { Tuya.explain(it) }
-                onStatus?.invoke("WebRTC: $reason\n$rtspReport")
-                if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) {
-                    message.text = "Neuer Versuch …"
-                    startRtc(uid)
-                }
-            }
-            return
+        // A refusal means the doorbell is in standby. Only Smart Life's own connection wakes its WebRTC part
+        // (an RTSP stream did not, tested); HLS gets a picture from standby within seconds, at the same SD size.
+        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab"))) {
+            rtcRefusals++
+            reason = "Kamera im Standby, Bild kommt über HLS"
         }
         notes += "WebRTC: $reason"
         // Show why, so a fallback to HLS isn't a mystery
-        onStatus?.invoke(listOf("WebRTC: $reason", rtspReport, "Bild kommt jetzt über HLS").filter { it.isNotEmpty() }.joinToString("\n"))
+        onStatus?.invoke(if (rtcRefusals > 0) reason else "WebRTC: $reason – Bild kommt über HLS")
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)
@@ -376,7 +358,7 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
         message.text = if (standby) "Die Klingel ist im Standby.\n\nTippe unten auf „In Smart Life öffnen“, starte dort das Bild " +
             "und komm zurück – dann klappt es hier sofort.\n\nOder antippen zum Wiederholen"
         else "Kein Live-Bild\n\n" + notes.joinToString("\n") + "\n\nAntippen zum Wiederholen"
-        if (standby) onStatus?.invoke((notes + listOf(rtspReport).filter { it.isNotEmpty() }).joinToString("\n"))
+        if (standby) onStatus?.invoke(notes.joinToString("\n"))
         message.visibility = View.VISIBLE
     }
 
