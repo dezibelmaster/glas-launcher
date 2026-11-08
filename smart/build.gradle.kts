@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.smart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 31
-        versionName = "3.9"
+        versionCode = 32
+        versionName = "4.0"
 
         // Phones only: keeps the WebRTC library from bloating the APK with emulator builds
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }

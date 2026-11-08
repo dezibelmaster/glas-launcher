@@ -199,38 +199,29 @@ class LiveView(ctx: Context, private val deviceId: String, private val fullscree
     /** WebRTC didn't work: note why and fall back to HLS. */
     private fun rtcFailed(reason: String) {
         if (rtc == null) return
-        val info = rtc?.info ?: ""
-        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 6) {
+        if (!gotFrame && (reason.startsWith("Kamera hat beendet") || reason.startsWith("Kamera lehnt ab")) && ++rtcRefusals <= 1) {
+            // After a pause the doorbell refuses (Smart Life too). Play its RTSP stream for a few seconds so Tuya's
+            // media server pulls from the camera, then try WebRTC once more. If that is refused too, HLS takes over
+            // right away: it got a picture within seconds in tests, and WebRTC only delivers SD on this doorbell anyway.
             releaseRtc()
             val uid = Repo.find(deviceId)?.uid ?: ""
-            message.text = "Kamera wird geweckt, neuer Versuch ($rtcRefusals/6) …"
+            message.text = "Kamera wird per RTSP geweckt …"
             message.visibility = View.VISIBLE
             onStatus?.invoke("WebRTC: $reason")
-            // After a pause the doorbell refuses (Smart Life too). Playing its RTSP stream for a few seconds makes
-            // Tuya's media server pull from the camera, which may wake it; the next WebRTC attempt also sends a wake-up call.
-            if (rtcRefusals == 1 || rtcRefusals == 4) {
-                message.text = "Kamera wird per RTSP geweckt …"
-                val api = Store(context).api()
-                val tryNo = rtcRefusals
-                async({ RtspWake.run(api.streamUrl(deviceId, "rtsp")) }) { r ->
-                    val report = r.getOrElse { Tuya.explain(it) }
-                    rtspReport = "RTSP-Weckruf: $report"
-                    onStatus?.invoke("WebRTC: $reason\n$rtspReport")
-                    if (rtc == null && player == null && attempt == 0 && rtcRefusals == tryNo && uid.isNotEmpty()) {
-                        message.text = "Kamera wird geweckt, neuer Versuch ($rtcRefusals/6) …"
-                        startRtc(uid)
-                    }
+            val api = Store(context).api()
+            async({ RtspWake.run(api.streamUrl(deviceId, "rtsp")) }) { r ->
+                rtspReport = "RTSP-Weckruf: " + r.getOrElse { Tuya.explain(it) }
+                onStatus?.invoke("WebRTC: $reason\n$rtspReport")
+                if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) {
+                    message.text = "Neuer Versuch …"
+                    startRtc(uid)
                 }
-                return
-            }
-            later(3000L) {
-                if (rtc == null && player == null && attempt == 0 && uid.isNotEmpty()) startRtc(uid)
             }
             return
         }
         notes += "WebRTC: $reason"
         // Show why, so a fallback to HLS isn't a mystery
-        onStatus?.invoke("WebRTC: $reason" + (info.takeIf { it.isNotEmpty() }?.let { "\n$it" } ?: ""))
+        onStatus?.invoke(listOf("WebRTC: $reason", rtspReport, "Bild kommt jetzt über HLS").filter { it.isNotEmpty() }.joinToString("\n"))
         releaseRtc()
         renderer.visibility = View.GONE
         onQuality?.invoke(false)
