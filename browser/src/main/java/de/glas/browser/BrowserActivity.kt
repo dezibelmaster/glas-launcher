@@ -280,13 +280,14 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
 
     private val progressListener = object : GeckoSession.ProgressDelegate {
         override fun onPageStart(s: GeckoSession, url: String) {
+            if (!isHome(url)) Diag.add("Lädt: $url")
             pageChanged(url)
             progress.visibility = View.VISIBLE
         }
 
         override fun onPageStop(s: GeckoSession, success: Boolean) {
             progress.visibility = View.INVISIBLE
-            if (!success && currentUrl != Store.HOME) Diag.add("Seite nicht fertig geladen: $currentUrl")
+            if (currentUrl != Store.HOME) Diag.add(if (success) "Fertig geladen: $currentUrl" else "Seite nicht fertig geladen: $currentUrl")
         }
 
         override fun onProgressChange(s: GeckoSession, value: Int) {
@@ -312,6 +313,10 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         }
 
         override fun onCloseRequest(s: GeckoSession) = finish()
+
+        // Steps of a page, for the error report: tells "nothing arrives" apart from "nothing is drawn"
+        override fun onFirstComposite(s: GeckoSession) = Diag.add("Erstes Bild gezeichnet")
+        override fun onFirstContentfulPaint(s: GeckoSession) = Diag.add("Erster Inhalt gezeichnet")
 
         override fun onCrash(s: GeckoSession) = restartSession(tr("abgestürzt"))
         override fun onKill(s: GeckoSession) = restartSession(tr("vom System beendet (Speicher)"))
@@ -564,7 +569,8 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         GlassMenu.Item(tr("Fehlerbericht")) {
             val log = Diag.all()
             GlassMenu.show(this, tr("Fehlerbericht"), listOf(GlassMenu.Item("OK") {}),
-                footer = if (log.isEmpty()) tr("Keine Fehler seit dem Start des Browsers.") else log.joinToString("\n"))
+                footer = (if (log.isEmpty()) tr("Keine Fehler seit dem Start des Browsers.") else log.take(14).joinToString("\n")) +
+                    "\n\n" + tr("Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht."))
         },
         GlassMenu.Item(tr("Info")) {
             val v = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()

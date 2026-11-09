@@ -36,6 +36,8 @@ class RemoteProvider : ContentProvider() {
         val error = if (method == "cmd") onMain { run(ctx, cmd) } else null
         val state = onMain { state(ctx) } ?: JSONObject()
         if (error != null) state.put("error", error)
+        // Collected off the main thread: reading the log takes a moment
+        if (cmd.optString("c") == "log") state.put("log", Diag.report(ctx))
         return Bundle().apply { putString("json", state.toString()) }
     }
 
@@ -47,7 +49,7 @@ class RemoteProvider : ContentProvider() {
             "fav-add" -> BrowserActivity.open?.let { if (it.currentUrl != Store.HOME) Store.addFavorite(ctx, it.currentTitle, it.currentUrl); it.refreshStart() }
             "fav-remove" -> { Store.removeFavorite(ctx, cmd.optString("url")); BrowserActivity.open?.refreshStart() }
             "install" -> BrowserActivity.open?.installExtension(cmd.optString("url")) ?: return tr("Der Browser ist am Fernseher nicht geöffnet.")
-            "state", "" -> {}
+            "state", "", "log" -> {}
             else -> {
                 val b = BrowserActivity.open ?: return tr("Der Browser ist am Fernseher nicht geöffnet.")
                 // Phone pixels to TV pixels: the TV screen is a lot larger than the touchpad

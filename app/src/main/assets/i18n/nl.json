@@ -444,5 +444,12 @@
  "Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.": "Naam of link van een Firefox-extensie van addons.mozilla.org. De browser op de tv vraagt het voor het installeren. Beheren in de browser onder 🧩.",
  "Suche Glas Browser …": "Glas Browser zoeken …",
  "Zuerst unter Updates die Update-Quelle (GitHub) festlegen": "Stel eerst onder Updates de updatebron (GitHub) in",
- "ca. 100 MB": "ca. 100 MB"
+ "ca. 100 MB": "ca. 100 MB",
+ "Fehlerbericht": "Foutrapport",
+ "Lädt eine Seite nicht? Den Bericht laden, kopieren und an den Entwickler schicken.": "Laadt een pagina niet? Laad het rapport, kopieer het en stuur het naar de ontwikkelaar.",
+ "Fehlerbericht laden": "Foutrapport laden",
+ "Kopieren": "Kopiëren",
+ "Kopiert": "Gekopieerd",
+ "Bericht wird gesammelt …": "Rapport wordt verzameld …",
+ "Text ist markiert – lange tippen und „Kopieren“ wählen.": "Tekst is geselecteerd – lang drukken en „Kopiëren” kiezen."
 }

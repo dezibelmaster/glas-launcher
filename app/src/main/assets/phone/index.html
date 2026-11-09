@@ -99,6 +99,8 @@
   .fav i { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; background: #c0392b; color: #fff;
     font-style: normal; font-size: 13px; line-height: 24px; display: none; }
   .editing .fav i { display: block; }
+  textarea.log { width: 100%; height: 50vh; margin-top: 10px; font: 11px/1.35 ui-monospace, Menlo, monospace; color: var(--text);
+    background: rgba(0,0,0,.4); border: 1px solid var(--line); border-radius: 12px; padding: 10px; white-space: pre; }
   .dpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 260px; margin: 0 auto; }
   .dpad button { height: 54px; font-size: 20px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -559,6 +561,23 @@ function browserCard() {
 
   const ext = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: false, placeholder: 'ublock-origin' });
   const installExt = slug => browser({ c: 'install', url: slug });
+  const logBox = h('textarea', { class: 'log', readOnly: true, style: 'display:none' });
+  async function loadLog() {
+    logBox.style.display = '';
+    logBox.value = t('Bericht wird gesammelt …');
+    try {
+      const r = await api('/api/browser', { c: 'log' });
+      logBox.value = r.log || r.error || t('Der Glas Browser antwortet nicht.');
+    } catch (e) { logBox.value = e.message; }
+  }
+  function copyLog() {
+    if (logBox.style.display === 'none' || !logBox.value) return loadLog();
+    logBox.focus(); logBox.select(); logBox.setSelectionRange(0, logBox.value.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { /* older browsers */ }
+    if (!ok && navigator.clipboard) navigator.clipboard.writeText(logBox.value).then(() => toast(t('Kopiert')), () => {});
+    else toast(ok ? t('Kopiert') : t('Text ist markiert – lange tippen und „Kopieren“ wählen.'));
+  }
 
   browserEl = h('div', {},
     h('div', { class: 'now' }),
@@ -591,6 +610,12 @@ function browserCard() {
       h('form', { class: 'line', onsubmit: e => { e.preventDefault(); if (ext.value.trim()) installExt(ext.value.trim()); ext.value = ''; ext.blur(); } },
         ext, h('button', { type: 'submit' }, t('Installieren'))),
       h('p', { class: 'note' }, t('Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.'))),
+    section(t('Fehlerbericht'),
+      h('p', { class: 'note', style: 'margin-top:0' }, t('Lädt eine Seite nicht? Den Bericht laden, kopieren und an den Entwickler schicken.')),
+      h('div', { class: 'grid g2' },
+        h('button', { onclick: loadLog }, t('Fehlerbericht laden')),
+        h('button', { onclick: copyLog }, t('Kopieren'))),
+      logBox),
     section(t('Pfeiltasten'),
       h('div', { class: 'dpad' },
         h('span'), cmd('▲', 'key', { k: 'up' }), h('span'),

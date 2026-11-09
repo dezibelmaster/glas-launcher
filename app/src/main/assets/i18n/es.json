@@ -444,5 +444,12 @@
  "Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.": "Nombre o enlace de una extensión de Firefox de addons.mozilla.org. El navegador del televisor pregunta antes de instalar. Se gestionan en el navegador en 🧩.",
  "Suche Glas Browser …": "Buscando Glas Browser …",
  "Zuerst unter Updates die Update-Quelle (GitHub) festlegen": "Primero define la fuente de actualizaciones (GitHub) en Actualizaciones",
- "ca. 100 MB": "unos 100 MB"
+ "ca. 100 MB": "unos 100 MB",
+ "Fehlerbericht": "Informe de errores",
+ "Lädt eine Seite nicht? Den Bericht laden, kopieren und an den Entwickler schicken.": "¿No carga una página? Carga el informe, cópialo y envíalo al desarrollador.",
+ "Fehlerbericht laden": "Cargar informe",
+ "Kopieren": "Copiar",
+ "Kopiert": "Copiado",
+ "Bericht wird gesammelt …": "Recopilando informe …",
+ "Text ist markiert – lange tippen und „Kopieren“ wählen.": "El texto está seleccionado: mantén pulsado y elige «Copiar»."
 }

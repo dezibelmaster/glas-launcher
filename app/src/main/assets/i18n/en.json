@@ -444,5 +444,12 @@
  "Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.": "Name or link of a Firefox extension from addons.mozilla.org. The browser on the TV asks before installing. Manage them in the browser under 🧩.",
  "Suche Glas Browser …": "Looking for Glas Browser …",
  "Zuerst unter Updates die Update-Quelle (GitHub) festlegen": "First set the update source (GitHub) under Updates",
- "ca. 100 MB": "about 100 MB"
+ "ca. 100 MB": "about 100 MB",
+ "Fehlerbericht": "Error report",
+ "Lädt eine Seite nicht? Den Bericht laden, kopieren und an den Entwickler schicken.": "A page won't load? Load the report, copy it and send it to the developer.",
+ "Fehlerbericht laden": "Load error report",
+ "Kopieren": "Copy",
+ "Kopiert": "Copied",
+ "Bericht wird gesammelt …": "Collecting report …",
+ "Text ist markiert – lange tippen und „Kopieren“ wählen.": "Text is selected – long-press and choose “Copy”."
 }

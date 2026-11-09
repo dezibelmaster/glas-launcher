@@ -43,6 +43,30 @@ object Diag {
 
     @Synchronized
     fun all(): List<String> = entries.toList()
+
+    /**
+     * Everything needed to find a fault: device, versions, the steps above, and the engine's own warnings
+     * and errors from the Android log (an app may read its own log without any permission).
+     */
+    fun report(ctx: Context): String {
+        val b = StringBuilder()
+        val v = runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull()
+        b.append("Glas Browser ").append(v).append(" · GeckoView ").append(org.mozilla.geckoview.BuildConfig.MOZILLA_VERSION).append('\n')
+        b.append(Build.MANUFACTURER).append(' ').append(Build.MODEL).append(" · Android ").append(Build.VERSION.RELEASE)
+            .append(" (API ").append(Build.VERSION.SDK_INT).append(") · ").append(Build.SUPPORTED_ABIS.joinToString()).append('\n')
+        val mem = android.app.ActivityManager.MemoryInfo()
+        ctx.getSystemService(android.app.ActivityManager::class.java)?.getMemoryInfo(mem)
+        b.append("RAM frei ").append(mem.availMem / 1_000_000).append(" von ").append(mem.totalMem / 1_000_000).append(" MB\n\n")
+        all().reversed().forEach { b.append(it).append('\n') }
+        b.append("\n--- logcat ---\n")
+        val keep = Regex("Gecko|gecko|Moz|moz|GlasBrowser|AndroidRuntime|ChildProcess|libc|DEBUG|crash|Crash|FATAL|denied|SELinux|avc:")
+        val lines = runCatching {
+            val p = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", "3000", "-v", "time"))
+            p.inputStream.bufferedReader().readLines()
+        }.getOrElse { listOf("logcat: " + it.message) }
+        lines.filter { keep.containsMatchIn(it) && !it.contains(" V/") && !it.contains(" D/") }.takeLast(250).forEach { b.append(it).append('\n') }
+        return b.toString()
+    }
 }
 
 /**
@@ -85,7 +109,8 @@ object Engine {
                 .build())
             .doubleTapZoomingEnabled(false)
             .inputAutoZoomEnabled(false)
-            .consoleOutput(false)
+            // Page errors go to the Android log, where the error report picks them up
+            .consoleOutput(true)
             .locales(arrayOf(I18n.lang))
             .build()
         val rt = GeckoRuntime.create(ctx.applicationContext, settings)

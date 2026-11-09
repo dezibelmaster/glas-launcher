@@ -102,5 +102,6 @@
  "Unbekannter Fehler": "Unknown error",
  "Seite nicht erreichbar": "Page not reachable",
  "Fehlerbericht": "Error report",
- "Keine Fehler seit dem Start des Browsers.": "No errors since the browser started."
+ "Keine Fehler seit dem Start des Browsers.": "No errors since the browser started.",
+ "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "The full report to copy is on the phone: Set up from phone → Browser → Error report."
 }

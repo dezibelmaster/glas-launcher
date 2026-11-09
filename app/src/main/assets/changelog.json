@@ -1,5 +1,28 @@
 [
  {
+  "version": "2.45",
+  "notes": {
+   "de": [
+    "Am Handy unter „Einstellen per Handy“ → Browser lässt sich ein Fehlerbericht des Glas Browsers laden und kopieren"
+   ],
+   "en": [
+    "On the phone under “Set up from phone” → Browser you can load and copy an error report of Glas Browser"
+   ],
+   "fr": [
+    "Sur le téléphone, sous « Réglages depuis le téléphone » → Navigateur, on peut charger et copier un rapport d'erreurs de Glas Browser"
+   ],
+   "es": [
+    "En el móvil, en «Ajustes desde el móvil» → Navegador, se puede cargar y copiar un informe de errores de Glas Browser"
+   ],
+   "it": [
+    "Sul telefono, in «Impostazioni dal telefono» → Browser, si può caricare e copiare un rapporto errori di Glas Browser"
+   ],
+   "nl": [
+    "Op de telefoon onder „Instellen via telefoon” → Browser kun je een foutrapport van Glas Browser laden en kopiëren"
+   ]
+  }
+ },
+ {
   "version": "2.44",
   "notes": {
    "de": [

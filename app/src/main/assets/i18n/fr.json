@@ -444,5 +444,12 @@
  "Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.": "Nom ou lien d'une extension Firefox d'addons.mozilla.org. Le navigateur du téléviseur demande avant d'installer. Gérez-les dans le navigateur sous 🧩.",
  "Suche Glas Browser …": "Recherche de Glas Browser …",
  "Zuerst unter Updates die Update-Quelle (GitHub) festlegen": "Définissez d'abord la source des mises à jour (GitHub) sous Mises à jour",
- "ca. 100 MB": "env. 100 Mo"
+ "ca. 100 MB": "env. 100 Mo",
+ "Fehlerbericht": "Rapport d'erreurs",
+ "Lädt eine Seite nicht? Den Bericht laden, kopieren und an den Entwickler schicken.": "Une page ne se charge pas ? Chargez le rapport, copiez-le et envoyez-le au développeur.",
+ "Fehlerbericht laden": "Charger le rapport",
+ "Kopieren": "Copier",
+ "Kopiert": "Copié",
+ "Bericht wird gesammelt …": "Collecte du rapport …",
+ "Text ist markiert – lange tippen und „Kopieren“ wählen.": "Le texte est sélectionné – appui long puis « Copier »."
 }
