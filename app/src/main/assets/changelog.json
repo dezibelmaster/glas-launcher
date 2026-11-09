@@ -1,5 +1,40 @@
 [
  {
+  "version": "2.42",
+  "notes": {
+   "de": [
+    "Werbeblocker im Glas Browser: Werbe- und Tracking-Server werden nicht geladen, Werbeflächen ausgeblendet",
+    "Werbung in YouTube-Videos wird übersprungen",
+    "🛡 oben im Browser zeigt, wie viel blockiert wurde; läuft eine Seite nicht richtig, dort die Werbung für diese Seite erlauben"
+   ],
+   "en": [
+    "Ad blocker in Glas Browser: ad and tracking servers are not loaded, ad spaces are hidden",
+    "Ads in YouTube videos are skipped",
+    "🛡 at the top of the browser shows how much was blocked; if a page doesn't work properly, allow ads for that page there"
+   ],
+   "fr": [
+    "Bloqueur de publicités dans Glas Browser : les serveurs de publicité et de pistage ne sont pas chargés, les espaces publicitaires sont masqués",
+    "Les pubs des vidéos YouTube sont passées",
+    "🛡 en haut du navigateur indique ce qui a été bloqué ; si une page ne fonctionne pas bien, autorisez-y la publicité pour cette page"
+   ],
+   "es": [
+    "Bloqueador de anuncios en Glas Browser: no se cargan servidores de anuncios ni de rastreo y se ocultan los espacios publicitarios",
+    "Se saltan los anuncios de los vídeos de YouTube",
+    "🛡 arriba en el navegador muestra lo bloqueado; si una página no funciona bien, permite allí los anuncios para esa página"
+   ],
+   "it": [
+    "Blocco pubblicità in Glas Browser: i server pubblicitari e di tracciamento non vengono caricati, gli spazi pubblicitari sono nascosti",
+    "La pubblicità nei video di YouTube viene saltata",
+    "🛡 in alto nel browser mostra quanto è stato bloccato; se una pagina non funziona bene, consenti lì la pubblicità per quella pagina"
+   ],
+   "nl": [
+    "Reclameblokkering in Glas Browser: reclame- en trackingservers worden niet geladen, reclamevlakken verborgen",
+    "Reclame in YouTube-video's wordt overgeslagen",
+    "🛡 bovenin de browser toont hoeveel er geblokkeerd is; werkt een pagina niet goed, sta daar reclame voor die pagina toe"
+   ]
+  }
+ },
+ {
   "version": "2.41",
   "notes": {
    "de": [

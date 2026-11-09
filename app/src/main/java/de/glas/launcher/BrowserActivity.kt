@@ -28,6 +28,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -36,6 +37,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import org.json.JSONObject
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
 
@@ -69,6 +71,13 @@ class BrowserActivity : Activity() {
     @Volatile var canBack = false
         private set
 
+    // Ad blocker: read on WebView's network threads, so kept in fields instead of the settings
+    @Volatile private var adBlockOn = true
+    @Volatile private var adAllowedHere = false
+    @Volatile var adsBlocked = 0
+        private set
+    private lateinit var shield: TextView
+
     // In full screen the arrows seek; up or down brings the pointer back for a few seconds
     private var pointerUntil = 0L
     private val hidePointer = Runnable { updatePointer() }
@@ -99,6 +108,9 @@ class BrowserActivity : Activity() {
         root.addView(pointer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         setContentView(root)
         setupWeb()
+        adBlockOn = AdBlock.enabled(this)
+        updateShield()
+        Thread({ AdBlock.prepare(applicationContext) }, "glas-adblock").start()
         root.post { pointer.place(root.width / 2f, root.height / 2.5f) }
 
         Browser.window = WeakReference(this)
@@ -173,7 +185,8 @@ class BrowserActivity : Activity() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val uri = request.url
                 return when (uri.scheme) {
-                    "http", "https" -> false
+                    // A page that sends the whole window to an ad server (pop-under, redirect) stays where it is
+                    "http", "https" -> blocking() && AdBlock.blocksPage(uri).also { if (it) countBlocked() }
                     "intent" -> {
                         // Links that want an app: use the web fallback if the page gives one
                         runCatching { Intent.parseUri(uri.toString(), Intent.URI_INTENT_SCHEME).getStringExtra("browser_fallback_url") }
@@ -184,14 +197,27 @@ class BrowserActivity : Activity() {
                 }
             }
 
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                if (request.isForMainFrame || !blocking() || !AdBlock.blocks(request.url)) return null
+                countBlocked()
+                return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
+            }
+
             override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                 setPlaying(false)
+                adsBlocked = 0
+                adAllowedHere = AdBlock.isAllowed(this@BrowserActivity, url?.let { Uri.parse(it).host })
                 pageChanged(url)
+                updateShield()
+                hideAds(view)
             }
+
+            override fun onPageCommitVisible(view: WebView, url: String?) = hideAds(view)
 
             override fun onPageFinished(view: WebView, url: String?) {
                 pageChanged(url)
                 view.evaluateJavascript(WATCH_MEDIA, null)
+                hideAds(view)
             }
 
             override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) = pageChanged(url)
@@ -202,6 +228,7 @@ class BrowserActivity : Activity() {
                 progress.progress = newProgress
                 progress.visibility = if (newProgress in 1..99) View.VISIBLE else View.INVISIBLE
                 if (newProgress > 60) view.evaluateJavascript(WATCH_MEDIA, null)
+                if (newProgress > 30) hideAds(view)
             }
 
             override fun onReceivedTitle(view: WebView, title: String?) = pageChanged(view.url)
@@ -230,6 +257,46 @@ class BrowserActivity : Activity() {
             val chrome = Regex("Chrome/[\\d.]+").find(base)?.value ?: "Chrome/120.0.0.0"
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) $chrome Safari/537.36"
         } else base
+    }
+
+    private fun blocking() = adBlockOn && !adAllowedHere
+
+    private fun hideAds(view: WebView) { if (blocking() && !isHome(view.url)) view.evaluateJavascript(AdBlock.PAGE_SCRIPT, null) }
+
+    private fun countBlocked() {
+        adsBlocked++
+        runOnUiThread { updateShield() }
+    }
+
+    private fun updateShield() {
+        shield.text = when {
+            !adBlockOn -> "🛡 " + tr("Aus")
+            adAllowedHere -> "🛡 –"
+            else -> "🛡 $adsBlocked"
+        }
+    }
+
+    /** What the ad blocker did on this page, and switches for it. */
+    private fun adMenu() {
+        val host = Uri.parse(currentUrl).host?.takeIf { currentUrl != Browser.HOME }
+        val items = mutableListOf(GlassMenu.Item(tr("Werbeblocker: {0}", if (adBlockOn) tr("An") else tr("Aus"))) {
+            adBlockOn = !adBlockOn
+            AdBlock.setEnabled(this, adBlockOn)
+            updateShield()
+            web.reload()
+        })
+        if (adBlockOn && host != null) {
+            val site = AdBlock.site(host)
+            items += GlassMenu.Item(if (adAllowedHere) tr("Werbung auf {0} wieder blockieren", site) else tr("Werbung auf {0} erlauben", site)) {
+                AdBlock.setAllowed(this, host, !adAllowedHere)
+                web.reload()
+            }
+        }
+        GlassMenu.show(this, tr("Werbeblocker"), items, footer = when {
+            !adBlockOn -> tr("Der Werbeblocker ist aus.")
+            adAllowedHere -> tr("Auf dieser Seite ist Werbung erlaubt.")
+            else -> tr("Auf dieser Seite {0} Werbe- und Tracking-Anfragen blockiert. Läuft eine Seite oder ein Video nicht richtig, hier die Werbung für diese Seite erlauben.", adsBlocked)
+        })
     }
 
     private fun isHome(url: String?) = url == null || url == "about:blank" || url.startsWith("data:") || url == START_BASE
@@ -322,6 +389,9 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
             setOnClickListener { askAddress() }
         }
         b.addView(address, LinearLayout.LayoutParams(0, dp(42), 1f).apply { marginEnd = dp(8) })
+        shield = button("🛡 0") { adMenu() }
+        b.addView(shield, LinearLayout.LayoutParams(WRAP_CONTENT, dp(42)).apply { marginEnd = dp(8) })
+        shield.setPadding(dp(12), 0, dp(12), 0)
         star = button("☆") { toggleFavorite() }
         b.addView(star, size)
         b.addView(button("📱") { showPhone() }, size)
@@ -359,6 +429,7 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         if (web.canGoForward()) items += GlassMenu.Item(tr("Vorwärts")) { web.goForward() }
         items += GlassMenu.Item(tr("Neu laden")) { web.reload() }
         items += GlassMenu.Item(tr("Startseite")) { load(Browser.HOME) }
+        items += GlassMenu.Item(tr("Werbeblocker …")) { adMenu() }
         items += GlassMenu.Item(tr("Mauszeiger: {0}", if (pointerOn) tr("An") else tr("Aus"))) { setPointer(!pointerOn) }
         items += GlassMenu.Item(tr("Ansicht: {0}", if (Browser.desktop(this)) tr("Computer") else tr("Handy/Tablet"))) {
             Browser.setDesktop(this, !Browser.desktop(this))

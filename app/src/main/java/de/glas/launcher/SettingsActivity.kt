@@ -120,9 +120,14 @@ class SettingsActivity : Activity() {
         row(tr("Ansicht"), if (Browser.desktop(this)) tr("Computer") else tr("Handy/Tablet")) {
             Browser.setDesktop(this, !Browser.desktop(this)); render()
         }
+        row(tr("Werbeblocker"), if (AdBlock.enabled(this)) tr("An") else tr("Aus")) {
+            AdBlock.setEnabled(this, !AdBlock.enabled(this)); render()
+        }
+        if (AdBlock.allowed(this).isNotEmpty()) row(tr("Seiten mit erlaubter Werbung"), "${AdBlock.allowed(this).size}") { allowedAdSites() }
         row(tr("Favoriten zurücksetzen")) { Browser.resetFavorites(this); toast(tr("Favoriten zurückgesetzt")) }
         row(tr("Browserdaten löschen")) { clearBrowserData() }
         note(tr("Im Browser bewegen die Pfeiltasten einen Zeiger, OK klickt. Adressen und Text tippst du auf dem Handy ein: „Einstellen per Handy“ einschalten, den Code scannen und oben „Browser“ wählen. Gesperrt wird der Browser wie eine App unter „Gesperrte Apps“ und „Zeitfenster“."))
+        note(tr("Der Werbeblocker lädt keine Werbe- und Tracking-Server, blendet Werbeflächen aus und überspringt Werbung in YouTube-Videos. Läuft eine Seite nicht richtig: im Browser auf 🛡 drücken und die Werbung für diese Seite erlauben."))
 
         section(tr("Kindersicherung"))
         row("PIN", if (prefs.pinHash == null) tr("Festlegen") else tr("Ändern")) { changePin() }
@@ -229,6 +234,15 @@ class SettingsActivity : Activity() {
         } catch (e: ActivityNotFoundException) {
             toast(tr("Diese Einstellung gibt es auf deinem Fernseher nicht"))
         }
+    }
+
+    /** Sites where the ad blocker was switched off; choosing one blocks ads there again. */
+    private fun allowedAdSites() {
+        val sites = AdBlock.allowed(this).sorted()
+        if (sites.isEmpty()) return render()
+        GlassMenu.show(this, tr("Seiten mit erlaubter Werbung"), sites.map { site ->
+            GlassMenu.Item(site) { AdBlock.setAllowed(this, site, false); render(); allowedAdSites() }
+        }, footer = tr("Eine Seite wählen, um die Werbung dort wieder zu blockieren."))
     }
 
     /** Cookies, logins, stored pages and history of the Glas Browser. */

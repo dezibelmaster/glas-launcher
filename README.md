@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.41**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.42**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -86,7 +86,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 - **Sichern:** Einstellungen sichern nach `Download/GlasLauncher-Einstellungen.json` und wiederherstellen. Für einen anderen
   Fernseher die Datei nach `/sdcard/Android/data/de.glas.launcher/files/` kopieren (z. B. mit Bugjaeger).
 - **Updates:** installierte Version, „Neu in Version …“ mit früheren Versionen, Update-Quelle (`Name/Projekt` auf GitHub), jetzt nach Updates suchen
-- **Browser:** Glas Browser öffnen, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*), Ansicht Handy/Tablet oder Computer, Favoriten zurücksetzen, Browserdaten löschen
+- **Browser:** Glas Browser öffnen, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*), Ansicht Handy/Tablet oder Computer, Werbeblocker, Seiten mit erlaubter Werbung, Favoriten zurücksetzen, Browserdaten löschen
 - **Startbildschirm:** Status, als Standard festlegen, Home-Taste umleiten
 - **Bildschirmschoner:** Uhrzeit, Datum und Wetter einzeln ein- und ausschalten (alles aus zeigt nur den Hintergrund), Zeit bis zum Start im Launcher, jetzt anzeigen, System-Bildschirmschoner
 - **Fernseher:** Fernseher-Einstellungen öffnen
@@ -122,7 +122,7 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.41.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.42.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -131,7 +131,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.41` anlegen und `GlasLauncher-2.41.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.42` anlegen und `GlasLauncher-2.42.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
@@ -165,7 +165,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.41.apk
+adb install -r GlasLauncher-2.42.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -302,6 +302,20 @@ Update einmalig im Dock und lässt sich wie jede App verschieben, entfernen oder
 Die Startseite zeigt die Favoriten als Kacheln. ☆ oben merkt die aktuelle Seite.
 Läuft ein Video, bleibt der Fernseher wach; auf einer stehenden Seite schaltet er wie gewohnt ab. Geschützte
 Videos (DRM) der Mediatheken spielt der Browser ab, Netflix und ähnliche Dienste nur in ihrer eigenen App.
+
+**Werbeblocker**
+
+Der Browser blendet Werbung aus, ohne dass du etwas einstellen musst:
+
+- Anfragen an Werbe- und Tracking-Server (Google Ads, Taboola, Outbrain, Criteo und viele mehr) werden gar nicht erst
+  geladen. Die eingebaute Liste wird einmal pro Woche um die Werbeserver-Liste von [Peter Lowe](https://pgl.yoyo.org/adservers/)
+  ergänzt. Seiten, die das ganze Fenster auf einen Werbeserver umleiten (Pop-unders), bleiben stehen.
+- Übrige Werbeflächen auf der Seite werden ausgeblendet.
+- **YouTube:** Werbung vor und in Videos wird stumm geschaltet, ans Ende gespult und „Überspringen“ gedrückt.
+  YouTube ändert das öfter; ganz ohne kurzes Aufblitzen geht es nicht immer.
+- 🛡 oben im Browser zeigt, wie viele Anfragen auf der Seite blockiert wurden. Läuft eine Seite oder ein Video nicht
+  richtig, dort *Werbung auf … erlauben* wählen; die Seite wird dann nicht mehr gefiltert.
+- Ein- und ausschalten und erlaubte Seiten verwalten: 🛡 bzw. *Einstellungen → Browser → Werbeblocker*.
 
 **Handy als Fernbedienung**
 

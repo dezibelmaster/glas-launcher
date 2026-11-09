@@ -456,5 +456,16 @@
  "Zeiger": "Pointeur",
  "Adressen und Text auf dem Handy eintippen: 📱 oben rechts drücken und den QR-Code scannen.": "Saisir adresses et texte sur le téléphone : appuyez sur 📱 en haut à droite et scannez le code QR.",
  "Code mit der Handy-Kamera scannen, dann oben „Browser“ wählen.": "Scannez le code avec l'appareil photo du téléphone, puis choisissez « Navigateur » en haut.",
- "Im Browser bewegen die Pfeiltasten einen Zeiger, OK klickt. Adressen und Text tippst du auf dem Handy ein: „Einstellen per Handy“ einschalten, den Code scannen und oben „Browser“ wählen. Gesperrt wird der Browser wie eine App unter „Gesperrte Apps“ und „Zeitfenster“.": "Dans le navigateur, les flèches déplacent un pointeur et OK clique. Vous saisissez adresses et texte sur le téléphone : activez « Réglages depuis le téléphone », scannez le code et choisissez « Navigateur » en haut. Le navigateur se verrouille comme une appli sous « Applis verrouillées » et « Plages horaires »."
+ "Im Browser bewegen die Pfeiltasten einen Zeiger, OK klickt. Adressen und Text tippst du auf dem Handy ein: „Einstellen per Handy“ einschalten, den Code scannen und oben „Browser“ wählen. Gesperrt wird der Browser wie eine App unter „Gesperrte Apps“ und „Zeitfenster“.": "Dans le navigateur, les flèches déplacent un pointeur et OK clique. Vous saisissez adresses et texte sur le téléphone : activez « Réglages depuis le téléphone », scannez le code et choisissez « Navigateur » en haut. Le navigateur se verrouille comme une appli sous « Applis verrouillées » et « Plages horaires ».",
+ "Auf dieser Seite ist Werbung erlaubt.": "Les publicités sont autorisées sur cette page.",
+ "Auf dieser Seite {0} Werbe- und Tracking-Anfragen blockiert. Läuft eine Seite oder ein Video nicht richtig, hier die Werbung für diese Seite erlauben.": "{0} requêtes publicitaires et de pistage bloquées sur cette page. Si une page ou une vidéo ne fonctionne pas bien, autorisez ici la publicité pour cette page.",
+ "Der Werbeblocker ist aus.": "Le bloqueur de publicités est désactivé.",
+ "Der Werbeblocker lädt keine Werbe- und Tracking-Server, blendet Werbeflächen aus und überspringt Werbung in YouTube-Videos. Läuft eine Seite nicht richtig: im Browser auf 🛡 drücken und die Werbung für diese Seite erlauben.": "Le bloqueur ne charge pas les serveurs de publicité et de pistage, masque les espaces publicitaires et passe les pubs des vidéos YouTube. Si une page ne fonctionne pas bien : appuyez sur 🛡 dans le navigateur et autorisez la publicité pour cette page.",
+ "Eine Seite wählen, um die Werbung dort wieder zu blockieren.": "Choisissez un site pour y bloquer à nouveau la publicité.",
+ "Seiten mit erlaubter Werbung": "Sites avec publicité autorisée",
+ "Werbeblocker": "Bloqueur de publicités",
+ "Werbeblocker …": "Bloqueur de publicités …",
+ "Werbeblocker: {0}": "Bloqueur de publicités : {0}",
+ "Werbung auf {0} erlauben": "Autoriser la publicité sur {0}",
+ "Werbung auf {0} wieder blockieren": "Bloquer à nouveau la publicité sur {0}"
 }
