@@ -1,5 +1,46 @@
 [
  {
+  "version": "2.43",
+  "notes": {
+   "de": [
+    "Neuer Glas Browser mit der Firefox-Engine: eigene App, die Firefox-Erweiterungen wie uBlock Origin installieren kann (im Browser 🧩)",
+    "Installieren und aktualisieren unter Einstellungen → Browser; der Launcher wählt die passende Datei für den Fernseher",
+    "Der bisherige eingebaute Browser und sein Werbeblocker entfallen; Werbung blockiert jetzt uBlock Origin",
+    "Am Handy unter „Einstellen per Handy“ → Browser lassen sich Erweiterungen per Name installieren"
+   ],
+   "en": [
+    "New Glas Browser with the Firefox engine: a separate app that can install Firefox extensions such as uBlock Origin (🧩 in the browser)",
+    "Install and update under Settings → Browser; the launcher picks the right file for the TV",
+    "The previous built-in browser and its ad blocker are gone; ads are now blocked by uBlock Origin",
+    "On the phone under “Set up from phone” → Browser you can install extensions by name"
+   ],
+   "fr": [
+    "Nouveau Glas Browser avec le moteur Firefox : une appli à part qui peut installer des extensions Firefox comme uBlock Origin (🧩 dans le navigateur)",
+    "Installation et mise à jour sous Paramètres → Navigateur ; le lanceur choisit le bon fichier pour le téléviseur",
+    "L'ancien navigateur intégré et son bloqueur disparaissent ; la publicité est désormais bloquée par uBlock Origin",
+    "Sur le téléphone, sous « Réglages depuis le téléphone » → Navigateur, on installe des extensions par leur nom"
+   ],
+   "es": [
+    "Nuevo Glas Browser con el motor de Firefox: una app aparte que puede instalar extensiones de Firefox como uBlock Origin (🧩 en el navegador)",
+    "Instalar y actualizar en Ajustes → Navegador; el launcher elige el archivo adecuado para el televisor",
+    "Desaparecen el navegador integrado anterior y su bloqueador; ahora los anuncios los bloquea uBlock Origin",
+    "En el móvil, en «Ajustes desde el móvil» → Navegador, se instalan extensiones por su nombre"
+   ],
+   "it": [
+    "Nuovo Glas Browser con il motore di Firefox: un'app separata che può installare estensioni di Firefox come uBlock Origin (🧩 nel browser)",
+    "Installa e aggiorna in Impostazioni → Browser; il launcher sceglie il file giusto per il TV",
+    "Il precedente browser integrato e il suo blocco pubblicità vengono rimossi; ora la pubblicità la blocca uBlock Origin",
+    "Sul telefono, in «Impostazioni dal telefono» → Browser, si installano estensioni per nome"
+   ],
+   "nl": [
+    "Nieuwe Glas Browser met de Firefox-engine: een aparte app die Firefox-extensies zoals uBlock Origin kan installeren (🧩 in de browser)",
+    "Installeren en bijwerken onder Instellingen → Browser; de launcher kiest het juiste bestand voor de tv",
+    "De vorige ingebouwde browser en zijn reclameblokkering vervallen; reclame blokkeert nu uBlock Origin",
+    "Op de telefoon onder „Instellen via telefoon” → Browser installeer je extensies op naam"
+   ]
+  }
+ },
+ {
   "version": "2.42",
   "notes": {
    "de": [

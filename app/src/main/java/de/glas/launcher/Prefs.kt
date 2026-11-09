@@ -153,10 +153,10 @@ class Prefs(context: Context) {
         get() = sp.getString("updateRepo", null)
         set(v) = sp.edit().putString("updateRepo", v).apply()
 
-    /** The Glas Browser was put into the dock once; after that the user decides. */
+    /** The Glas Browser app was put into the dock once; after that the user decides. */
     var browserInDock: Boolean
-        get() = sp.getBoolean("browserInDock", false)
-        set(v) = sp.edit().putBoolean("browserInDock", v).apply()
+        get() = sp.getBoolean("glasBrowserInDock", false)
+        set(v) = sp.edit().putBoolean("glasBrowserInDock", v).apply()
 
     /** Free memory automatically when the screensaver starts. */
     var autoFreeMemory: Boolean

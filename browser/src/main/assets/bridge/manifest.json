@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "Glas Bridge",
+  "version": "1.0",
+  "description": "Lets the Glas Browser scroll, control videos and type text on pages.",
+  "browser_specific_settings": { "gecko": { "id": "bridge@glas.de" } },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_start",
+    "all_frames": true
+  }],
+  "permissions": ["nativeMessaging", "nativeMessagingFromContent", "geckoViewAddons"]
+}

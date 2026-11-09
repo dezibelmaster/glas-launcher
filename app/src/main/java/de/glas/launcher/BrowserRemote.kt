@@ -6,40 +6,21 @@ import android.os.Handler
 import android.os.Looper
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 /**
  * The Glas Browser from the phone ("Einstellen per Handy" → Browser): typed addresses and text,
- * touchpad for the pointer, video buttons and volume. Called from [PhoneApi] on its worker threads.
+ * touchpad for the pointer, video buttons, volume and extensions. Called from [PhoneApi] on its worker
+ * threads; the commands go on to the browser app ([GlasBrowser]).
  */
 object BrowserRemote {
     private val main = Handler(Looper.getMainLooper())
 
-    /** Runs [block] on the main thread and waits for its answer. */
-    private fun <T> onMain(block: () -> T): T? {
-        var result: T? = null
-        val done = CountDownLatch(1)
-        main.post { try { result = block() } finally { done.countDown() } }
-        done.await(3, TimeUnit.SECONDS)
-        return result
-    }
-
     fun state(ctx: Context): JSONObject {
-        val o = JSONObject()
-        onMain {
-            val b = Browser.open
-            o.put("open", b != null)
-            if (b != null) {
-                o.put("url", if (b.currentUrl == Browser.HOME) "" else b.currentUrl)
-                o.put("title", b.currentTitle)
-                o.put("playing", b.playing)
-                o.put("pointer", b.pointerEnabled)
-            }
+        if (!GlasBrowser.installed(ctx)) {
+            return JSONObject().put("installed", false).put("open", false).put("favorites", JSONArray())
         }
-        val favs = JSONArray()
-        for (f in Browser.favorites(ctx)) favs.put(JSONObject().put("title", f.title).put("url", f.url))
-        return o.put("favorites", favs)
+        return (GlasBrowser.call(ctx, JSONObject().put("c", "state")) ?: JSONObject().put("open", false).put("favorites", JSONArray()))
+            .put("installed", true)
     }
 
     /**
@@ -49,70 +30,46 @@ object BrowserRemote {
     fun command(ctx: Context, cmd: JSONObject, pinOk: () -> Boolean): JSONObject {
         val app = ctx.applicationContext
         val c = cmd.optString("c")
-        when (c) {
-            "open", "youtube" -> {
-                val text = cmd.optString("url").trim()
-                val url = if (c == "youtube") Browser.youtubeSearchUrl(text) else text.ifEmpty { null }
-                return open(app, url, pinOk)
+        if (c == "vol") {
+            val dir = when (cmd.optInt("d")) {
+                1 -> AudioManager.ADJUST_RAISE
+                -1 -> AudioManager.ADJUST_LOWER
+                else -> AudioManager.ADJUST_TOGGLE_MUTE
             }
-            "vol" -> {
-                val dir = when (cmd.optInt("d")) {
-                    1 -> AudioManager.ADJUST_RAISE
-                    -1 -> AudioManager.ADJUST_LOWER
-                    else -> AudioManager.ADJUST_TOGGLE_MUTE
-                }
-                app.getSystemService(AudioManager::class.java)?.adjustStreamVolume(AudioManager.STREAM_MUSIC, dir, AudioManager.FLAG_SHOW_UI)
-                return state(app)
-            }
-            "fav-add" -> {
-                onMain { Browser.open?.let { if (it.currentUrl != Browser.HOME) Browser.addFavorite(app, it.currentTitle, it.currentUrl) } }
-                onMain { Browser.open?.refreshStart() }
-                return state(app)
-            }
-            "fav-remove" -> {
-                Browser.removeFavorite(app, cmd.optString("url"))
-                onMain { Browser.open?.refreshStart() }
-                return state(app)
-            }
+            app.getSystemService(AudioManager::class.java)?.adjustStreamVolume(AudioManager.STREAM_MUSIC, dir, AudioManager.FLAG_SHOW_UI)
+            return state(app)
         }
-        // Phone pixels to TV pixels: the TV screen is a lot larger than the touchpad
-        val scale = app.resources.displayMetrics.density * 1.4f
-        val error = onMain {
-            val b = Browser.open ?: return@onMain tr("Der Browser ist am Fernseher nicht geöffnet.")
-            when (c) {
-                "home" -> b.load(Browser.HOME)
-                "back" -> b.back()
-                "forward" -> b.forward()
-                "reload" -> b.reload()
-                "close" -> b.finish()
-                "key" -> b.key(cmd.optString("k"))
-                "move" -> b.move(cmd.optDouble("dx", 0.0).toFloat() * scale, cmd.optDouble("dy", 0.0).toFloat() * scale, scrollAtEdge = false)
-                "tap" -> b.click()
-                "scroll" -> b.scroll(cmd.optDouble("dx", 0.0).toFloat() * scale * 2, cmd.optDouble("dy", 0.0).toFloat() * scale * 2)
-                "text" -> b.type(cmd.optString("t"), cmd.optBoolean("enter"))
-                "play" -> b.media("toggle", 0)
-                "seek" -> b.media("seek", cmd.optInt("s"))
-                "pointer" -> b.setPointer(!b.pointerEnabled)
-            }
-            null
+        if (!GlasBrowser.installed(app)) {
+            return state(app).put("error", tr("Der Glas Browser ist nicht installiert. Am Fernseher: Einstellungen → Browser → Glas Browser installieren."))
         }
-        return state(app).apply { if (error != null) put("error", error) }
+        if (c == "install-browser") {
+            main.post { GlasBrowser.installOrUpdate(app, Prefs(app).updateRepo) }
+            return state(app)
+        }
+        if (c == "open" || c == "youtube") {
+            val text = cmd.optString("url").trim()
+            val url = if (c == "youtube") "https://m.youtube.com/results?search_query=" + java.net.URLEncoder.encode(text, "UTF-8") else text
+            return open(app, url.ifEmpty { null }, pinOk)
+        }
+        val reply = GlasBrowser.call(app, cmd) ?: return state(app).put("error", tr("Der Glas Browser antwortet nicht."))
+        return reply.put("installed", true)
     }
 
     private fun open(app: Context, url: String?, pinOk: () -> Boolean): JSONObject {
-        val already = onMain { Browser.open } != null
+        val already = state(app).optBoolean("open")
         if (!already) {
-            val reason = Browser.restricted(app)
-            if (reason != null) {
-                if (!pinOk()) return state(app).put("error", reason).put("needPin", true)
-                Browser.unlockedUntil = android.os.SystemClock.elapsedRealtime() + 10_000
-            }
+            val reason = GlasBrowser.restricted(app)
+            if (reason != null && !pinOk()) return state(app).put("error", reason).put("needPin", true)
         }
-        onMain { BrowserActivity.open(app, url) }
+        if (already && url != null) {
+            // The window is there: load in it without bringing up a new one
+            GlasBrowser.call(app, JSONObject().put("c", "load").put("url", url))
+        }
+        main.post { runCatching { GlasBrowser.open(app, if (already) null else url) } }
         if (!already) {
             // Android may refuse to bring up a window while another app is in front
-            Thread.sleep(1500)
-            if (onMain { Browser.open } == null) {
+            Thread.sleep(2500)
+            if (!state(app).optBoolean("open")) {
                 return state(app).put("error", tr("Der Fernseher hat den Browser nicht geöffnet. Öffne ihn einmal am Fernseher über das Dock."))
             }
         }

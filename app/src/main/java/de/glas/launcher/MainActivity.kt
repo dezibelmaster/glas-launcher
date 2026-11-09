@@ -742,11 +742,15 @@ class MainActivity : Activity() {
     private fun buildDock(focus: String? = null) {
         dock.removeAllViews()
         var ids = prefs.dock ?: Apps.defaultDock(apps).also { prefs.dock = it }
-        // Once, after the update that brought it: the Glas Browser joins the dock
-        val browser = apps.firstOrNull { it.pkg == packageName }?.component
+        // Once the Glas Browser app is installed, it joins the dock (also in place of the old built-in one)
+        val browser = apps.firstOrNull { it.pkg == GlasBrowser.PKG }?.component
         if (browser != null && !prefs.browserInDock) {
             prefs.browserInDock = true
-            if (browser !in ids) { ids = ids + browser; prefs.dock = ids }
+            val old = ids.indexOf(GlasBrowser.OLD_COMPONENT)
+            if (browser !in ids) {
+                ids = if (old >= 0) ids.toMutableList().also { it[old] = browser } else ids + browser
+                prefs.dock = ids
+            }
         }
         val byComponent = apps.associateBy { it.component }
         val entries = ids.mapNotNull { byComponent[it] }
@@ -874,9 +878,8 @@ class MainActivity : Activity() {
     private fun launch(app: AppEntry) {
         val window = prefs.timeWindows[app.pkg]
         val go = {
-            // The browser checks the PIN itself when opened elsewhere; from here it is already checked
-            if (app.pkg == packageName) Browser.unlockedUntil = android.os.SystemClock.elapsedRealtime() + 10_000
-            start(app.launch, app.label)
+            // The Glas Browser speaks the launcher's language
+            start(if (app.pkg == GlasBrowser.PKG) Intent(app.launch).putExtra("lang", I18n.lang) else app.launch, app.label)
         }
         when {
             app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { go() }

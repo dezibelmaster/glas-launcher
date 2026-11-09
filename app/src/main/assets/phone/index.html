@@ -526,7 +526,9 @@ function showBrowser(r) {
   if (!r || !browserEl) return;
   B = r;
   const now = browserEl.querySelector('.now');
-  now.replaceChildren(r.open ? h('b', {}, '● ') : '', r.open ? (r.title || r.url || t('Startseite')) : t('Der Browser ist am Fernseher nicht geöffnet.'));
+  now.replaceChildren(r.open ? h('b', {}, '● ') : '', r.installed === false ? t('Der Glas Browser ist auf dem Fernseher noch nicht installiert.')
+    : r.open ? (r.title || r.url || t('Startseite')) : t('Der Browser ist am Fernseher nicht geöffnet.'));
+  browserEl.querySelector('.missing').style.display = r.installed === false ? '' : 'none';
   browserEl.querySelector('#play').textContent = r.playing ? '⏸' : '▶';
   const box = browserEl.querySelector('.favs');
   box.replaceChildren(...(r.favorites || []).map(f => h('button', { class: 'fav', onclick: () => browser(editingFavs ? { c: 'fav-remove', url: f.url } : { c: 'open', url: f.url }) },
@@ -555,8 +557,14 @@ function browserCard() {
   } }, t('Bearbeiten'));
   const play = h('button', { id: 'play', class: 'primary', onclick: () => browser({ c: 'play' }) }, '▶');
 
+  const ext = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: false, placeholder: 'ublock-origin' });
+  const installExt = slug => browser({ c: 'install', url: slug });
+
   browserEl = h('div', {},
     h('div', { class: 'now' }),
+    h('section', { class: 'missing', style: 'display:none' }, h('h2', {}, 'Glas Browser'),
+      h('p', { class: 'note', style: 'margin-top:0' }, t('Der Glas Browser ist eine eigene App mit der Firefox-Engine (ca. 100 MB). Er lädt sich aus den GitHub-Releases, wie die Updates des Launchers.')),
+      h('button', { class: 'primary full', onclick: () => browser({ c: 'install-browser' }) }, t('Am Fernseher installieren'))),
     section(t('Adresse'),
       h('form', { class: 'line', style: 'margin-top:0', onsubmit: e => { e.preventDefault(); browser({ c: 'open', url: url.value.trim() }); url.blur(); } },
         url, h('button', { type: 'submit', class: 'primary' }, t('Öffnen'))),
@@ -576,6 +584,13 @@ function browserCard() {
       h('div', { class: 'grid g2' },
         h('button', { onclick: () => { if (!B || !B.open || !B.url) return toast(t('Zuerst eine Seite öffnen'), true); browser({ c: 'fav-add' }); } }, t('★ Aktuelle Seite merken')),
         editBtn)),
+    section(t('Erweiterungen'),
+      h('div', { class: 'grid g2', style: 'margin-top:0' },
+        h('button', { onclick: () => installExt('ublock-origin') }, 'uBlock Origin'),
+        h('button', { onclick: () => installExt('sponsorblock') }, 'SponsorBlock')),
+      h('form', { class: 'line', onsubmit: e => { e.preventDefault(); if (ext.value.trim()) installExt(ext.value.trim()); ext.value = ''; ext.blur(); } },
+        ext, h('button', { type: 'submit' }, t('Installieren'))),
+      h('p', { class: 'note' }, t('Name oder Link einer Firefox-Erweiterung von addons.mozilla.org. Am Fernseher fragt der Browser vor dem Installieren nach. Verwalten im Browser unter 🧩.'))),
     section(t('Pfeiltasten'),
       h('div', { class: 'dpad' },
         h('span'), cmd('▲', 'key', { k: 'up' }), h('span'),

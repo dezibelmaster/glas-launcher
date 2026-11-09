@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.42**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.43**, **Glas Browser 1.0**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -48,7 +48,7 @@ Aktuelle Versionen: **Glas Launcher 2.42**, **Glas Natur-Videos 1.2**.
 - **Bildschirmschoner:** große Uhr mit Datum und Wetter, wandert gegen Einbrennen.
 - **Wetter:** Open-Meteo, beliebige Orte, hohe Schleierwolken werden herausgerechnet.
 - **Startbildschirm:** ersetzt die Google-TV-Oberfläche, auch nach einem Neustart.
-- **Glas Browser:** Videoseiten und Videos mit Mauszeiger auf der Fernbedienung; Adressen und Text tippst du auf dem Handy ein.
+- **Glas Browser:** eigene App mit der Firefox-Engine für Videoseiten, mit Firefox-Erweiterungen wie uBlock Origin; Mauszeiger auf der Fernbedienung, Adressen und Text tippst du auf dem Handy ein.
 
 ## Bedienung auf dem Fernseher
 
@@ -86,7 +86,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 - **Sichern:** Einstellungen sichern nach `Download/GlasLauncher-Einstellungen.json` und wiederherstellen. Für einen anderen
   Fernseher die Datei nach `/sdcard/Android/data/de.glas.launcher/files/` kopieren (z. B. mit Bugjaeger).
 - **Updates:** installierte Version, „Neu in Version …“ mit früheren Versionen, Update-Quelle (`Name/Projekt` auf GitHub), jetzt nach Updates suchen
-- **Browser:** Glas Browser öffnen, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*), Ansicht Handy/Tablet oder Computer, Werbeblocker, Seiten mit erlaubter Werbung, Favoriten zurücksetzen, Browserdaten löschen
+- **Browser:** Glas Browser installieren, öffnen und aktualisieren, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*)
 - **Startbildschirm:** Status, als Standard festlegen, Home-Taste umleiten
 - **Bildschirmschoner:** Uhrzeit, Datum und Wetter einzeln ein- und ausschalten (alles aus zeigt nur den Hintergrund), Zeit bis zum Start im Launcher, jetzt anzeigen, System-Bildschirmschoner
 - **Fernseher:** Fernseher-Einstellungen öffnen
@@ -119,10 +119,15 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
 ## Bauen
 
 ```
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.42.apk`
+Das Projekt bringt Gradle selbst mit (`gradlew`, Gradle 9). Gebraucht werden Java 17 und das Android-SDK mit
+Plattform 35 und 37.2 (der Glas Browser baut gegen das neueste SDK, weil GeckoView es verlangt).
+
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.43.apk`
+- Browser: `browser/build/outputs/apk/debug/GlasBrowser-<Version>-<Prozessor>.apk`, je eine Datei für
+  `arm64-v8a` (64 Bit) und `armeabi-v7a` (32 Bit), etwa 100 MB
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -131,8 +136,10 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.42` anlegen und `GlasLauncher-2.42.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.43` anlegen und `GlasLauncher-2.43.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
+Die beiden `GlasBrowser-…apk` nur anhängen, wenn sich der Browser geändert hat: Der Launcher sucht sie in den letzten
+15 Releases und nimmt die neueste, die zum Prozessor des Fernsehers passt.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
 *Einstellungen → Updates → Neu in Version …*. Der Text eines GitHub-Releases wird vor dem Installieren angezeigt.
@@ -165,7 +172,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.42.apk
+adb install -r GlasLauncher-2.43.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -283,9 +290,21 @@ der UV-Index fehlt beim DWD.
 
 ## Glas Browser
 
-Ein Browser für Videoseiten wie YouTube, ARD- und ZDF-Mediathek, arte, 3sat, Vimeo oder Dailymotion. Er liegt nach dem
-Update einmalig im Dock und lässt sich wie jede App verschieben, entfernen oder mit PIN und Zeitfenster sperren
-(*Einstellungen → Kindersicherung*, dort heißt er „Glas Browser“).
+Ein Browser für Videoseiten wie YouTube, ARD- und ZDF-Mediathek, arte, 3sat, Vimeo oder Dailymotion – als eigene
+App (`de.glas.browser`, Modul `browser`) mit **GeckoView**, der Firefox-Engine von Mozilla. Dadurch laufen
+**Firefox-Erweiterungen** von [addons.mozilla.org](https://addons.mozilla.org), allen voran uBlock Origin gegen Werbung.
+
+**Installieren:** *Einstellungen → Browser → Glas Browser installieren*. Der Launcher holt die passende Datei für den
+Prozessor des Fernsehers aus den GitHub-Releases (etwa 100 MB) und öffnet den Installer; *Glas Browser aktualisieren*
+holt später neuere Versionen. Danach liegt der Browser im Dock (an Stelle des früheren eingebauten Browsers) und lässt
+sich wie jede App verschieben, entfernen oder mit PIN und Zeitfenster sperren. Er braucht mindestens Android 8;
+der alte Fire TV Stick mit Fire OS 6 bleibt ohne ihn.
+
+**Erweiterungen:** im Browser 🧩 (oder Menü → *Erweiterungen …*). Beim ersten Start bietet der Browser uBlock Origin an.
+Empfohlen sind uBlock Origin, SponsorBlock, Consent-O-Matic (Cookie-Banner), Dark Reader, Return YouTube Dislike und
+Privacy Badger; *Andere von addons.mozilla.org* nimmt den Namen aus der Adresse einer Erweiterung, z. B. `ublock-origin`.
+Vor dem Installieren zeigt der Browser, was die Erweiterung darf. Ausschalten, entfernen und ihre Einstellungen öffnen
+geht über 🧩 → Erweiterung. Bequemer tippen: am Handy unter *Einstellen per Handy* → *Browser* → *Erweiterungen*.
 
 **Mit der Fernbedienung des Fernsehers**
 
@@ -295,27 +314,16 @@ Update einmalig im Dock und lässt sich wie jede App verschieben, entfernen oder
 | Klicken | **OK** (gedrückt halten = lange drücken) |
 | Blättern | Zeiger an den Bildschirmrand schieben und weiter drücken |
 | Eine Seite zurück, Vollbild verlassen | **Zurück** |
-| Adresse, YouTube-Suche, Favoriten, Zeiger an/aus, Ansicht, Handy als Fernbedienung | **Menü-Taste** oder ☰ oben rechts |
+| Adresse, YouTube-Suche, Favoriten, Erweiterungen, Zeiger an/aus, Ansicht, Handy als Fernbedienung | **Menü-Taste** oder ☰ oben rechts |
+| Erweiterungen | 🧩 oben rechts |
 | Video im Vollbild | ◀ / ▶ spulen 10 Sekunden, **OK** Pause/Weiter, ▲ / ▼ holen den Zeiger zurück |
 | Wiedergabe | Play/Pause-, Vor- und Zurückspul-Tasten der Fernbedienung |
 
 Die Startseite zeigt die Favoriten als Kacheln. ☆ oben merkt die aktuelle Seite.
 Läuft ein Video, bleibt der Fernseher wach; auf einer stehenden Seite schaltet er wie gewohnt ab. Geschützte
-Videos (DRM) der Mediatheken spielt der Browser ab, Netflix und ähnliche Dienste nur in ihrer eigenen App.
-
-**Werbeblocker**
-
-Der Browser blendet Werbung aus, ohne dass du etwas einstellen musst:
-
-- Anfragen an Werbe- und Tracking-Server (Google Ads, Taboola, Outbrain, Criteo und viele mehr) werden gar nicht erst
-  geladen. Die eingebaute Liste wird einmal pro Woche um die Werbeserver-Liste von [Peter Lowe](https://pgl.yoyo.org/adservers/)
-  ergänzt. Seiten, die das ganze Fenster auf einen Werbeserver umleiten (Pop-unders), bleiben stehen.
-- Übrige Werbeflächen auf der Seite werden ausgeblendet.
-- **YouTube:** Werbung vor und in Videos wird stumm geschaltet, ans Ende gespult und „Überspringen“ gedrückt.
-  YouTube ändert das öfter; ganz ohne kurzes Aufblitzen geht es nicht immer.
-- 🛡 oben im Browser zeigt, wie viele Anfragen auf der Seite blockiert wurden. Läuft eine Seite oder ein Video nicht
-  richtig, dort *Werbung auf … erlauben* wählen; die Seite wird dann nicht mehr gefiltert.
-- Ein- und ausschalten und erlaubte Seiten verwalten: 🛡 bzw. *Einstellungen → Browser → Werbeblocker*.
+Videos (DRM) spielt der Browser ab, soweit Firefox sie auf Android unterstützt; Netflix und ähnliche Dienste nur in
+ihrer eigenen App. Seitenabstürze fängt der Browser ab und lädt die Seite neu. *Mehr → Browserdaten löschen* entfernt
+Anmeldungen, Cookies und Verlauf; Erweiterungen und Favoriten bleiben.
 
 **Handy als Fernbedienung**
 
@@ -386,7 +394,7 @@ Liste liefern, werden nach 20 Sekunden erneut gefragt.
 ## Übersetzungen
 
 Die Texte stehen auf Deutsch im Code und laufen durch `tr("…")`. Die Übersetzungen liegen in
-`app/src/main/assets/i18n/<sprache>.json` und ordnen jedem deutschen Text den übersetzten zu; Platzhalter
+`app/src/main/assets/i18n/<sprache>.json` (Glas Browser: `browser/src/main/assets/i18n/`) und ordnen jedem deutschen Text den übersetzten zu; Platzhalter
 heißen `{0}`, `{1}`. Fehlt ein Eintrag, erscheint der deutsche Text. Eine neue Sprache braucht eine solche Datei
 und einen Eintrag in `I18n.languages`. Amtliche Unwetterwarnungen gibt der Deutsche Wetterdienst nur auf Deutsch
 und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
@@ -396,4 +404,5 @@ und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
 - Wetterfotos: Wikimedia Commons, CC0. Quellen: `app/src/main/assets/weather/CREDITS.txt`
 - Natur-Videos: Wikimedia Commons, CC0. Adressen: `videos/src/main/java/de/glas/launcher/videos/VideoProvider.kt`
 - Plugin-Schnittstelle: Projectivy Wallpaper Provider API, Apache 2.0
+- Glas Browser: [GeckoView](https://mozilla.github.io/geckoview/) von Mozilla, Mozilla Public License 2.0
 - Wetterdaten: Open-Meteo

@@ -15,8 +15,7 @@ object Apps {
         val pm = context.packageManager
         val query = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
         return pm.queryIntentActivities(query, 0)
-            // The launcher itself is left out, but its Glas Browser is an app like the others
-            .filter { it.activityInfo.packageName != context.packageName || it.activityInfo.name == BrowserActivity::class.java.name }
+            .filter { it.activityInfo.packageName != context.packageName }
             .map { ri ->
                 val pkg = ri.activityInfo.packageName
                 val launch = Intent(Intent.ACTION_MAIN)

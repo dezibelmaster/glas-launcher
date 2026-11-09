@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Only apps with the Glas key may steer the browser (the launcher's phone remote) -->
+    <permission
+        android:name="de.glas.permission.REMOTE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="de.glas.permission.REMOTE" />
+
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <!-- The launcher hands out the phone address for the QR code -->
+    <queries>
+        <provider android:authorities="de.glas.launcher.phone" />
+    </queries>
+
+    <application
+        android:name=".GlasBrowserApp"
+        android:label="Glas Browser"
+        android:icon="@drawable/icon"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+
+        <activity
+            android:name=".BrowserActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+            <!-- Web links from other apps -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name=".RemoteProvider"
+            android:authorities="de.glas.browser.remote"
+            android:exported="true"
+            android:permission="de.glas.permission.REMOTE" />
+    </application>
+</manifest>
