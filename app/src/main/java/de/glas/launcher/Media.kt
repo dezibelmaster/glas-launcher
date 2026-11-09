@@ -2,6 +2,7 @@ package de.glas.launcher
 
 import android.Manifest
 import android.app.RecoverableSecurityException
+import android.content.ContentValues
 import android.content.ContentUris
 import android.content.Context
 import android.content.IntentSender
@@ -11,7 +12,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import java.io.File
+import java.io.IOException
+import java.io.OutputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -19,8 +23,60 @@ import java.util.concurrent.TimeUnit
 object Media {
     class Item(val name: String, val uri: String)
 
-    private val imageTypes = setOf("jpg", "jpeg", "png", "webp")
-    private val videoTypes = setOf("mp4", "mkv", "webm", "mov", "m4v")
+    val imageTypes = setOf("jpg", "jpeg", "png", "webp")
+    val videoTypes = setOf("mp4", "mkv", "webm", "mov", "m4v")
+
+    /** A file name that is safe to store, keeping letters of any language; null if nothing is left. */
+    fun safeName(raw: String): String? {
+        val name = raw.substringAfterLast('/').substringAfterLast('\\')
+            .replace(Regex("[^\\p{L}\\p{N} ._()-]"), "_").trim().trimStart('.')
+        if (name.isEmpty() || !name.contains('.')) return null
+        val ext = name.substringAfterLast('.')
+        return name.substringBeforeLast('.').take(80) + "." + ext.take(5)
+    }
+
+    /**
+     * Stores a picture or video in Pictures/GlasLauncher or Movies/GlasLauncher, where the
+     * launcher finds it as an own background. [write] fills the file. Returns its address. Blocking.
+     */
+    fun save(ctx: Context, name: String, video: Boolean, write: (OutputStream) -> Unit): String {
+        val folder = if (video) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES
+        val ext = name.substringAfterLast('.').lowercase()
+        val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: if (video) "video/$ext" else "image/$ext"
+        if (Build.VERSION.SDK_INT >= 29) {
+            val resolver = ctx.contentResolver
+            val collection = if (video) MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                else MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "$folder/GlasLauncher")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(collection, values) ?: throw IOException("MediaStore")
+            try {
+                (resolver.openOutputStream(uri) ?: throw IOException("MediaStore")).use(write)
+                resolver.update(uri, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+            } catch (e: Exception) {
+                runCatching { resolver.delete(uri, null, null) }
+                throw e
+            }
+            return uri.toString()
+        }
+        @Suppress("DEPRECATION")
+        val dir = File(Environment.getExternalStoragePublicDirectory(folder), "GlasLauncher").apply { mkdirs() }
+        var file = File(dir, name)
+        var n = 2
+        while (file.exists()) file = File(dir, "${name.substringBeforeLast('.')} ($n).${name.substringAfterLast('.')}").also { n++ }
+        try {
+            file.outputStream().use(write)
+        } catch (e: Exception) {
+            file.delete()
+            throw e
+        }
+        MediaScannerConnection.scanFile(ctx, arrayOf(file.absolutePath), null, null)
+        return Uri.fromFile(file).toString()
+    }
 
     fun permission(video: Boolean): String = when {
         Build.VERSION.SDK_INT >= 33 && video -> Manifest.permission.READ_MEDIA_VIDEO
@@ -60,6 +116,23 @@ object Media {
                 else -> Deletion.Failed
             }
         }
+    }
+
+    /** Where a picture or video lies on the TV's storage, or null if that can't be told. */
+    @Suppress("DEPRECATION")
+    fun pathOf(ctx: Context, uri: String): String? {
+        val u = Uri.parse(uri)
+        if (u.scheme == "file") return u.path
+        return runCatching {
+            ctx.contentResolver.query(u, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            }
+        }.getOrNull()
+    }
+
+    /** Removes a file deleted from outside the launcher from the media index. */
+    fun forget(ctx: Context, path: String) {
+        MediaScannerConnection.scanFile(ctx, arrayOf(path), null, null)
     }
 
     /** The media index entry for a file, scanning it in first if it isn't indexed yet. */
@@ -136,7 +209,7 @@ object Media {
         val types = if (video) videoTypes else imageTypes
         @Suppress("DEPRECATION")
         val storage = Environment.getExternalStorageDirectory()
-        for (dir in listOf("Pictures", "Pictures/GlasLauncher", "Movies", "Download", "DCIM")) {
+        for (dir in listOf("Pictures", "Pictures/GlasLauncher", "Movies", "Movies/GlasLauncher", "Download", "DCIM")) {
             File(storage, dir).listFiles()?.forEach { f ->
                 if (f.isFile && f.extension.lowercase() in types) found.putIfAbsent(f.name, Item(f.name, Uri.fromFile(f).toString()))
             }

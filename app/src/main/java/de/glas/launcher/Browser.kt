@@ -9,7 +9,7 @@ import java.net.URLEncoder
 
 /**
  * Shared parts of the Glas Browser: favourites, turning typed text into an address,
- * the parental lock, and the open browser window that the phone remote talks to.
+ * the parental lock, and the open browser window that the phone ([BrowserRemote]) talks to.
  */
 object Browser {
     class Favorite(val title: String, val url: String)
@@ -66,10 +66,6 @@ object Browser {
     fun desktop(ctx: Context) = sp(ctx).getBoolean("browserDesktop", false)
     fun setDesktop(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("browserDesktop", on).apply()
 
-    /** The phone remote in the home network. */
-    fun remoteEnabled(ctx: Context) = sp(ctx).getBoolean("remoteEnabled", true)
-    fun setRemoteEnabled(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("remoteEnabled", on).apply()
-
     /** Last page, so the browser opens where it was left. */
     fun lastUrl(ctx: Context): String? = sp(ctx).getString("browserLast", null)
     fun setLastUrl(ctx: Context, url: String) = sp(ctx).edit().putString("browserLast", url).apply()
@@ -97,6 +93,6 @@ object Browser {
         return if (looksLikeHost) "https://$s" else searchUrl(s)
     }
 
-    fun searchUrl(q: String) = "https://www.google.com/search?q=" + URLEncoder.encode(q, "UTF-8")
+    private fun searchUrl(q: String) = "https://www.google.com/search?q=" + URLEncoder.encode(q, "UTF-8")
     fun youtubeSearchUrl(q: String) = "https://m.youtube.com/results?search_query=" + URLEncoder.encode(q, "UTF-8")
 }

@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.41**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -24,6 +24,9 @@ Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
 
 ## Funktionen
 
+- **Einstellen per Handy:** QR-Code am Fernseher scannen und am Handy Hintergrund, eigene Bilder und Videos (Hochladen
+  vom Handy), Dock, Wetterorte, Bildschirmschoner, Kindersicherung, Sprache und Sicherung einstellen. Änderungen
+  erscheinen sofort auf dem Fernseher.
 - **Statusleiste oben mittig:** Datum, Uhrzeit, Wettersymbol mit Temperatur, WLAN-Signalstärke und Zahnrad zu den
   Fernseher-Einstellungen. Auf Wunsch eingeklappt, dann nur die Uhrzeit oben rechts. Alternativ große Uhr mit Wetterkarte.
 - **Dock:** Apps hinzufügen, entfernen und verschieben. Alle Symbole als einheitlich abgerundete Quadrate.
@@ -72,6 +75,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 ## Einstellungen
 
 - **Sprache:** Automatisch (Sprache des Fernsehers, sonst Englisch) oder eine feste Sprache
+- **Handy:** Einstellen per Handy ein- und ausschalten, QR-Code anzeigen
 - **Aussehen:** Hintergrund, Milchglas, *Oben anzeigen* (Statusleiste oder große Uhr mit Wetterkarte),
   eigene Bilder und Videos löschen, heruntergeladene Videos löschen
 - **Wetter:** Orte suchen und hinzufügen, Hauptort festlegen (bestimmt den Hintergrund), Orte entfernen
@@ -82,11 +86,35 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 - **Sichern:** Einstellungen sichern nach `Download/GlasLauncher-Einstellungen.json` und wiederherstellen. Für einen anderen
   Fernseher die Datei nach `/sdcard/Android/data/de.glas.launcher/files/` kopieren (z. B. mit Bugjaeger).
 - **Updates:** installierte Version, „Neu in Version …“ mit früheren Versionen, Update-Quelle (`Name/Projekt` auf GitHub), jetzt nach Updates suchen
-- **Browser:** Glas Browser öffnen, Handy als Fernbedienung an/aus, Handy verbinden (QR-Code), Ansicht Handy/Tablet oder Computer, Favoriten zurücksetzen, Browserdaten löschen
+- **Browser:** Glas Browser öffnen, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*), Ansicht Handy/Tablet oder Computer, Favoriten zurücksetzen, Browserdaten löschen
 - **Startbildschirm:** Status, als Standard festlegen, Home-Taste umleiten
 - **Bildschirmschoner:** Uhrzeit, Datum und Wetter einzeln ein- und ausschalten (alles aus zeigt nur den Hintergrund), Zeit bis zum Start im Launcher, jetzt anzeigen, System-Bildschirmschoner
 - **Fernseher:** Fernseher-Einstellungen öffnen
 - **Info:** installierte Versionen von Glas Launcher und Glas Natur-Videos
+
+## Einstellen per Handy
+
+*Einstellungen → Handy → Einstellen per Handy* startet einen kleinen Webserver im Launcher und zeigt einen QR-Code.
+Mit der Handy-Kamera scannen (Handy und Fernseher im selben WLAN), die Seite öffnet sich im Browser. Ohne QR-Code
+geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7m2p9qa`.
+
+- **Was geht:** Hintergrund (Wetter-Stile, eigene Bilder und Videos), Milchglas, „Oben anzeigen“, eigene Bilder und
+  Videos hochladen, als Hintergrund verwenden und löschen, Dock sortieren, Apps hinzufügen und entfernen, Wetterorte
+  suchen, Hauptort, Wetterquelle, Bildschirmschoner, Sprache, Sicherung aufs Handy und zurück, Update-Quelle.
+- **Kindersicherung:** PIN festlegen oder ändern, Apps sperren, Zeitfenster (auch eigene Uhrzeiten), „Alle Apps“ und
+  Einstellungen schützen. Ist ein PIN festgelegt, fragt die Seite ihn zuerst ab, genau wie der Fernseher. Nach fünf
+  falschen Versuchen ist eine Minute Pause.
+- **Sicherheit:** Die Adresse enthält nach dem `#` einen Zugangsschlüssel, der bei jedem Einschalten neu entsteht.
+  Ohne ihn lässt sich nichts lesen oder ändern. Der Fernseher meldet, wenn sich ein Handy verbindet. Der Server läuft
+  nur, solange die Funktion an ist, und schaltet sich nach 30 Minuten ohne Nutzung von selbst aus. Die Verbindung ist
+  unverschlüsselt (HTTP) und nur für das eigene Heimnetz gedacht.
+- **Hochgeladene Dateien** landen in `Movies/GlasLauncher` bzw. `Pictures/GlasLauncher`. Ein Bild mit dem Namen
+  eines Wetterfotos (z. B. `clear_day.jpg`) ersetzt dort das eingebaute Foto, solange es noch keine Datei mit diesem Namen gibt.
+- **Löschen vom Handy:** Eigene Uploads löscht der Launcher direkt. Dateien, die anders auf den Fernseher kamen
+  (z. B. mit Bugjaeger), darf eine App ab Android 10 nicht ohne Weiteres löschen. Ist das USB-Debugging an, löscht der
+  Launcher sie über den eigenen Debugging-Zugang (wie bei der Google-TV-Oberfläche). Sonst erscheint am Fernseher
+  Androids Frage, ob gelöscht werden darf, und wird mit der Fernbedienung bestätigt.
+- Erweiterungen, Projectivy-Plugins und die Google-TV-Oberfläche werden weiter am Fernseher eingestellt.
 
 ## Bauen
 
@@ -94,7 +122,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 gradle assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.39.apk`
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.41.apk`
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -103,7 +131,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.39` anlegen und `GlasLauncher-2.39.apk` anhängen. Ist in den
+**Updates über GitHub:** Ein Release mit dem Tag `v2.41` anlegen und `GlasLauncher-2.41.apk` anhängen. Ist in den
 Einstellungen unter *Updates* die Quelle `Name/Projekt` eingetragen, meldet der Launcher die neue Version.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
@@ -137,7 +165,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.39.apk
+adb install -r GlasLauncher-2.41.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -267,36 +295,34 @@ Update einmalig im Dock und lässt sich wie jede App verschieben, entfernen oder
 | Klicken | **OK** (gedrückt halten = lange drücken) |
 | Blättern | Zeiger an den Bildschirmrand schieben und weiter drücken |
 | Eine Seite zurück, Vollbild verlassen | **Zurück** |
-| Adresse, YouTube-Suche, Favoriten, Zeiger an/aus, Ansicht, Handy verbinden | **Menü-Taste** oder ☰ oben rechts |
+| Adresse, YouTube-Suche, Favoriten, Zeiger an/aus, Ansicht, Handy als Fernbedienung | **Menü-Taste** oder ☰ oben rechts |
 | Video im Vollbild | ◀ / ▶ spulen 10 Sekunden, **OK** Pause/Weiter, ▲ / ▼ holen den Zeiger zurück |
 | Wiedergabe | Play/Pause-, Vor- und Zurückspul-Tasten der Fernbedienung |
 
-Die Startseite zeigt die Favoriten als Kacheln und den QR-Code für das Handy. ☆ oben merkt die aktuelle Seite.
+Die Startseite zeigt die Favoriten als Kacheln. ☆ oben merkt die aktuelle Seite.
 Läuft ein Video, bleibt der Fernseher wach; auf einer stehenden Seite schaltet er wie gewohnt ab. Geschützte
 Videos (DRM) der Mediatheken spielt der Browser ab, Netflix und ähnliche Dienste nur in ihrer eigenen App.
 
 **Handy als Fernbedienung**
 
-Der Launcher bietet im Heimnetz eine Fernbedienungs-Seite an: `http://<Adresse des Fernsehers>:8765`, z. B.
-`http://192.168.178.173:8765`. Eine eigene App ist nicht nötig, es geht mit jedem Handy (Android und iPhone).
+Die Steuerung steckt in *Einstellen per Handy*: Die Seite hat oben die Reiter **Browser** und **Einstellungen**.
 
 1. Handy und Fernseher ins selbe WLAN.
-2. Im Browser ☰ → *Handy als Fernbedienung …* (oder 📱 oben, die Startseite oder *Einstellungen → Browser → Handy verbinden*)
-   zeigt einen QR-Code. Mit der Handy-Kamera scannen.
-3. Im Browser-Menü des Handys **„Zum Startbildschirm hinzufügen“** wählen. Dann liegt die *Glas Fernbedienung*
-   wie eine App auf dem Handy.
+2. Im Browser 📱 oben rechts (oder ☰ → *Handy als Fernbedienung …*, *Einstellungen → Browser* bzw. *→ Handy*) zeigt
+   den QR-Code von *Einstellen per Handy*. Mit der Handy-Kamera scannen. Solange es läuft, steht der Code auch auf der
+   Startseite des Browsers.
+3. Oben **Browser** wählen. Die Seite merkt sich den Reiter.
 
 Auf dem Handy: Adresse oder Suchbegriff eintippen und *Öffnen* (öffnet den Browser am Fernseher, auch vom
 Startbildschirm aus), *Auf YouTube suchen*, Touchpad für den Zeiger (wischen, tippen = klicken, zwei Finger oder der
 rechte Rand blättern), Zurück/Vor/Neu laden/Start, Video ±10 s und Pause, Lautstärke, Text in ein Eingabefeld der
 Seite schreiben (z. B. Suchbegriff, Anmeldung), Favoriten öffnen, merken und löschen, Pfeiltasten.
 
-- Damit die Adresse gleich bleibt, im Router dem Fernseher immer dieselbe IP-Adresse geben.
-- Ist der Browser gesperrt oder außerhalb seines Zeitfensters, öffnet ihn das Handy nicht; dann am Fernseher mit PIN öffnen.
-- Ausschalten: *Einstellungen → Browser → Handy als Fernbedienung*. Die Seite ist nur im Heimnetz erreichbar, ohne Passwort.
+- Es gelten die Regeln von *Einstellen per Handy*: Zugang nur mit dem Schlüssel aus dem QR-Code, Ende nach 30 Minuten
+  ohne Nutzung.
+- Ist der Browser gesperrt oder außerhalb seines Zeitfensters, fragt das Handy nach dem PIN, bevor es ihn öffnet.
 - Läuft gerade eine andere App, lässt Android das Öffnen des Browsers vom Handy aus manchmal nicht zu. Dann den
   Browser am Fernseher über das Dock öffnen.
-- Den QR-Code zeichnet die Bibliothek [ZXing](https://github.com/zxing/zxing) (Apache-2.0).
 
 ## Erweiterungen
 

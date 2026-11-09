@@ -43,8 +43,8 @@ import java.lang.ref.WeakReference
  * Glas Browser: web pages and videos on the TV.
  *
  * With the TV remote the arrow keys move a mouse pointer, OK clicks, and at the edge of the screen the
- * page scrolls. The Menu key opens the options. The phone remote (see [RemoteServer]) sends the same
- * commands plus typed addresses and text.
+ * page scrolls. The Menu key opens the options. The phone ("Einstellen per Handy", see [BrowserRemote])
+ * sends the same commands plus typed addresses and text.
  */
 class BrowserActivity : Activity() {
     private lateinit var root: FrameLayout
@@ -262,16 +262,15 @@ class BrowserActivity : Activity() {
             val host = Uri.parse(f.url).host.orEmpty().removePrefix("www.").removePrefix("m.")
             "<a class=t href=\"${esc(f.url)}\"><b>${esc(f.title.take(1).uppercase())}</b><span>${esc(f.title)}</span><i>${esc(host)}</i></a>"
         }
-        val remote = RemoteServer.address(this)
-        val qr = remote?.let { Qr.bitmap(it, 360) }?.let { bmp ->
+        // While "Einstellen per Handy" is on, its QR code is right here; otherwise a hint where to find it
+        val remote = PhoneRemote.url()
+        val phone = if (remote != null) {
             val out = ByteArrayOutputStream()
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
-            "<img src=\"data:image/png;base64,${Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)}\">"
-        }.orEmpty()
-        val phone = when {
-            !Browser.remoteEnabled(this) -> ""
-            remote == null -> "<div class=p><div><h2>${esc(tr("Handy als Fernbedienung"))}</h2><p>${esc(tr("Der Fernseher ist nicht mit dem Netzwerk verbunden."))}</p></div></div>"
-            else -> "<div class=p>$qr<div><h2>${esc(tr("Handy als Fernbedienung"))}</h2><p>${esc(tr("Code mit der Handy-Kamera scannen oder im Handy-Browser öffnen:"))}</p><p class=u>${esc(remote)}</p><p>${esc(tr("Handy und Fernseher müssen im selben WLAN sein."))}</p></div></div>"
+            PhoneRemote.qrCode(remote, 360).compress(Bitmap.CompressFormat.PNG, 100, out)
+            val qr = "<img src=\"data:image/png;base64,${Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)}\">"
+            "<div class=p>$qr<div><h2>${esc(tr("Handy als Fernbedienung"))}</h2><p>${esc(tr("Code mit der Handy-Kamera scannen, dann oben „Browser“ wählen."))}</p><p>${esc(tr("Handy und Fernseher müssen im selben WLAN sein."))}</p></div></div>"
+        } else {
+            "<div class=p><div><h2>${esc(tr("Handy als Fernbedienung"))}</h2><p>${esc(tr("Adressen und Text auf dem Handy eintippen: 📱 oben rechts drücken und den QR-Code scannen."))}</p></div></div>"
         }
         return """<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>${esc(tr("Startseite"))}</title><style>
@@ -378,7 +377,7 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         GlassMenu.show(this, tr("Favoriten"), favs.map { f -> GlassMenu.Item(f.title) { load(f.url) } })
     }
 
-    private fun showPhone() = RemoteServer.showConnect(this)
+    private fun showPhone() = PhoneRemote.show(this)
 
     // ---- Remote ----
 
