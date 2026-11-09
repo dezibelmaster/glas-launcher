@@ -1,5 +1,28 @@
 [
  {
+  "version": "2.44",
+  "notes": {
+   "de": [
+    "„Glas Browser aktualisieren“ findet jetzt immer die neueste Browser-Version, egal in welcher Reihenfolge GitHub die Releases auflistet"
+   ],
+   "en": [
+    "“Update Glas Browser” now always finds the newest browser version, whatever order GitHub lists the releases in"
+   ],
+   "fr": [
+    "« Mettre à jour Glas Browser » trouve désormais toujours la version la plus récente, quel que soit l'ordre des releases sur GitHub"
+   ],
+   "es": [
+    "«Actualizar Glas Browser» encuentra ahora siempre la versión más reciente, sea cual sea el orden de las releases en GitHub"
+   ],
+   "it": [
+    "«Aggiorna Glas Browser» trova ora sempre la versione più recente, in qualunque ordine GitHub elenchi le release"
+   ],
+   "nl": [
+    "„Glas Browser bijwerken” vindt nu altijd de nieuwste browserversie, in welke volgorde GitHub de releases ook toont"
+   ]
+  }
+ },
+ {
   "version": "2.43",
   "notes": {
    "de": [

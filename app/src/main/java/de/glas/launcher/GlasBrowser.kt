@@ -56,13 +56,20 @@ object GlasBrowser {
 
     class Available(val version: String, val name: String, val url: String)
 
-    /** The newest browser APK for this TV's processor among the recent releases. Blocking. */
+    /**
+     * The newest browser APK for this TV's processor among the recent releases. Blocking.
+     * GitHub doesn't list releases strictly by date, so the highest version wins, not the first one found.
+     */
     fun available(repo: String): Available? {
         val apks = PluginStore.recentApks(repo)
         for (abi in Build.SUPPORTED_ABIS) {
-            val hit = apks.firstOrNull { it.first.startsWith("GlasBrowser-", true) && it.first.endsWith("-$abi.apk", true) } ?: continue
-            val version = Regex("""GlasBrowser-(\d+(\.\d+)*)""").find(hit.first)?.groupValues?.get(1) ?: continue
-            return Available(version, hit.first, hit.second)
+            val best = apks
+                .filter { it.first.startsWith("GlasBrowser-", true) && it.first.endsWith("-$abi.apk", true) }
+                .mapNotNull { apk ->
+                    Regex("""GlasBrowser-(\d+(\.\d+)*)""").find(apk.first)?.groupValues?.get(1)?.let { Available(it, apk.first, apk.second) }
+                }
+                .reduceOrNull { a, b -> if (Updater.newer(b.version, a.version)) b else a }
+            if (best != null) return best
         }
         return null
     }
