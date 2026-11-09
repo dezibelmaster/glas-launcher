@@ -67,5 +67,6 @@ class GlasApp : Application() {
     override fun onCreate() {
         super.onCreate()
         I18n.init(this)
+        RemoteServer.start(this)
     }
 }

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<title>Glas Fernbedienung</title>
+<style>
+:root{--bg:#07090d;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.1);--text:#f3f6fa;--muted:rgba(243,246,250,.6);--accent:#8ab4f8;--warn:#ffb74d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Roboto,sans-serif;min-height:100%}
+body{background:linear-gradient(#1a2230,var(--bg) 480px) no-repeat;padding:calc(12px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;user-select:none;-webkit-user-select:none}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+header h1{font-size:20px;font-weight:300;margin:0;flex:1}
+.dot{width:10px;height:10px;border-radius:50%;background:#666}.dot.on{background:#5bd68a}
+#now{font-size:13px;color:var(--muted);margin:-6px 0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+form{display:flex;gap:8px}
+input{flex:1;min-width:0;font:inherit;font-size:17px;color:var(--text);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;user-select:text;-webkit-user-select:text}
+input:focus{border-color:var(--accent)}
+button{font:inherit;font-size:16px;color:var(--text);background:rgba(255,255,255,.09);border:1px solid var(--line);border-radius:12px;padding:12px 10px;min-height:46px;cursor:pointer;touch-action:manipulation}
+button:active{background:rgba(255,255,255,.22)}
+button.main{background:#2d4e74;border-color:#3d6896}
+.row{display:grid;gap:8px;margin-top:8px}
+.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:repeat(3,1fr)}.r4{grid-template-columns:repeat(4,1fr)}.r5{grid-template-columns:repeat(5,1fr)}
+#pad{position:relative;height:42vh;min-height:220px;border-radius:16px;background:rgba(0,0,0,.35);border:1px solid var(--line);touch-action:none;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:14px;padding:20px 60px 20px 20px}
+#pad.active{border-color:var(--accent)}
+#strip{position:absolute;right:0;top:0;bottom:0;width:44px;border-left:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
+h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:4px 4px 8px}
+.favs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.fav{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--line);font-size:13px;text-align:center;min-height:auto}
+.fav b{width:40px;height:40px;border-radius:11px;background:#2d4e74;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:400}
+.fav span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fav i{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:#c0392b;font-style:normal;font-size:14px;line-height:24px;display:none}
+.edit .fav i{display:block}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;margin:0 auto}
+.dpad button{height:56px;font-size:20px}
+#msg{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));max-width:528px;margin:0 auto;background:#3a2a10;border:1px solid var(--warn);color:#ffe0b2;border-radius:14px;padding:12px 14px;font-size:14px;display:none;z-index:9}
+.small{font-size:12px;color:var(--muted);margin:8px 4px 0;line-height:1.4}
+</style>
+</head>
+<body>
+<header><span class="dot" id="dot"></span><h1 data-t="Glas Fernbedienung">Glas Fernbedienung</h1></header>
+<div id="now"></div>
+
+<div class="card">
+  <form id="go">
+    <input id="url" type="search" enterkeyhint="go" autocomplete="off" autocapitalize="off" spellcheck="false"
+           data-tp="Adresse oder Suche" placeholder="Adresse oder Suche">
+    <button class="main" type="submit" data-t="Öffnen">Öffnen</button>
+  </form>
+  <div class="row r2">
+    <button id="yt" data-t="Auf YouTube suchen">Auf YouTube suchen</button>
+    <button id="openb" data-t="Browser öffnen">Browser öffnen</button>
+  </div>
+</div>
+
+<div class="card">
+  <div id="pad"><span data-t="Wischen bewegt den Zeiger, Tippen klickt. Mit zwei Fingern oder am rechten Rand blättern.">Wischen bewegt den Zeiger, Tippen klickt. Mit zwei Fingern oder am rechten Rand blättern.</span><div id="strip">↕</div></div>
+  <div class="row r4">
+    <button data-c="back" data-t="Zurück">Zurück</button>
+    <button data-c="forward" data-t="Vor">Vor</button>
+    <button data-c="reload" data-t="Neu laden">Neu laden</button>
+    <button data-c="home" data-t="Start">Start</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2 data-t="Video">Video</h2>
+  <div class="row r3">
+    <button data-c="seek" data-s="-10">« 10 s</button>
+    <button data-c="play" class="main" id="play">⏯</button>
+    <button data-c="seek" data-s="10">10 s »</button>
+  </div>
+  <div class="row r3">
+    <button data-c="vol" data-d="-1">🔉 <span data-t="Leiser">Leiser</span></button>
+    <button data-c="vol" data-d="0">🔇</button>
+    <button data-c="vol" data-d="1">🔊 <span data-t="Lauter">Lauter</span></button>
+  </div>
+</div>
+
+<div class="card">
+  <h2 data-t="Text auf der Seite eingeben">Text auf der Seite eingeben</h2>
+  <form id="type">
+    <input id="text" type="text" enterkeyhint="send" autocomplete="off" data-tp="z. B. Suchbegriff oder Passwort" placeholder="z. B. Suchbegriff oder Passwort">
+    <button class="main" type="submit" data-t="Senden">Senden</button>
+  </form>
+  <p class="small" data-t="Zuerst am Fernseher ins Eingabefeld der Seite klicken. Senden schreibt den Text hinein und drückt Enter.">Zuerst am Fernseher ins Eingabefeld der Seite klicken. Senden schreibt den Text hinein und drückt Enter.</p>
+</div>
+
+<div class="card">
+  <h2 data-t="Favoriten">Favoriten</h2>
+  <div class="favs" id="favs"></div>
+  <div class="row r2">
+    <button id="addfav" data-t="★ Aktuelle Seite merken">★ Aktuelle Seite merken</button>
+    <button id="editfav" data-t="Bearbeiten">Bearbeiten</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2 data-t="Pfeiltasten">Pfeiltasten</h2>
+  <div class="dpad">
+    <span></span><button data-c="key" data-k="up">▲</button><span></span>
+    <button data-c="key" data-k="left">◀</button><button data-c="key" data-k="ok" class="main">OK</button><button data-c="key" data-k="right">▶</button>
+    <span></span><button data-c="key" data-k="down">▼</button><span></span>
+  </div>
+  <div class="row r2">
+    <button data-c="pointer" data-t="Zeiger ein/aus">Zeiger ein/aus</button>
+    <button data-c="key" data-k="menu" data-t="Menü am Fernseher">Menü am Fernseher</button>
+  </div>
+</div>
+
+<div id="msg"></div>
+
+<script>
+var T=/*T*/{};
+function t(s){return T[s]||s}
+document.querySelectorAll('[data-t]').forEach(function(e){e.textContent=t(e.getAttribute('data-t'))});
+document.querySelectorAll('[data-tp]').forEach(function(e){e.placeholder=t(e.getAttribute('data-tp'))});
+document.title=t('Glas Fernbedienung');
+
+var state={favorites:[]},msgTimer,editing=false;
+function $(id){return document.getElementById(id)}
+function say(text){var m=$('msg');m.textContent=text;m.style.display='block';clearTimeout(msgTimer);msgTimer=setTimeout(function(){m.style.display='none'},5000)}
+
+function show(s){
+  if(!s)return;state=s;
+  $('dot').className='dot'+(s.open?' on':'');
+  $('now').textContent=s.open?(s.title||s.url||t('Startseite')):t('Der Browser ist am Fernseher nicht geöffnet.');
+  $('play').textContent=s.playing?'⏸':'▶';
+  if(s.error)say(s.error);
+  var box=$('favs');box.innerHTML='';
+  (s.favorites||[]).forEach(function(f){
+    var b=document.createElement('button');b.className='fav';
+    b.innerHTML='<b></b><span></span><i>✕</i>';
+    b.querySelector('b').textContent=(f.title||'?').charAt(0).toUpperCase();
+    b.querySelector('span').textContent=f.title;
+    b.onclick=function(){if(editing)send({c:'fav-remove',url:f.url});else send({c:'open',url:f.url})};
+    box.appendChild(b);
+  });
+}
+
+function send(cmd){
+  return fetch('/api/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cmd)})
+    .then(function(r){return r.json()}).then(show)
+    .catch(function(){$('dot').className='dot';say(t('Keine Verbindung zum Fernseher. Sind Handy und Fernseher im selben WLAN?'))});
+}
+function poll(){if(document.hidden)return;fetch('/api/state').then(function(r){return r.json()}).then(function(s){s.error=null;show(s)}).catch(function(){$('dot').className='dot'})}
+poll();setInterval(poll,4000);document.addEventListener('visibilitychange',poll);
+
+$('go').onsubmit=function(e){e.preventDefault();var v=$('url').value.trim();send({c:'open',url:v});$('url').blur()};
+$('yt').onclick=function(){var v=$('url').value.trim();if(!v){$('url').focus();return}send({c:'youtube',url:v});$('url').blur()};
+$('openb').onclick=function(){send({c:'open',url:''})};
+$('type').onsubmit=function(e){e.preventDefault();send({c:'text',t:$('text').value,enter:true});$('text').value='';$('text').blur()};
+$('addfav').onclick=function(){if(!state.open||!state.url){say(t('Zuerst eine Seite öffnen'));return}send({c:'fav-add'})};
+$('editfav').onclick=function(){editing=!editing;$('favs').parentNode.classList.toggle('edit',editing);this.textContent=editing?t('Fertig'):t('Bearbeiten')};
+document.querySelectorAll('[data-c]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var c={c:b.getAttribute('data-c')};
+    if(b.dataset.s)c.s=+b.dataset.s;if(b.dataset.d)c.d=+b.dataset.d;if(b.dataset.k)c.k=b.dataset.k;
+    send(c);
+  });
+});
+
+// Touchpad: moves are collected and sent at most every 40 ms, one request at a time
+(function(){
+  var pad=$('pad'),strip=$('strip'),mx=0,my=0,sx=0,sy=0,busy=false,last=null,start=0,moved=0,fingers=0,scrollOnly=false;
+  function flush(){
+    if(busy)return;
+    var c=null;
+    if(sx||sy){c={c:'scroll',dx:sx,dy:sy};sx=sy=0}
+    else if(mx||my){c={c:'move',dx:mx,dy:my};mx=my=0}
+    if(!c)return;busy=true;
+    fetch('/api/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)})
+      .catch(function(){}).then(function(){busy=false});
+  }
+  setInterval(flush,40);
+  function mid(ts){var x=0,y=0;for(var i=0;i<ts.length;i++){x+=ts[i].clientX;y+=ts[i].clientY}return{x:x/ts.length,y:y/ts.length}}
+  pad.addEventListener('touchstart',function(e){
+    e.preventDefault();pad.classList.add('active');
+    fingers=Math.max(fingers,e.touches.length);last=mid(e.touches);
+    if(e.touches.length===1){start=Date.now();moved=0;fingers=1;scrollOnly=e.target===strip}
+  },{passive:false});
+  pad.addEventListener('touchmove',function(e){
+    e.preventDefault();var p=mid(e.touches);if(!last){last=p;return}
+    var dx=p.x-last.x,dy=p.y-last.y;last=p;moved+=Math.abs(dx)+Math.abs(dy);
+    if(e.touches.length>1||scrollOnly){sx+=-dx;sy+=-dy*1.5}
+    else{var a=Math.min(2.2,1+Math.sqrt(dx*dx+dy*dy)/12);mx+=dx*a;my+=dy*a}
+  },{passive:false});
+  pad.addEventListener('touchend',function(e){
+    e.preventDefault();
+    if(e.touches.length){last=mid(e.touches);return}
+    pad.classList.remove('active');last=null;
+    if(fingers===1&&!scrollOnly&&moved<10&&Date.now()-start<350){flush();setTimeout(function(){send({c:'tap'})},50)}
+    fingers=0;
+  },{passive:false});
+  // Mouse on a computer: drag moves, click clicks
+  var down=null;
+  pad.addEventListener('mousedown',function(e){down={x:e.clientX,y:e.clientY,m:0}});
+  window.addEventListener('mousemove',function(e){if(!down)return;var dx=e.clientX-down.x,dy=e.clientY-down.y;down.x=e.clientX;down.y=e.clientY;down.m+=Math.abs(dx)+Math.abs(dy);mx+=dx;my+=dy});
+  window.addEventListener('mouseup',function(){if(down&&down.m<5)send({c:'tap'});down=null});
+  pad.addEventListener('wheel',function(e){e.preventDefault();sy+=e.deltaY;sx+=e.deltaX},{passive:false});
+})();
+</script>
+</body>
+</html>

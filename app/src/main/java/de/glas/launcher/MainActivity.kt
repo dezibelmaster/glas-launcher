@@ -708,7 +708,13 @@ class MainActivity : Activity() {
 
     private fun buildDock(focus: String? = null) {
         dock.removeAllViews()
-        val ids = prefs.dock ?: Apps.defaultDock(apps).also { prefs.dock = it }
+        var ids = prefs.dock ?: Apps.defaultDock(apps).also { prefs.dock = it }
+        // Once, after the update that brought it: the Glas Browser joins the dock
+        val browser = apps.firstOrNull { it.pkg == packageName }?.component
+        if (browser != null && !prefs.browserInDock) {
+            prefs.browserInDock = true
+            if (browser !in ids) { ids = ids + browser; prefs.dock = ids }
+        }
         val byComponent = apps.associateBy { it.component }
         val entries = ids.mapNotNull { byComponent[it] }
         for (app in entries) dock.addView(appTile(app, inDock = true), dockSlot())
@@ -834,11 +840,16 @@ class MainActivity : Activity() {
 
     private fun launch(app: AppEntry) {
         val window = prefs.timeWindows[app.pkg]
+        val go = {
+            // The browser checks the PIN itself when opened elsewhere; from here it is already checked
+            if (app.pkg == packageName) Browser.unlockedUntil = android.os.SystemClock.elapsedRealtime() + 10_000
+            start(app.launch, app.label)
+        }
         when {
-            app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { start(app.launch, app.label) }
+            app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { go() }
             window != null && !TimeLimits.allowedNow(window) ->
-                Pin.verify(this, prefs, tr("{0} ist nur {1} erlaubt", app.label, TimeLimits.label(window))) { start(app.launch, app.label) }
-            else -> start(app.launch, app.label)
+                Pin.verify(this, prefs, tr("{0} ist nur {1} erlaubt", app.label, TimeLimits.label(window))) { go() }
+            else -> go()
         }
     }
 

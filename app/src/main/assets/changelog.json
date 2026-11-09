@@ -1,5 +1,40 @@
 [
  {
+  "version": "2.39",
+  "notes": {
+   "de": [
+    "Neu: Glas Browser für Videoseiten und Videos, im Dock. Pfeiltasten bewegen einen Zeiger, OK klickt, Menü-Taste zeigt Adresse, Favoriten und mehr",
+    "Handy als Fernbedienung: Code im Browser scannen, dann Adressen und Text auf dem Handy eintippen, Touchpad, Video- und Lautstärketasten",
+    "Den Browser sperrst du wie eine App mit PIN und Zeitfenster"
+   ],
+   "en": [
+    "New: Glas Browser for video sites and videos, in the dock. Arrow keys move a pointer, OK clicks, the Menu button shows address, favourites and more",
+    "Phone as remote: scan the code in the browser, then type addresses and text on your phone, with touchpad, video and volume buttons",
+    "Lock the browser like an app with PIN and time window"
+   ],
+   "fr": [
+    "Nouveau : Glas Browser pour les sites et vidéos, dans le dock. Les flèches déplacent un pointeur, OK clique, la touche Menu affiche adresse, favoris et plus",
+    "Téléphone comme télécommande : scannez le code dans le navigateur, puis saisissez adresses et texte sur le téléphone, avec pavé tactile, touches vidéo et volume",
+    "Le navigateur se verrouille comme une appli avec code PIN et plage horaire"
+   ],
+   "es": [
+    "Nuevo: Glas Browser para webs de vídeo y vídeos, en el dock. Las flechas mueven un puntero, OK hace clic y el botón Menú muestra dirección, favoritos y más",
+    "Móvil como mando: escanea el código en el navegador y escribe direcciones y texto en el móvil, con panel táctil, botones de vídeo y volumen",
+    "El navegador se bloquea como una app con PIN y franja horaria"
+   ],
+   "it": [
+    "Novità: Glas Browser per siti e video, nel dock. Le frecce muovono un puntatore, OK fa clic, il tasto Menu mostra indirizzo, preferiti e altro",
+    "Telefono come telecomando: scansiona il codice nel browser e scrivi indirizzi e testo sul telefono, con touchpad, tasti video e volume",
+    "Il browser si blocca come un'app con PIN e fascia oraria"
+   ],
+   "nl": [
+    "Nieuw: Glas Browser voor videosites en video's, in het dock. Pijltjestoetsen bewegen een aanwijzer, OK klikt, de menutoets toont adres, favorieten en meer",
+    "Telefoon als afstandsbediening: scan de code in de browser en typ adressen en tekst op je telefoon, met touchpad, video- en volumeknoppen",
+    "De browser vergrendel je als een app met pincode en tijdvenster"
+   ]
+  }
+ },
+ {
   "version": "2.38",
   "notes": {
    "de": [

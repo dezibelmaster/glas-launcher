@@ -86,8 +86,25 @@ class SettingsActivity : Activity() {
         note(tr("Halte OK auf einer App gedrückt oder drücke die Menü-Taste, um sie zu verschieben, zu entfernen oder mit PIN zu sperren. Neue Apps fügst du unter „Alle Apps“ hinzu."))
         row(tr("Dock zurücksetzen")) {
             prefs.dock = null
+            prefs.browserInDock = false
             toast(tr("Das Dock zeigt wieder YouTube, Netflix, MagentaTV und Jellyfin"))
         }
+
+        section(tr("Browser"))
+        row(tr("Glas Browser öffnen")) { BrowserActivity.open(this, null) }
+        row(tr("Handy als Fernbedienung"), if (Browser.remoteEnabled(this)) tr("An") else tr("Aus")) {
+            val on = !Browser.remoteEnabled(this)
+            Browser.setRemoteEnabled(this, on)
+            if (on) RemoteServer.start(this) else RemoteServer.stop()
+            render()
+        }
+        if (Browser.remoteEnabled(this)) row(tr("Handy verbinden"), RemoteServer.address(this) ?: tr("kein Netzwerk")) { RemoteServer.showConnect(this) }
+        row(tr("Ansicht"), if (Browser.desktop(this)) tr("Computer") else tr("Handy/Tablet")) {
+            Browser.setDesktop(this, !Browser.desktop(this)); render()
+        }
+        row(tr("Favoriten zurücksetzen")) { Browser.resetFavorites(this); toast(tr("Favoriten zurückgesetzt")) }
+        row(tr("Browserdaten löschen")) { clearBrowserData() }
+        note(tr("Im Browser bewegen die Pfeiltasten einen Zeiger, OK klickt. Mit der Handy-Fernbedienung tippst du Adressen und Text auf dem Handy ein: Handy und Fernseher ins selbe WLAN, dann „Handy verbinden“ und den Code scannen. Gesperrt wird der Browser wie eine App unter „Gesperrte Apps“ und „Zeitfenster“."))
 
         section(tr("Kindersicherung"))
         row("PIN", if (prefs.pinHash == null) tr("Festlegen") else tr("Ändern")) { changePin() }
@@ -194,6 +211,16 @@ class SettingsActivity : Activity() {
         } catch (e: ActivityNotFoundException) {
             toast(tr("Diese Einstellung gibt es auf deinem Fernseher nicht"))
         }
+    }
+
+    /** Cookies, logins, stored pages and history of the Glas Browser. */
+    private fun clearBrowserData() = withPin {
+        android.webkit.CookieManager.getInstance().removeAllCookies(null)
+        android.webkit.WebStorage.getInstance().deleteAllData()
+        runCatching { android.webkit.WebView(this).apply { clearCache(true); clearHistory(); destroy() } }
+        getSharedPreferences("glas", MODE_PRIVATE).edit().remove("browserLast").apply()
+        Browser.open?.finish()
+        toast(tr("Browserdaten gelöscht"))
     }
 
     private fun withPin(action: () -> Unit) = Pin.verify(this, prefs, tr("PIN eingeben"), action)
