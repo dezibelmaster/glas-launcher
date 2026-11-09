@@ -90,5 +90,17 @@
  "{0} ist aus": "{0} staat uit",
  "{0} ist installiert": "{0} is geïnstalleerd",
  "Öffnen": "Openen",
- "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Slaat sponsorstukken in YouTube-video's over"
+ "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Slaat sponsorstukken in YouTube-video's over",
+ "abgestürzt": "gecrasht",
+ "vom System beendet (Speicher)": "door het systeem beëindigd (geheugen)",
+ "Die Seite stürzt immer wieder ab": "De pagina crasht steeds opnieuw",
+ "Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.": "De Firefox-engine kon deze pagina niet tonen ({0}). Menu → Meer → Foutrapport toont details.",
+ "Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?": "Geen verbinding met de server. Is de tv met internet verbonden?",
+ "Diese Adresse gibt es nicht.": "Dit adres bestaat niet.",
+ "Die Verbindung ist nicht sicher (Zertifikat).": "De verbinding is niet veilig (certificaat).",
+ "Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.": "De pagina levert inhoud die de browser niet kan tonen.",
+ "Unbekannter Fehler": "Onbekende fout",
+ "Seite nicht erreichbar": "Pagina niet bereikbaar",
+ "Fehlerbericht": "Foutrapport",
+ "Keine Fehler seit dem Start des Browsers.": "Geen fouten sinds de browser is gestart."
 }

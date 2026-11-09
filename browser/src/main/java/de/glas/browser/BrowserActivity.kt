@@ -45,6 +45,7 @@ import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.ScreenLength
 import org.mozilla.geckoview.WebExtension
+import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
 import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
@@ -256,6 +257,20 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
             }
         }
 
+        // A page that can't be loaded gets a short explanation instead of an empty screen
+        override fun onLoadError(s: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String> {
+            Diag.add("Ladefehler ${error.category}/${error.code}: $uri")
+            val reason = when (error.category) {
+                WebRequestError.ERROR_CATEGORY_NETWORK -> tr("Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?")
+                WebRequestError.ERROR_CATEGORY_URI -> tr("Diese Adresse gibt es nicht.")
+                WebRequestError.ERROR_CATEGORY_SECURITY -> tr("Die Verbindung ist nicht sicher (Zertifikat).")
+                WebRequestError.ERROR_CATEGORY_CONTENT -> tr("Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.")
+                else -> tr("Unbekannter Fehler")
+            }
+            val page = errorPage(tr("Seite nicht erreichbar"), "$reason\n${uri.orEmpty()} (${error.category}/${error.code})")
+            return GeckoResult.fromValue("data:text/html;base64," + Base64.encodeToString(page.toByteArray(), Base64.NO_WRAP))
+        }
+
         // Links that want a new window open in this one
         override fun onNewSession(s: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
             handler.post { session.loadUri(uri) }
@@ -269,7 +284,10 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
             progress.visibility = View.VISIBLE
         }
 
-        override fun onPageStop(s: GeckoSession, success: Boolean) { progress.visibility = View.INVISIBLE }
+        override fun onPageStop(s: GeckoSession, success: Boolean) {
+            progress.visibility = View.INVISIBLE
+            if (!success && currentUrl != Store.HOME) Diag.add("Seite nicht fertig geladen: $currentUrl")
+        }
 
         override fun onProgressChange(s: GeckoSession, value: Int) {
             progress.progress = value
@@ -295,18 +313,38 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
 
         override fun onCloseRequest(s: GeckoSession) = finish()
 
-        override fun onCrash(s: GeckoSession) = restartSession()
-        override fun onKill(s: GeckoSession) = restartSession()
+        override fun onCrash(s: GeckoSession) = restartSession(tr("abgestürzt"))
+        override fun onKill(s: GeckoSession) = restartSession(tr("vom System beendet (Speicher)"))
     }
 
-    /** The page's process ended (memory or a crash): start a fresh one on the same page. */
-    private fun restartSession() {
-        toast(tr("Die Seite wurde neu geladen"))
-        val url = currentUrl
+    private val restarts = ArrayDeque<Long>()
+
+    /**
+     * The page's process ended (memory or a crash): start a fresh one on the same page. If that keeps
+     * happening, stop and say so instead of trying forever.
+     */
+    private fun restartSession(why: String) {
+        Diag.add("Seitenprozess $why: $currentUrl")
+        val now = SystemClock.elapsedRealtime()
+        while (restarts.isNotEmpty() && now - restarts.first() > 60_000) restarts.removeFirst()
+        restarts.addLast(now)
         session.close()
         session = newSession()
         gecko.setSession(session)
-        load(url)
+        if (restarts.size > 2) {
+            session.load(GeckoSession.Loader().data(errorPage(tr("Die Seite stürzt immer wieder ab"),
+                tr("Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.", why)), "text/html"))
+            return
+        }
+        toast(tr("Die Seite wurde neu geladen"))
+        load(currentUrl)
+    }
+
+    private fun errorPage(title: String, text: String): String {
+        fun esc(s: String) = TextUtils.htmlEncode(s)
+        return "<!doctype html><html><head><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><title>${esc(title)}</title>" +
+            "<style>body{margin:0;padding:60px;background:#07090d;color:#fff;font-family:sans-serif}h1{font-weight:300}p{opacity:.75;font-size:18px;line-height:1.5}</style>" +
+            "</head><body><h1>${esc(title)}</h1><p>${esc(text)}</p></body></html>"
     }
 
     // Autoplay and protected videos (DRM) of the media libraries are allowed; nothing else is asked
@@ -522,6 +560,11 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
                 },
                 GlassMenu.Item(tr("Abbrechen")) {},
             ), footer = tr("Löscht Anmeldungen, Cookies, gespeicherte Seiten und den Verlauf. Erweiterungen und Favoriten bleiben."))
+        },
+        GlassMenu.Item(tr("Fehlerbericht")) {
+            val log = Diag.all()
+            GlassMenu.show(this, tr("Fehlerbericht"), listOf(GlassMenu.Item("OK") {}),
+                footer = if (log.isEmpty()) tr("Keine Fehler seit dem Start des Browsers.") else log.joinToString("\n"))
         },
         GlassMenu.Item(tr("Info")) {
             val v = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull().orEmpty()

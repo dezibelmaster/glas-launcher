@@ -2,6 +2,8 @@ package de.glas.browser
 
 import android.app.Application
 import android.content.Context
+import android.os.Build
+import java.io.File
 import android.os.Handler
 import android.os.Looper
 import org.mozilla.geckoview.ContentBlocking
@@ -14,8 +16,33 @@ import org.mozilla.geckoview.WebExtensionController
 class GlasBrowserApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        I18n.init(this)
+        // Gecko shows pages in sandboxed helper processes of this app. Android starts this class there too,
+        // but those processes may not touch the app's storage; reading the settings there made them crash.
+        if (!isMainProcess()) return
+        runCatching { I18n.init(this) }
     }
+
+    private fun isMainProcess(): Boolean {
+        val name = if (Build.VERSION.SDK_INT >= 28) getProcessName()
+        else runCatching { File("/proc/self/cmdline").readText().trim('\u0000', ' ', '\n') }.getOrNull()
+        return name == null || name == packageName
+    }
+}
+
+/** The last things that went wrong, for "Mehr → Fehlerbericht" and the Android log (tag GlasBrowser). */
+object Diag {
+    private val entries = ArrayDeque<String>()
+    private val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT)
+
+    @Synchronized
+    fun add(what: String) {
+        android.util.Log.w("GlasBrowser", what)
+        entries.addFirst(time.format(java.util.Date()) + "  " + what)
+        while (entries.size > 30) entries.removeLast()
+    }
+
+    @Synchronized
+    fun all(): List<String> = entries.toList()
 }
 
 /**
@@ -88,7 +115,7 @@ object Engine {
                 bridgeWaiters.forEach { it(ext) }
                 bridgeWaiters.clear()
             }
-        }, { /* Without the bridge the pointer still works; only scrolling and video buttons need it */ })
+        }, { e -> Diag.add("Glas Bridge: " + (e?.message ?: e?.javaClass?.simpleName)) })
         return rt
     }
 
@@ -119,7 +146,7 @@ object Engine {
         }
         runtime(ctx).webExtensionController.install(url).accept(
             { ext -> main.post { done(ext, null) } },
-            { e -> main.post { done(null, e) } },
+            { e -> Diag.add("Erweiterung $url: " + (e?.message ?: e?.javaClass?.simpleName)); main.post { done(null, e) } },
         )
     }
 

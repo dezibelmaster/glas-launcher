@@ -90,5 +90,17 @@
  "{0} ist aus": "{0} is off",
  "{0} ist installiert": "{0} is installed",
  "Öffnen": "Open",
- "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Skips sponsor segments in YouTube videos"
+ "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Skips sponsor segments in YouTube videos",
+ "abgestürzt": "crashed",
+ "vom System beendet (Speicher)": "ended by the system (memory)",
+ "Die Seite stürzt immer wieder ab": "The page keeps crashing",
+ "Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.": "The Firefox engine couldn't show this page ({0}). Menu → More → Error report shows details.",
+ "Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?": "No connection to the server. Is the TV connected to the internet?",
+ "Diese Adresse gibt es nicht.": "This address doesn't exist.",
+ "Die Verbindung ist nicht sicher (Zertifikat).": "The connection isn't secure (certificate).",
+ "Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.": "The page delivers content the browser can't show.",
+ "Unbekannter Fehler": "Unknown error",
+ "Seite nicht erreichbar": "Page not reachable",
+ "Fehlerbericht": "Error report",
+ "Keine Fehler seit dem Start des Browsers.": "No errors since the browser started."
 }

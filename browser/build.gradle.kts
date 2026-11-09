@@ -14,8 +14,8 @@ android {
         // GeckoView runs from Android 8
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     // One APK per processor type; the launcher installs the one that fits the TV
@@ -74,7 +74,7 @@ dependencies {
     implementation("com.google.zxing:core:3.5.3")
 }
 
-// APK named with version and processor type, e.g. GlasBrowser-1.0-arm64-v8a.apk
+// APK named with version and processor type, e.g. GlasBrowser-1.1-arm64-v8a.apk
 @Suppress("DEPRECATION")
 android.applicationVariants.all {
     outputs.all {

@@ -90,5 +90,17 @@
  "{0} ist aus": "{0} est désactivé",
  "{0} ist installiert": "{0} est installé",
  "Öffnen": "Ouvrir",
- "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Passe les segments sponsorisés des vidéos YouTube"
+ "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Passe les segments sponsorisés des vidéos YouTube",
+ "abgestürzt": "planté",
+ "vom System beendet (Speicher)": "arrêté par le système (mémoire)",
+ "Die Seite stürzt immer wieder ab": "La page plante sans cesse",
+ "Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.": "Le moteur Firefox n'a pas pu afficher cette page ({0}). Menu → Plus → Rapport d'erreurs donne les détails.",
+ "Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?": "Pas de connexion au serveur. Le téléviseur est-il connecté à Internet ?",
+ "Diese Adresse gibt es nicht.": "Cette adresse n'existe pas.",
+ "Die Verbindung ist nicht sicher (Zertifikat).": "La connexion n'est pas sécurisée (certificat).",
+ "Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.": "La page fournit un contenu que le navigateur ne peut pas afficher.",
+ "Unbekannter Fehler": "Erreur inconnue",
+ "Seite nicht erreichbar": "Page inaccessible",
+ "Fehlerbericht": "Rapport d'erreurs",
+ "Keine Fehler seit dem Start des Browsers.": "Aucune erreur depuis le démarrage du navigateur."
 }

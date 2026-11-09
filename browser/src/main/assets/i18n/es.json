@@ -90,5 +90,17 @@
  "{0} ist aus": "{0} está desactivado",
  "{0} ist installiert": "{0} está instalado",
  "Öffnen": "Abrir",
- "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Salta los segmentos patrocinados de los vídeos de YouTube"
+ "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Salta los segmentos patrocinados de los vídeos de YouTube",
+ "abgestürzt": "se ha bloqueado",
+ "vom System beendet (Speicher)": "cerrado por el sistema (memoria)",
+ "Die Seite stürzt immer wieder ab": "La página se bloquea una y otra vez",
+ "Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.": "El motor de Firefox no pudo mostrar esta página ({0}). Menú → Más → Informe de errores muestra los detalles.",
+ "Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?": "Sin conexión con el servidor. ¿Está el televisor conectado a internet?",
+ "Diese Adresse gibt es nicht.": "Esta dirección no existe.",
+ "Die Verbindung ist nicht sicher (Zertifikat).": "La conexión no es segura (certificado).",
+ "Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.": "La página envía contenido que el navegador no puede mostrar.",
+ "Unbekannter Fehler": "Error desconocido",
+ "Seite nicht erreichbar": "Página no disponible",
+ "Fehlerbericht": "Informe de errores",
+ "Keine Fehler seit dem Start des Browsers.": "Ningún error desde que se abrió el navegador."
 }

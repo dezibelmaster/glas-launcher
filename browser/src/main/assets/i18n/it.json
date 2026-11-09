@@ -90,5 +90,17 @@
  "{0} ist aus": "{0} è spento",
  "{0} ist installiert": "{0} è installato",
  "Öffnen": "Apri",
- "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Salta i segmenti sponsorizzati nei video di YouTube"
+ "Überspringt Sponsoren-Abschnitte in YouTube-Videos": "Salta i segmenti sponsorizzati nei video di YouTube",
+ "abgestürzt": "andato in crash",
+ "vom System beendet (Speicher)": "chiuso dal sistema (memoria)",
+ "Die Seite stürzt immer wieder ab": "La pagina continua a bloccarsi",
+ "Die Firefox-Engine konnte diese Seite nicht anzeigen ({0}). Menü → Mehr → Fehlerbericht zeigt Einzelheiten.": "Il motore di Firefox non è riuscito a mostrare questa pagina ({0}). Menu → Altro → Rapporto errori mostra i dettagli.",
+ "Keine Verbindung zum Server. Ist der Fernseher mit dem Internet verbunden?": "Nessuna connessione al server. Il TV è connesso a Internet?",
+ "Diese Adresse gibt es nicht.": "Questo indirizzo non esiste.",
+ "Die Verbindung ist nicht sicher (Zertifikat).": "La connessione non è sicura (certificato).",
+ "Die Seite liefert Inhalte, die der Browser nicht anzeigen kann.": "La pagina fornisce contenuti che il browser non può mostrare.",
+ "Unbekannter Fehler": "Errore sconosciuto",
+ "Seite nicht erreichbar": "Pagina non raggiungibile",
+ "Fehlerbericht": "Rapporto errori",
+ "Keine Fehler seit dem Start des Browsers.": "Nessun errore dall'avvio del browser."
 }
