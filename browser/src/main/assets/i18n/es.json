@@ -103,5 +103,9 @@
  "Seite nicht erreichbar": "Página no disponible",
  "Fehlerbericht": "Informe de errores",
  "Keine Fehler seit dem Start des Browsers.": "Ningún error desde que se abrió el navegador.",
- "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "El informe completo para copiar está en el móvil: Ajustes desde el móvil → Navegador → Informe de errores."
+ "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "El informe completo para copiar está en el móvil: Ajustes desde el móvil → Navegador → Informe de errores.",
+ "Videoqualität höchstens": "Calidad de vídeo máxima",
+ "Videos automatisch im Vollbild": "Vídeos en pantalla completa automáticamente",
+ "empfohlen": "recomendado",
+ "Viele Fernseher zeigen bei 4K-Videos nach kurzer Zeit nur noch ein grünes Bild. Bis 1440p sind auch AV1 und HDR aus; Seiten wie YouTube schicken dann ein Format, das der Fernseher sicher abspielt.": "Muchos televisores muestran solo una imagen verde al poco tiempo con vídeos 4K. Hasta 1440p también se desactivan AV1 y HDR; sitios como YouTube envían entonces un formato que el televisor reproduce bien."
 }

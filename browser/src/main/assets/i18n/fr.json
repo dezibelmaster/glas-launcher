@@ -103,5 +103,9 @@
  "Seite nicht erreichbar": "Page inaccessible",
  "Fehlerbericht": "Rapport d'erreurs",
  "Keine Fehler seit dem Start des Browsers.": "Aucune erreur depuis le démarrage du navigateur.",
- "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "Le rapport complet à copier est sur le téléphone : Réglages depuis le téléphone → Navigateur → Rapport d'erreurs."
+ "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "Le rapport complet à copier est sur le téléphone : Réglages depuis le téléphone → Navigateur → Rapport d'erreurs.",
+ "Videoqualität höchstens": "Qualité vidéo maximale",
+ "Videos automatisch im Vollbild": "Vidéos en plein écran automatiquement",
+ "empfohlen": "recommandé",
+ "Viele Fernseher zeigen bei 4K-Videos nach kurzer Zeit nur noch ein grünes Bild. Bis 1440p sind auch AV1 und HDR aus; Seiten wie YouTube schicken dann ein Format, das der Fernseher sicher abspielt.": "Beaucoup de téléviseurs n'affichent plus qu'une image verte après peu de temps avec les vidéos 4K. Jusqu'à 1440p, AV1 et HDR sont aussi désactivés ; des sites comme YouTube envoient alors un format que le téléviseur lit sans problème."
 }

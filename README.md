@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.45**, **Glas Browser 1.2**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.45**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -318,6 +318,13 @@ geht über 🧩 → Erweiterung. Bequemer tippen: am Handy unter *Einstellen per
 | Erweiterungen | 🧩 oben rechts |
 | Video im Vollbild | ◀ / ▶ spulen 10 Sekunden, **OK** Pause/Weiter, ▲ / ▼ holen den Zeiger zurück |
 | Wiedergabe | Play/Pause-, Vor- und Zurückspul-Tasten der Fernbedienung |
+
+**Videos:** Startet ein großes Video mit Ton, wechselt der Browser von selbst ins Vollbild (*Menü → Videos automatisch im
+Vollbild*). Stumme Vorschauen, z. B. auf der YouTube-Startseite, bleiben klein. Lässt eine Seite kein echtes Vollbild
+zu, wird das Video auf den ganzen Bildschirm vergrößert. **Zurück** verlässt das Vollbild; dieses Video bleibt dann klein.
+*Menü → Videoqualität höchstens* (720p, 1080p, 1440p oder 4K, Standard 1080p) sagt den Seiten, welche Auflösung der
+Browser höchstens abspielt; bis 1440p sind auch AV1 und HDR aus. Viele Fernseher zeigen bei 4K-Videos im Browser nach
+kurzer Zeit nur noch ein grünes Bild, mit 1080p schicken YouTube und andere ein Format, das sicher läuft.
 
 Die Startseite zeigt die Favoriten als Kacheln. ☆ oben merkt die aktuelle Seite.
 Läuft ein Video, bleibt der Fernseher wach; auf einer stehenden Seite schaltet er wie gewohnt ab. Geschützte

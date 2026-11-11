@@ -52,6 +52,14 @@ object Store {
     fun desktop(ctx: Context) = sp(ctx).getBoolean("desktop", false)
     fun setDesktop(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("desktop", on).apply()
 
+    /** Highest video resolution the pages are offered; above it TVs often show a green picture. */
+    fun maxVideoHeight(ctx: Context) = sp(ctx).getInt("maxVideoHeight", 1080)
+    fun setMaxVideoHeight(ctx: Context, h: Int) = sp(ctx).edit().putInt("maxVideoHeight", h).apply()
+
+    /** Videos that start with sound go to full screen by themselves. */
+    fun autoFullscreen(ctx: Context) = sp(ctx).getBoolean("autoFullscreen", true)
+    fun setAutoFullscreen(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean("autoFullscreen", on).apply()
+
     fun lastUrl(ctx: Context): String? = sp(ctx).getString("last", null)
     fun setLastUrl(ctx: Context, url: String) = sp(ctx).edit().putString("last", url).apply()
 

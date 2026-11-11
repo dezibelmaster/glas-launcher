@@ -103,5 +103,9 @@
  "Seite nicht erreichbar": "Page not reachable",
  "Fehlerbericht": "Error report",
  "Keine Fehler seit dem Start des Browsers.": "No errors since the browser started.",
- "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "The full report to copy is on the phone: Set up from phone → Browser → Error report."
+ "Den ganzen Bericht zum Kopieren gibt es am Handy: Einstellen per Handy → Browser → Fehlerbericht.": "The full report to copy is on the phone: Set up from phone → Browser → Error report.",
+ "Videoqualität höchstens": "Maximum video quality",
+ "Videos automatisch im Vollbild": "Videos in full screen automatically",
+ "empfohlen": "recommended",
+ "Viele Fernseher zeigen bei 4K-Videos nach kurzer Zeit nur noch ein grünes Bild. Bis 1440p sind auch AV1 und HDR aus; Seiten wie YouTube schicken dann ein Format, das der Fernseher sicher abspielt.": "Many TVs show only a green picture after a short while with 4K videos. Up to 1440p, AV1 and HDR are off too; sites like YouTube then send a format the TV plays reliably."
 }

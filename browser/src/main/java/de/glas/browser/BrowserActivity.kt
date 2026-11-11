@@ -70,6 +70,9 @@ class BrowserActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var fullscreen = false
+    // Video enlarged to the whole screen by the bridge when the page didn't allow real full screen
+    private var filmPort: WebExtension.Port? = null
+    private val immersive get() = fullscreen || filmPort != null
     private var pointerOn = true
     private var downTime = 0L
     private var pointerUntil = 0L
@@ -421,6 +424,8 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
     private val bridgeDelegate = object : WebExtension.MessageDelegate {
         override fun onConnect(port: WebExtension.Port) {
             ports += port
+            // Right away, before the page's video player asks which formats it may use
+            runCatching { port.postMessage(videoConfig()) }
             port.setDelegate(object : WebExtension.PortDelegate {
                 override fun onPortMessage(message: Any, p: WebExtension.Port) {
                     val m = message as? JSONObject ?: return
@@ -428,10 +433,15 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
                         if (m.optBoolean("playing")) playingPorts += p else playingPorts -= p
                         keepAwake()
                     }
+                    if (m.has("film")) {
+                        filmPort = if (m.optBoolean("film")) p else if (filmPort === p) null else filmPort
+                        updatePointer()
+                    }
                     if (m.has("id")) replies[m.optInt("id")]?.invoke(m.opt("result"))
                 }
 
                 override fun onDisconnect(p: WebExtension.Port) {
+                    if (filmPort === p) { filmPort = null; updatePointer() }
                     ports -= p
                     playingPorts -= p
                     keepAwake()
@@ -439,6 +449,11 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
             })
         }
     }
+
+    private fun videoConfig() = JSONObject()
+        .put("c", "config")
+        .put("maxHeight", Store.maxVideoHeight(this))
+        .put("autoFull", Store.autoFullscreen(this))
 
     /** Sends a command to every page and frame; [onReply] learns whether any of them did it. */
     private fun toPages(cmd: JSONObject, onReply: ((Boolean) -> Unit)? = null) {
@@ -545,6 +560,11 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         items += GlassMenu.Item(tr("Erweiterungen …")) { extensionsMenu() }
         items += GlassMenu.Item(tr("Mauszeiger"), if (pointerOn) tr("An") else tr("Aus")) { setPointer(!pointerOn) }
         items += GlassMenu.Item(tr("Ansicht"), if (Store.desktop(this)) tr("Computer") else tr("Handy/Tablet")) { toggleDesktop() }
+        items += GlassMenu.Item(tr("Videoqualität höchstens"), qualityName(Store.maxVideoHeight(this))) { chooseQuality() }
+        items += GlassMenu.Item(tr("Videos automatisch im Vollbild"), if (Store.autoFullscreen(this)) tr("An") else tr("Aus")) {
+            Store.setAutoFullscreen(this, !Store.autoFullscreen(this))
+            toPages(videoConfig())
+        }
         items += GlassMenu.Item(tr("Handy als Fernbedienung …")) { showPhone() }
         items += GlassMenu.Item(tr("Mehr …")) { moreMenu() }
         items += GlassMenu.Item(tr("Browser schließen")) { finish() }
@@ -578,6 +598,27 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
                 footer = tr("Mit der Firefox-Engine GeckoView von Mozilla (Mozilla Public License 2.0)."))
         },
     ))
+
+    private fun qualityName(h: Int) = when (h) {
+        2160 -> "4K (2160p)"
+        1440 -> "1440p"
+        720 -> "720p"
+        else -> "1080p"
+    }
+
+    private fun chooseQuality() {
+        val options = listOf(720, 1080, 1440, 2160)
+        val now = Store.maxVideoHeight(this)
+        GlassMenu.show(this, tr("Videoqualität höchstens"), options.map { h ->
+            GlassMenu.Item(qualityName(h) + (if (h == 1080) "  · " + tr("empfohlen") else "") + if (h == now) "  ✓" else "") {
+                Store.setMaxVideoHeight(this, h)
+                toPages(videoConfig())
+                // Players pick their format when a video starts, so start it afresh
+                session.reload()
+            }
+        }, focus = options.indexOf(now).coerceAtLeast(0),
+            footer = tr("Viele Fernseher zeigen bei 4K-Videos nach kurzer Zeit nur noch ein grünes Bild. Bis 1440p sind auch AV1 und HDR aus; Seiten wie YouTube schicken dann ein Format, das der Fernseher sicher abspielt."))
+    }
 
     private fun toggleDesktop() {
         Store.setDesktop(this, !Store.desktop(this))
@@ -733,7 +774,7 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
         if (code == KeyEvent.KEYCODE_BACK) return true
         // Arrow keys and OK drive the pointer, unless the on-screen keyboard has them
         if (!usesPointerKeys() || code !in POINTER_KEYS) return super.dispatchKeyEvent(event)
-        if (fullscreen && SystemClock.uptimeMillis() > pointerUntil) {
+        if (immersive && SystemClock.uptimeMillis() > pointerUntil) {
             if (event.action != KeyEvent.ACTION_DOWN) return true
             when (code) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> media("seek", -10)
@@ -743,7 +784,7 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
             }
             return true
         }
-        if (fullscreen) showPointerBriefly()
+        if (immersive) showPointerBriefly()
         when (code) {
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
                 if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) touch(true)
@@ -763,7 +804,7 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
     }
 
     private fun usesPointerKeys(): Boolean {
-        if (!pointerOn && !fullscreen) return false
+        if (!pointerOn && !immersive) return false
         // While typing into a page field, the arrows belong to the field
         val r = android.graphics.Rect()
         root.getWindowVisibleDisplayFrame(r)
@@ -774,6 +815,11 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
     private fun goBack() {
         when {
             fullscreen -> session.exitFullScreen()
+            filmPort != null -> {
+                runCatching { filmPort?.postMessage(JSONObject().put("c", "exitFilm")) }
+                filmPort = null
+                updatePointer()
+            }
             canBack -> session.goBack()
             else -> finish()
         }
@@ -798,22 +844,22 @@ h1{font-weight:200;font-size:40px;margin:0 0 24px}h2{font-weight:300;margin:0 0 
 
     private fun updatePointer() {
         pointer.visibility = when {
-            fullscreen -> if (SystemClock.uptimeMillis() < pointerUntil) View.VISIBLE else View.GONE
+            immersive -> if (SystemClock.uptimeMillis() < pointerUntil) View.VISIBLE else View.GONE
             pointerOn -> View.VISIBLE
             else -> View.GONE
         }
-        bar.visibility = if (fullscreen) View.GONE else View.VISIBLE
-        progress.visibility = if (fullscreen) View.GONE else progress.visibility
+        bar.visibility = if (immersive) View.GONE else View.VISIBLE
+        progress.visibility = if (immersive) View.GONE else progress.visibility
     }
 
     /** Moves the pointer; at the screen edge the page under it scrolls instead. */
     fun move(dx: Float, dy: Float, scrollAtEdge: Boolean) {
-        if (pointer.visibility != View.VISIBLE) { if (fullscreen) showPointerBriefly() else return }
+        if (pointer.visibility != View.VISIBLE) { if (immersive) showPointerBriefly() else return }
         val x = pointer.x0 + dx
         val y = pointer.y0 + dy
         val maxX = root.width - 1f
         val maxY = root.height - 1f
-        if (scrollAtEdge && !fullscreen) {
+        if (scrollAtEdge && !immersive) {
             val sx = if (x < 0) x else if (x > maxX) x - maxX else 0f
             val sy = if (y < 0) y else if (y > maxY) y - maxY else 0f
             if (sx != 0f || sy != 0f) scroll(sx * 4, sy * 4)
