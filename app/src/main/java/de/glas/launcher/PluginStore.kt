@@ -59,6 +59,20 @@ object PluginStore {
     private var pending: ((Context) -> Unit)? = null
 
     /** Called when a screen comes back: continues a waiting install if the permission is there now. */
+    /** The last releases (newest first, no drafts), with their APK files. Blocking. */
+    fun recentReleases(repo: String): List<Release> {
+        val releases = org.json.JSONArray(get("https://api.github.com/repos/$repo/releases?per_page=15"))
+        return (0 until releases.length()).map { releases.getJSONObject(it) }
+            .filter { !it.optBoolean("draft") && !it.optBoolean("prerelease") }
+            .map { r ->
+                val assets = r.getJSONArray("assets")
+                val apks = (0 until assets.length()).map { assets.getJSONObject(it) }
+                    .filter { it.getString("name").endsWith(".apk", true) }
+                    .map { it.getString("name") to it.getString("browser_download_url") }
+                Release(r.optString("tag_name"), apks, r.optString("body").trim())
+            }
+    }
+
     /** APK files of the last releases, newest first; for apps that aren't attached to every release. */
     fun recentApks(repo: String): List<Pair<String, String>> {
         val releases = org.json.JSONArray(get("https://api.github.com/repos/$repo/releases?per_page=15"))
