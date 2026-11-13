@@ -59,6 +59,19 @@ object PluginStore {
     private var pending: ((Context) -> Unit)? = null
 
     /** Called when a screen comes back: continues a waiting install if the permission is there now. */
+    /** APK files of the last releases, newest first; for apps that aren't attached to every release. */
+    fun recentApks(repo: String): List<Pair<String, String>> {
+        val releases = org.json.JSONArray(get("https://api.github.com/repos/$repo/releases?per_page=15"))
+        return (0 until releases.length()).map { releases.getJSONObject(it) }
+            .filter { !it.optBoolean("draft") && !it.optBoolean("prerelease") }
+            .flatMap { r ->
+                val assets = r.getJSONArray("assets")
+                (0 until assets.length()).map { assets.getJSONObject(it) }
+                    .filter { it.getString("name").endsWith(".apk", true) }
+                    .map { it.getString("name") to it.getString("browser_download_url") }
+            }
+    }
+
     fun resumePending(ctx: Context) {
         val action = pending ?: return
         pending = null
@@ -67,7 +80,7 @@ object PluginStore {
     }
 
     /** Downloads one APK of [repo]'s newest release, chosen by [pick], and opens Android's installer. */
-    fun installRelease(ctx: Context, label: String, repo: String, pick: (List<Pair<String, String>>) -> Pair<String, String>?) {
+    fun installRelease(ctx: Context, label: String, repo: String, fromRecent: Boolean = false, pick: (List<Pair<String, String>>) -> Pair<String, String>?) {
         // Some TVs (TCL) show the app as allowed to install apps while Android still reports it isn't.
         // So the permission screen comes only once; after that the download goes ahead and Android's
         // installer checks the permission itself.
@@ -77,7 +90,7 @@ object PluginStore {
         ) {
             prefs.edit().putBoolean("install.asked", true).apply()
             // Carry on by itself once the user comes back
-            pending = { c -> installRelease(c, label, repo, pick) }
+            pending = { c -> installRelease(c, label, repo, fromRecent, pick) }
             ctx.toast(tr("Erlaube dem Glas Launcher, Apps zu installieren, und drücke dann Zurück."))
             runCatching {
                 ctx.startActivity(
@@ -90,8 +103,8 @@ object PluginStore {
         ctx.toast(tr("{0} wird heruntergeladen …", label))
         Thread {
             val result = runCatching {
-                val apk = pick(latestRelease(repo).apks) ?: throw IllegalStateException(tr("{0} bietet gerade keine APK-Datei an", label))
-                download(ctx, apk.second, repo.substringAfter('/') + ".apk")
+                val apk = pick(if (fromRecent) recentApks(repo) else latestRelease(repo).apks) ?: throw IllegalStateException(tr("{0} bietet gerade keine APK-Datei an", label))
+                download(ctx, apk.second, if (fromRecent) apk.first else repo.substringAfter('/') + ".apk")
             }
             main.post {
                 val file = result.getOrNull()

@@ -47,10 +47,12 @@ object Pin {
     fun hash(pin: String): String =
         MessageDigest.getInstance("SHA-256").digest("glas:$pin".toByteArray()).joinToString("") { "%02x".format(it) }
 
-    fun ask(ctx: Context, title: String, onEntered: (String) -> Unit) {
+    fun ask(ctx: Context, title: String, onCancel: (() -> Unit)? = null, onEntered: (String) -> Unit) {
         val dialog = Dialog(ctx)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         var pin = ""
+        var entered = false
+        dialog.setOnDismissListener { if (!entered) onCancel?.invoke() }
         val dots = Ui.text(ctx, 34f).apply {
             gravity = Gravity.CENTER
             letterSpacing = .3f
@@ -62,6 +64,7 @@ object Pin {
             pin += d
             refresh()
             if (pin.length == 4) {
+                entered = true
                 dialog.dismiss()
                 onEntered(pin)
             }
@@ -126,9 +129,14 @@ object Pin {
     }
 
     /** Runs [onOk] right away if no PIN is set, otherwise after the right PIN. */
-    fun verify(ctx: Context, prefs: Prefs, title: String, onOk: () -> Unit) {
+    fun verify(ctx: Context, prefs: Prefs, title: String, onOk: () -> Unit) = verify(ctx, prefs, title, null, onOk)
+
+    /** Like [verify], and [onCancel] runs when the PIN is wrong or the keypad is closed. */
+    fun verify(ctx: Context, prefs: Prefs, title: String, onCancel: (() -> Unit)?, onOk: () -> Unit) {
         val expected = prefs.pinHash ?: return onOk()
-        ask(ctx, title) { if (hash(it) == expected) onOk() else ctx.toast(tr("Falscher PIN")) }
+        ask(ctx, title, onCancel) {
+            if (hash(it) == expected) onOk() else { ctx.toast(tr("Falscher PIN")); onCancel?.invoke() }
+        }
     }
 
     fun create(ctx: Context, prefs: Prefs, onDone: () -> Unit) {

@@ -112,6 +112,8 @@ class MainActivity : Activity() {
     private val idle = Runnable { startActivity(Intent(this, ScreensaverActivity::class.java)) }
 
     private val builtLanguage = I18n.lang
+    private var started = false
+    private var resumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -307,6 +309,7 @@ class MainActivity : Activity() {
             if (bar.visibility == View.VISIBLE && now != null && !isInside(now, bar)) hideBar(focusDock = false)
         }
         setContentView(root)
+        PhoneRemote.addListener(phoneListener)
         pointOutWhatsNew()
         if (prefs.places.isEmpty()) handler.postDelayed({ welcome() }, 800)
     }
@@ -351,8 +354,35 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        started = true
         // A new language in the settings: build the home screen again in it
         if (builtLanguage != I18n.lang) { recreate(); return }
+        applyPrefs()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        started = false
+    }
+
+    /** Settings changed on the phone while the home screen shows: apply them right away. */
+    private val phoneListener: (Boolean) -> Unit = { settings ->
+        if (settings && started) {
+            if (builtLanguage != I18n.lang) recreate()
+            else {
+                applyPrefs()
+                if (resumed) {
+                    backdrop.resume()
+                    handler.removeCallbacks(weatherTick)
+                    handler.post(weatherTick)
+                    resetIdle()
+                }
+            }
+        }
+    }
+
+    /** Brings the home screen in line with the settings. */
+    private fun applyPrefs() {
         applyBackdrop()
         // Own videos may have been deleted or added in the meantime
         if (prefs.background == "video") (backdrop as? VideoBackdrop)?.refresh()
@@ -383,6 +413,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        resumed = true
         backdrop.resume()
         handler.post(clockTick)
         handler.post(weatherTick)
@@ -391,6 +422,7 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         super.onPause()
+        resumed = false
         // Free the video decoder right away: TVs often have only one for 4K, and the app being
         // opened (e.g. YouTube) crashes if the launcher still holds it
         backdrop.pause()
@@ -399,6 +431,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        PhoneRemote.removeListener(phoneListener)
         if (::backdrop.isInitialized) backdrop.release()
     }
 
@@ -739,7 +772,17 @@ class MainActivity : Activity() {
 
     private fun buildDock(focus: String? = null) {
         dock.removeAllViews()
-        val ids = prefs.dock ?: Apps.defaultDock(apps).also { prefs.dock = it }
+        var ids = prefs.dock ?: Apps.defaultDock(apps).also { prefs.dock = it }
+        // Once the Glas Browser app is installed, it joins the dock (also in place of the old built-in one)
+        val browser = apps.firstOrNull { it.pkg == GlasBrowser.PKG }?.component
+        if (browser != null && !prefs.browserInDock) {
+            prefs.browserInDock = true
+            val old = ids.indexOf(GlasBrowser.OLD_COMPONENT)
+            if (browser !in ids) {
+                ids = if (old >= 0) ids.toMutableList().also { it[old] = browser } else ids + browser
+                prefs.dock = ids
+            }
+        }
         val byComponent = apps.associateBy { it.component }
         val entries = ids.mapNotNull { byComponent[it] }
         for (app in entries) dock.addView(appTile(app, inDock = true), dockSlot())
@@ -865,11 +908,15 @@ class MainActivity : Activity() {
 
     private fun launch(app: AppEntry) {
         val window = prefs.timeWindows[app.pkg]
+        val go = {
+            // The Glas Browser speaks the launcher's language
+            start(if (app.pkg == GlasBrowser.PKG) Intent(app.launch).putExtra("lang", I18n.lang) else app.launch, app.label)
+        }
         when {
-            app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { start(app.launch, app.label) }
+            app.pkg in prefs.locked -> Pin.verify(this, prefs, tr("{0} ist gesperrt", app.label)) { go() }
             window != null && !TimeLimits.allowedNow(window) ->
-                Pin.verify(this, prefs, tr("{0} ist nur {1} erlaubt", app.label, TimeLimits.label(window))) { start(app.launch, app.label) }
-            else -> start(app.launch, app.label)
+                Pin.verify(this, prefs, tr("{0} ist nur {1} erlaubt", app.label, TimeLimits.label(window))) { go() }
+            else -> go()
         }
     }
 

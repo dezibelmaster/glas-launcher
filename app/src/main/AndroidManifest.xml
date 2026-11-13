@@ -15,6 +15,12 @@
     <!-- Deleting own pictures and videos before Android 10 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
+    <!-- Glas apps (same key) may talk to each other: the phone remote steers the Glas Browser -->
+    <permission
+        android:name="de.glas.permission.REMOTE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="de.glas.permission.REMOTE" />
+
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
@@ -33,6 +39,9 @@
             <action android:name="de.glas.launcher.WALLPAPER_PROVIDER" />
         </intent>
         <provider android:authorities="de.glas.launcher.videos" />
+        <!-- Glas Browser (Firefox engine), a separate app -->
+        <package android:name="de.glas.browser" />
+        <provider android:authorities="de.glas.browser.remote" />
         <!-- Projectivy wallpaper plugins -->
         <intent>
             <action android:name="tv.projectivy.plugin.WALLPAPER_PROVIDER" />
@@ -81,6 +90,21 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:noHistory="true" />
+
+        <!-- Android's question before deleting a file for the phone page -->
+        <activity
+            android:name=".DeleteConfirmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- The Glas Browser asks for the phone address for its QR code -->
+        <provider
+            android:name=".PhoneProvider"
+            android:authorities="de.glas.launcher.phone"
+            android:exported="true"
+            android:permission="de.glas.permission.REMOTE" />
 
         <provider
             android:name=".ApkProvider"

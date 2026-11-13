@@ -21,6 +21,13 @@ class SettingsActivity : Activity() {
     private lateinit var prefs: Prefs
     private lateinit var list: LinearLayout
     private var afterPermission: (() -> Unit)? = null
+    private var resumed = false
+    private val builtLanguage = I18n.lang
+
+    /** The phone changed something: show it right away. */
+    private val phoneListener: (Boolean) -> Unit = {
+        if (resumed) { if (I18n.lang != builtLanguage) recreate() else render() }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,10 +44,23 @@ class SettingsActivity : Activity() {
             }, FrameLayout.LayoutParams(dp(760), MATCH_PARENT, Gravity.CENTER_HORIZONTAL))
         }
         setContentView(root)
+        PhoneRemote.addListener(phoneListener)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        PhoneRemote.removeListener(phoneListener)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        resumed = false
     }
 
     override fun onResume() {
         super.onResume()
+        resumed = true
+        if (I18n.lang != builtLanguage) return recreate()
         render()
         PluginStore.resumePending(this)
     }
@@ -56,6 +76,10 @@ class SettingsActivity : Activity() {
 
         section(tr("Sprache") + if (I18n.lang != "en") " · Language" else "")
         row(tr("Sprache") + if (I18n.lang != "en") " · Language" else "", I18n.nameOf(prefs.language)) { chooseLanguage() }
+
+        section(tr("Handy"))
+        row(tr("Einstellen per Handy"), if (PhoneRemote.running) tr("An") else tr("Aus")) { phoneSettings() }
+        note(tr("Hintergrund, eigene Videos, Dock, Wetterorte, Kindersicherung und mehr bequem am Handy einstellen: QR-Code scannen, Handy und Fernseher im selben WLAN."))
 
         section(tr("Aussehen"))
         row(tr("Hintergrund"), backgroundLabel()) { chooseBackground() }
@@ -86,8 +110,20 @@ class SettingsActivity : Activity() {
         note(tr("Halte OK auf einer App gedrückt oder drücke die Menü-Taste, um sie zu verschieben, zu entfernen oder mit PIN zu sperren. Neue Apps fügst du unter „Alle Apps“ hinzu."))
         row(tr("Dock zurücksetzen")) {
             prefs.dock = null
+            prefs.browserInDock = false
             toast(tr("Das Dock zeigt wieder YouTube, Netflix, MagentaTV und Jellyfin"))
         }
+
+        section(tr("Browser"))
+        val browserVersion = GlasBrowser.version(this)
+        if (browserVersion != null) {
+            row(tr("Glas Browser öffnen"), tr("Version {0}", browserVersion)) { GlasBrowser.open(this, null) }
+            row(tr("Glas Browser aktualisieren")) { GlasBrowser.installOrUpdate(this, prefs.updateRepo) }
+        } else {
+            row(tr("Glas Browser installieren"), tr("ca. 100 MB")) { GlasBrowser.installOrUpdate(this, prefs.updateRepo) }
+        }
+        row(tr("Handy als Fernbedienung")) { phoneSettings() }
+        note(tr("Der Glas Browser ist eine eigene App mit der Firefox-Engine. Er kann Firefox-Erweiterungen wie uBlock Origin gegen Werbung installieren (im Browser auf 🧩 drücken). Im Browser bewegen die Pfeiltasten einen Zeiger, OK klickt. Adressen und Text tippst du auf dem Handy ein: „Einstellen per Handy“ einschalten, den Code scannen und oben „Browser“ wählen. Gesperrt wird der Browser wie eine App unter „Gesperrte Apps“ und „Zeitfenster“."))
 
         section(tr("Kindersicherung"))
         row("PIN", if (prefs.pinHash == null) tr("Festlegen") else tr("Ändern")) { changePin() }
@@ -197,6 +233,17 @@ class SettingsActivity : Activity() {
     }
 
     private fun withPin(action: () -> Unit) = Pin.verify(this, prefs, tr("PIN eingeben"), action)
+
+    // ---- Phone ----
+
+    private fun phoneSettings() {
+        // Let the phone see the pictures and videos already on the TV, and save uploads before Android 10
+        val wanted = listOf(Media.permission(video = false), Media.permission(video = true)) +
+            if (Build.VERSION.SDK_INT <= 28) listOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) else emptyList()
+        val missing = wanted.distinct().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isEmpty()) PhoneRemote.show(this)
+        else requestPermissions(missing.toTypedArray(), REQUEST_PHONE)
+    }
 
     // ---- Appearance ----
 
@@ -730,6 +777,8 @@ class SettingsActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        // Works without the permissions too, then only with files sent from the phone
+        if (requestCode == REQUEST_PHONE) return PhoneRemote.show(this)
         val action = afterPermission
         afterPermission = null
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) action?.invoke()
@@ -740,5 +789,6 @@ class SettingsActivity : Activity() {
         const val REQUEST_HOME = 1
         const val REQUEST_MEDIA = 2
         const val REQUEST_DELETE = 3
+        const val REQUEST_PHONE = 4
     }
 }

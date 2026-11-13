@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -24,6 +24,9 @@ Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
 
 ## Funktionen
 
+- **Einstellen per Handy:** QR-Code am Fernseher scannen und am Handy Hintergrund, eigene Bilder und Videos (Hochladen
+  vom Handy), Dock, Wetterorte, Bildschirmschoner, Kindersicherung, Sprache und Sicherung einstellen. Änderungen
+  erscheinen sofort auf dem Fernseher.
 - **Statusleiste oben mittig:** Datum, Uhrzeit, Wettersymbol mit Temperatur, WLAN-Signalstärke und Zahnrad zu den
   Fernseher-Einstellungen. Auf Wunsch eingeklappt, dann nur die Uhrzeit oben rechts. Alternativ große Uhr mit Wetterkarte.
 - **Dock:** Apps hinzufügen, entfernen und verschieben. Alle Symbole als einheitlich abgerundete Quadrate.
@@ -45,6 +48,7 @@ Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
 - **Bildschirmschoner:** große Uhr mit Datum und Wetter, wandert gegen Einbrennen.
 - **Wetter:** beliebige Orte; beim ersten Start fragt der Launcher nach der eigenen Stadt. Hohe Schleierwolken werden herausgerechnet.
 - **Startbildschirm:** ersetzt die Google-TV-Oberfläche, auch nach einem Neustart.
+- **Glas Browser:** eigene App mit der Firefox-Engine für Videoseiten, mit Firefox-Erweiterungen wie uBlock Origin; Mauszeiger auf der Fernbedienung, Adressen und Text tippst du auf dem Handy ein.
 
 ## Bedienung auf dem Fernseher
 
@@ -63,6 +67,7 @@ Aktuelle Versionen: **Glas Launcher 2.39**, **Glas Natur-Videos 1.2**.
 | Fernseher-Einstellungen | Statusleiste → ⚙ (mit PIN, wenn die Einstellungen geschützt sind) |
 | Statusleiste ein- und ausklappen | Statusleiste → Uhrzeit anklicken; erneut auf die Uhrzeit oben rechts klicken |
 | Einstellungen des Launchers | ⚙ **Einstellungen** im Dock |
+| Browser öffnen | **Glas Browser** im Dock (auch unter *Alle Apps*) |
 
 Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder Bildern. Sie blendet sich nach
 5 Sekunden ohne Tastendruck oder beim Wechsel ins Dock wieder aus.
@@ -70,6 +75,7 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 ## Einstellungen
 
 - **Sprache:** Automatisch (Sprache des Fernsehers, sonst Englisch) oder eine feste Sprache
+- **Handy:** Einstellen per Handy ein- und ausschalten, QR-Code anzeigen
 - **Aussehen:** Hintergrund, Milchglas, *Oben anzeigen* (Statusleiste oder große Uhr mit Wetterkarte),
   eigene Bilder und Videos löschen, heruntergeladene Videos löschen
 - **Wetter:** Orte suchen und hinzufügen, Hauptort festlegen (bestimmt den Hintergrund), Orte entfernen
@@ -80,18 +86,48 @@ Die Hintergrund-Leiste erscheint nur bei Hintergründen mit mehreren Videos oder
 - **Sichern:** Einstellungen sichern nach `Download/GlasLauncher-Einstellungen.json` und wiederherstellen. Für einen anderen
   Fernseher die Datei nach `/sdcard/Android/data/de.glas.launcher/files/` kopieren (z. B. mit Bugjaeger).
 - **Updates:** installierte Version, „Neu in Version …“ mit früheren Versionen, Update-Quelle (voreingestellt: `dezibelmaster/glas-launcher`; leer lassen stellt sie zurück), jetzt nach Updates suchen
+- **Browser:** Glas Browser installieren, öffnen und aktualisieren, Handy als Fernbedienung (QR-Code von *Einstellen per Handy*)
 - **Startbildschirm:** Status, als Standard festlegen, Home-Taste umleiten
 - **Bildschirmschoner:** Uhrzeit, Datum und Wetter einzeln ein- und ausschalten (alles aus zeigt nur den Hintergrund), Zeit bis zum Start im Launcher, jetzt anzeigen, System-Bildschirmschoner
 - **Fernseher:** Fernseher-Einstellungen öffnen
 - **Info:** installierte Versionen von Glas Launcher und Glas Natur-Videos
 
+## Einstellen per Handy
+
+*Einstellungen → Handy → Einstellen per Handy* startet einen kleinen Webserver im Launcher und zeigt einen QR-Code.
+Mit der Handy-Kamera scannen (Handy und Fernseher im selben WLAN), die Seite öffnet sich im Browser. Ohne QR-Code
+geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7m2p9qa`.
+
+- **Was geht:** Hintergrund (Wetter-Stile, eigene Bilder und Videos), Milchglas, „Oben anzeigen“, eigene Bilder und
+  Videos hochladen, als Hintergrund verwenden und löschen, Dock sortieren, Apps hinzufügen und entfernen, Wetterorte
+  suchen, Hauptort, Wetterquelle, Bildschirmschoner, Sprache, Sicherung aufs Handy und zurück, Update-Quelle.
+- **Kindersicherung:** PIN festlegen oder ändern, Apps sperren, Zeitfenster (auch eigene Uhrzeiten), „Alle Apps“ und
+  Einstellungen schützen. Ist ein PIN festgelegt, fragt die Seite ihn zuerst ab, genau wie der Fernseher. Nach fünf
+  falschen Versuchen ist eine Minute Pause.
+- **Sicherheit:** Die Adresse enthält nach dem `#` einen Zugangsschlüssel, der bei jedem Einschalten neu entsteht.
+  Ohne ihn lässt sich nichts lesen oder ändern. Der Fernseher meldet, wenn sich ein Handy verbindet. Der Server läuft
+  nur, solange die Funktion an ist, und schaltet sich nach 30 Minuten ohne Nutzung von selbst aus. Die Verbindung ist
+  unverschlüsselt (HTTP) und nur für das eigene Heimnetz gedacht.
+- **Hochgeladene Dateien** landen in `Movies/GlasLauncher` bzw. `Pictures/GlasLauncher`. Ein Bild mit dem Namen
+  eines Wetterfotos (z. B. `clear_day.jpg`) ersetzt dort das eingebaute Foto, solange es noch keine Datei mit diesem Namen gibt.
+- **Löschen vom Handy:** Eigene Uploads löscht der Launcher direkt. Dateien, die anders auf den Fernseher kamen
+  (z. B. mit Bugjaeger), darf eine App ab Android 10 nicht ohne Weiteres löschen. Ist das USB-Debugging an, löscht der
+  Launcher sie über den eigenen Debugging-Zugang (wie bei der Google-TV-Oberfläche). Sonst erscheint am Fernseher
+  Androids Frage, ob gelöscht werden darf, und wird mit der Fernbedienung bestätigt.
+- Erweiterungen, Projectivy-Plugins und die Google-TV-Oberfläche werden weiter am Fernseher eingestellt.
+
 ## Bauen
 
 ```
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.39.apk`
+Das Projekt bringt Gradle selbst mit (`gradlew`, Gradle 9). Gebraucht werden Java 17 und das Android-SDK mit
+Plattform 35 und 37.2 (der Glas Browser baut gegen das neueste SDK, weil GeckoView es verlangt).
+
+- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.46.apk`
+- Browser: `browser/build/outputs/apk/debug/GlasBrowser-<Version>-<Prozessor>.apk`, je eine Datei für
+  `arm64-v8a` (64 Bit) und `armeabi-v7a` (32 Bit), etwa 100 MB
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
@@ -100,8 +136,10 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.39` anlegen und `GlasLauncher-2.39.apk` anhängen. Der Launcher
+**Updates über GitHub:** Ein Release mit dem Tag `v2.46` anlegen und `GlasLauncher-2.46.apk` anhängen. Der Launcher
 sucht von sich aus in `dezibelmaster/glas-launcher` (änderbar unter *Einstellungen → Updates*) und meldet die neue Version.
+Die beiden `GlasBrowser-…apk` nur anhängen, wenn sich der Browser geändert hat: Der Launcher sucht sie in den letzten
+15 Releases und nimmt die neueste, die zum Prozessor des Fernsehers passt.
 
 **Was neu ist:** Steht in `app/src/main/assets/changelog.json` (alle sechs Sprachen) und erscheint unter
 *Einstellungen → Updates → Neu in Version …*. Der Text eines GitHub-Releases wird vor dem Installieren angezeigt.
@@ -134,7 +172,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.39.apk
+adb install -r GlasLauncher-2.46.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 
@@ -250,6 +288,71 @@ der UV-Index fehlt beim DWD.
 [Bright Sky](https://brightsky.dev), sonst aus der stündlichen Open-Meteo-Vorhersage der nächsten 12 Stunden
 (Gewitter, Böen ab 60 km/h, Glätte, Starkregen, starker Schneefall). Abruf alle 30 Minuten.
 
+## Glas Browser
+
+Ein Browser für Videoseiten wie YouTube, ARD- und ZDF-Mediathek, arte, 3sat, Vimeo oder Dailymotion – als eigene
+App (`de.glas.browser`, Modul `browser`) mit **GeckoView**, der Firefox-Engine von Mozilla. Dadurch laufen
+**Firefox-Erweiterungen** von [addons.mozilla.org](https://addons.mozilla.org), allen voran uBlock Origin gegen Werbung.
+
+**Installieren:** *Einstellungen → Browser → Glas Browser installieren*. Der Launcher holt die passende Datei für den
+Prozessor des Fernsehers aus den GitHub-Releases (etwa 100 MB) und öffnet den Installer; *Glas Browser aktualisieren*
+holt später neuere Versionen. Danach liegt der Browser im Dock (an Stelle des früheren eingebauten Browsers) und lässt
+sich wie jede App verschieben, entfernen oder mit PIN und Zeitfenster sperren. Er braucht mindestens Android 8;
+der alte Fire TV Stick mit Fire OS 6 bleibt ohne ihn.
+
+**Erweiterungen:** im Browser 🧩 (oder Menü → *Erweiterungen …*). Beim ersten Start bietet der Browser uBlock Origin an.
+Empfohlen sind uBlock Origin, SponsorBlock, Consent-O-Matic (Cookie-Banner), Dark Reader, Return YouTube Dislike und
+Privacy Badger; *Andere von addons.mozilla.org* nimmt den Namen aus der Adresse einer Erweiterung, z. B. `ublock-origin`.
+Vor dem Installieren zeigt der Browser, was die Erweiterung darf. Ausschalten, entfernen und ihre Einstellungen öffnen
+geht über 🧩 → Erweiterung. Bequemer tippen: am Handy unter *Einstellen per Handy* → *Browser* → *Erweiterungen*.
+
+**Mit der Fernbedienung des Fernsehers**
+
+| Was | Wie |
+|---|---|
+| Zeiger bewegen | Pfeiltasten (gedrückt halten wird schneller) |
+| Klicken | **OK** (gedrückt halten = lange drücken) |
+| Blättern | Zeiger an den Bildschirmrand schieben und weiter drücken |
+| Eine Seite zurück, Vollbild verlassen | **Zurück** |
+| Adresse, YouTube-Suche, Favoriten, Erweiterungen, Zeiger an/aus, Ansicht, Handy als Fernbedienung | **Menü-Taste** oder ☰ oben rechts |
+| Erweiterungen | 🧩 oben rechts |
+| Video im Vollbild | ◀ / ▶ spulen 10 Sekunden, **OK** Pause/Weiter, ▲ / ▼ holen den Zeiger zurück |
+| Wiedergabe | Play/Pause-, Vor- und Zurückspul-Tasten der Fernbedienung |
+
+**Videos:** Startet ein großes Video mit Ton, wechselt der Browser von selbst ins Vollbild (*Menü → Videos automatisch im
+Vollbild*). Stumme Vorschauen, z. B. auf der YouTube-Startseite, bleiben klein. Lässt eine Seite kein echtes Vollbild
+zu, wird das Video auf den ganzen Bildschirm vergrößert. **Zurück** verlässt das Vollbild; dieses Video bleibt dann klein.
+*Menü → Videoqualität höchstens* (720p, 1080p, 1440p oder 4K, Standard 1080p) sagt den Seiten, welche Auflösung der
+Browser höchstens abspielt; bis 1440p sind auch AV1 und HDR aus. Viele Fernseher zeigen bei 4K-Videos im Browser nach
+kurzer Zeit nur noch ein grünes Bild, mit 1080p schicken YouTube und andere ein Format, das sicher läuft.
+
+Die Startseite zeigt die Favoriten als Kacheln. ☆ oben merkt die aktuelle Seite.
+Läuft ein Video, bleibt der Fernseher wach; auf einer stehenden Seite schaltet er wie gewohnt ab. Geschützte
+Videos (DRM) spielt der Browser ab, soweit Firefox sie auf Android unterstützt; Netflix und ähnliche Dienste nur in
+ihrer eigenen App. Seitenabstürze fängt der Browser ab und lädt die Seite neu. *Mehr → Browserdaten löschen* entfernt
+Anmeldungen, Cookies und Verlauf; Erweiterungen und Favoriten bleiben.
+
+**Handy als Fernbedienung**
+
+Die Steuerung steckt in *Einstellen per Handy*: Die Seite hat oben die Reiter **Browser** und **Einstellungen**.
+
+1. Handy und Fernseher ins selbe WLAN.
+2. Im Browser 📱 oben rechts (oder ☰ → *Handy als Fernbedienung …*, *Einstellungen → Browser* bzw. *→ Handy*) zeigt
+   den QR-Code von *Einstellen per Handy*. Mit der Handy-Kamera scannen. Solange es läuft, steht der Code auch auf der
+   Startseite des Browsers.
+3. Oben **Browser** wählen. Die Seite merkt sich den Reiter.
+
+Auf dem Handy: Adresse oder Suchbegriff eintippen und *Öffnen* (öffnet den Browser am Fernseher, auch vom
+Startbildschirm aus), *Auf YouTube suchen*, Touchpad für den Zeiger (wischen, tippen = klicken, zwei Finger oder der
+rechte Rand blättern), Zurück/Vor/Neu laden/Start, Video ±10 s und Pause, Lautstärke, Text in ein Eingabefeld der
+Seite schreiben (z. B. Suchbegriff, Anmeldung), Favoriten öffnen, merken und löschen, Pfeiltasten.
+
+- Es gelten die Regeln von *Einstellen per Handy*: Zugang nur mit dem Schlüssel aus dem QR-Code, Ende nach 30 Minuten
+  ohne Nutzung.
+- Ist der Browser gesperrt oder außerhalb seines Zeitfensters, fragt das Handy nach dem PIN, bevor es ihn öffnet.
+- Läuft gerade eine andere App, lässt Android das Öffnen des Browsers vom Handy aus manchmal nicht zu. Dann den
+  Browser am Fernseher über das Dock öffnen.
+
 ## Erweiterungen
 
 `GlasNaturVideos.apk` (Modul `videos`) bringt 12 ruhige Naturvideos von Wikimedia Commons (CC0) mit, in Echtzeit und
@@ -298,7 +401,7 @@ Liste liefern, werden nach 20 Sekunden erneut gefragt.
 ## Übersetzungen
 
 Die Texte stehen auf Deutsch im Code und laufen durch `tr("…")`. Die Übersetzungen liegen in
-`app/src/main/assets/i18n/<sprache>.json` und ordnen jedem deutschen Text den übersetzten zu; Platzhalter
+`app/src/main/assets/i18n/<sprache>.json` (Glas Browser: `browser/src/main/assets/i18n/`) und ordnen jedem deutschen Text den übersetzten zu; Platzhalter
 heißen `{0}`, `{1}`. Fehlt ein Eintrag, erscheint der deutsche Text. Eine neue Sprache braucht eine solche Datei
 und einen Eintrag in `I18n.languages`. Amtliche Unwetterwarnungen gibt der Deutsche Wetterdienst nur auf Deutsch
 und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
@@ -308,4 +411,5 @@ und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
 - Wetterfotos: Wikimedia Commons, CC0. Quellen: `app/src/main/assets/weather/CREDITS.txt`
 - Natur-Videos: Wikimedia Commons, CC0. Adressen: `videos/src/main/java/de/glas/launcher/videos/VideoProvider.kt`
 - Plugin-Schnittstelle: Projectivy Wallpaper Provider API, Apache 2.0
+- Glas Browser: [GeckoView](https://mozilla.github.io/geckoview/) von Mozilla, Mozilla Public License 2.0
 - Wetterdaten: Open-Meteo
