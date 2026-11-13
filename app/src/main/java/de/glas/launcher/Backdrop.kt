@@ -131,7 +131,7 @@ object Backdrops {
                 else -> PhotoScene(ctx, withFx = true, key = { s, d -> "$s/$d" }) { s, d -> PhotoLoader.weather(ctx, s, d) }
             })
         }
-        val w = p.cachedWeather(p.mainPlace)
+        val w = p.cachedWeather()
         if (w != null) backdrop.setWeather(WeatherApi.skyFor(w.code), w.isDay) else backdrop.setWeather(Sky.PARTLY, true)
         return backdrop
     }

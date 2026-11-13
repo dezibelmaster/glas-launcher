@@ -30,14 +30,15 @@ class WeatherActivity : Activity() {
     private lateinit var content: LinearLayout
     private lateinit var places: LinearLayout
     private lateinit var stand: TextView
-    private var place: Place = Place.MEERBUSCH
+    private lateinit var place: Place
     private val glass = mutableListOf<GlassLayer.Glass>()
     private val clock = SimpleDateFormat("HH:mm", Locale.GERMANY)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
-        place = prefs.mainPlace
+        // Opened only once a place has been chosen; leave quietly otherwise
+        place = prefs.mainPlace ?: run { finish(); return }
         val root = FrameLayout(this)
         backdrop = Backdrops.create(this, prefs)
         root.addView(backdrop, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
@@ -138,7 +139,7 @@ class WeatherActivity : Activity() {
     private fun show(f: WeatherApi.Forecast) {
         clearCards()
         stand.text = tr("{0} · Stand {1}", place.name, clock.format(Date(f.now.time))) + " · " + f.source
-        if (place.key == prefs.mainPlace.key) backdrop.setWeather(WeatherApi.skyFor(f.now.code), f.now.isDay)
+        if (place.key == prefs.mainPlace?.key) backdrop.setWeather(WeatherApi.skyFor(f.now.code), f.now.isDay)
 
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         top.addView(currentCard(f), LinearLayout.LayoutParams(0, MATCH_PARENT, 1f).apply { marginEnd = dp(12) })

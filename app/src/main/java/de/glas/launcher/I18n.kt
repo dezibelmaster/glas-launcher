@@ -66,6 +66,7 @@ fun tr(de: String, vararg args: Any?): String {
 class GlasApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        Prefs.migrate(this)
         I18n.init(this)
     }
 }

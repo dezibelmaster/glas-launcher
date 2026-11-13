@@ -149,9 +149,10 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putStringSet("timeWindows", v.map { "${it.key}|${it.value}" }.toSet()).apply()
 
     /** GitHub repository ("owner/repo") the launcher looks in for updates. */
-    var updateRepo: String?
-        get() = sp.getString("updateRepo", null)
-        set(v) = sp.edit().putString("updateRepo", v).apply()
+    /** GitHub project to look for new versions in; the Glas Launcher's own unless changed. */
+    var updateRepo: String
+        get() = sp.getString("updateRepo", null) ?: DEFAULT_UPDATE_REPO
+        set(v) = sp.edit().apply { if (v == DEFAULT_UPDATE_REPO) remove("updateRepo") else putString("updateRepo", v) }.apply()
 
     /** Free memory automatically when the screensaver starts. */
     var autoFreeMemory: Boolean
@@ -161,12 +162,12 @@ class Prefs(context: Context) {
     /** Weather places; the first is the main place that drives the background. */
     var places: List<Place>
         get() {
-            val raw = sp.getString("places", null) ?: return listOf(Place.MEERBUSCH)
+            val raw = sp.getString("places", null) ?: return emptyList()
             val arr = JSONArray(raw)
             return (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
                 Place(o.getString("name"), o.optString("region"), o.getDouble("lat"), o.getDouble("lon"))
-            }.ifEmpty { listOf(Place.MEERBUSCH) }
+            }
         }
         set(v) {
             val arr = JSONArray()
@@ -174,7 +175,8 @@ class Prefs(context: Context) {
             sp.edit().putString("places", arr.toString()).apply()
         }
 
-    val mainPlace: Place get() = places.first()
+    /** The place for the weather background; null until one has been chosen on the first start. */
+    val mainPlace: Place? get() = places.firstOrNull()
 
     fun saveWeather(place: Place, w: WeatherNow) {
         val o = JSONObject()
@@ -183,8 +185,23 @@ class Prefs(context: Context) {
         sp.edit().putString("weather.${place.key}", o.toString()).apply()
     }
 
-    fun cachedWeather(place: Place = mainPlace): WeatherNow? {
+    fun cachedWeather(place: Place? = mainPlace): WeatherNow? {
+        if (place == null) return null
         val o = sp.getString("weather.${place.key}", null)?.let { runCatching { JSONObject(it) }.getOrNull() } ?: return null
         return WeatherNow(o.getInt("temp"), o.getInt("code"), o.getBoolean("day"), o.getInt("max"), o.getInt("min"), o.getLong("time"))
+    }
+
+    companion object {
+        const val DEFAULT_UPDATE_REPO = "dezibelmaster/glas-launcher"
+
+        /**
+         * Earlier versions showed Meerbusch until another place was chosen. Keep it for
+         * those who already used the launcher, so their weather doesn't vanish after the update.
+         */
+        fun migrate(context: Context) {
+            val sp = context.getSharedPreferences("glas", Context.MODE_PRIVATE)
+            if (sp.contains("places") || !(sp.contains("dock") || sp.contains("seenVersion"))) return
+            Prefs(context).places = listOf(Place.MEERBUSCH)
+        }
     }
 }

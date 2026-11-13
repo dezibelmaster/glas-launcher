@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.39",
+  "notes": {
+   "de": [
+    "Kein fester Ort mehr: Beim ersten Start fragt der Launcher nach deiner Stadt",
+    "Die Update-Quelle (GitHub des Glas Launchers) ist voreingestellt"
+   ],
+   "en": [
+    "No fixed location any more: on the first start the launcher asks for your town",
+    "The update source (Glas Launcher's GitHub) is preset"
+   ],
+   "fr": [
+    "Plus de lieu fixe : au premier démarrage, le launcher demande votre ville",
+    "La source des mises à jour (GitHub de Glas Launcher) est préréglée"
+   ],
+   "es": [
+    "Ya no hay un lugar fijo: al primer inicio el launcher pregunta por tu ciudad",
+    "La fuente de actualizaciones (GitHub de Glas Launcher) viene preconfigurada"
+   ],
+   "it": [
+    "Nessuna località fissa: al primo avvio il launcher chiede la tua città",
+    "La fonte degli aggiornamenti (GitHub di Glas Launcher) è preimpostata"
+   ],
+   "nl": [
+    "Geen vaste locatie meer: bij de eerste start vraagt de launcher naar je stad",
+    "De updatebron (GitHub van Glas Launcher) is vooraf ingesteld"
+   ]
+  }
+ },
+ {
   "version": "2.38",
   "notes": {
    "de": [

@@ -78,7 +78,7 @@ class SettingsActivity : Activity() {
         places.forEachIndexed { i, place ->
             row(place.name, if (i == 0) tr("Hauptort") else "") { placeMenu(place, i) }
         }
-        row(tr("Ort hinzufügen …")) { addPlace() }
+        if (places.isEmpty()) row(tr("Ort festlegen …"), tr("noch keiner")) { addPlace() } else row(tr("Ort hinzufügen …")) { addPlace() }
         row(tr("Wetterquelle"), WeatherApi.sourceName(prefs.weatherSource)) { chooseWeatherSource() }
         note(tr("Der Hauptort bestimmt den Wetter-Hintergrund. Weitere Orte erscheinen klein unter der Wetterkarte."))
 
@@ -147,7 +147,7 @@ class SettingsActivity : Activity() {
         Changelog.of(this, Updater.installedVersion(this))?.let { entry ->
             row(tr("Neu in Version {0}", entry.version)) { Changelog.show(this, entry, more = true) }
         }
-        row(tr("Update-Quelle (GitHub)"), prefs.updateRepo ?: tr("nicht festgelegt")) { chooseUpdateRepo() }
+        row(tr("Update-Quelle (GitHub)"), prefs.updateRepo) { chooseUpdateRepo() }
         row(tr("Jetzt nach Updates suchen")) { checkUpdate() }
         note(tr("Ist eine Quelle festgelegt, sucht Glas Launcher einmal am Tag nach einer neuen Version und zeigt einen Hinweis."))
 
@@ -311,28 +311,7 @@ class SettingsActivity : Activity() {
         GlassMenu.show(this, place.name, items, footer = place.region)
     }
 
-    private fun addPlace() {
-        TextPrompt.ask(this, tr("Ort suchen"), tr("z. B. Düsseldorf oder Palma")) { name ->
-            if (name.isBlank()) return@ask
-            Thread {
-                val found = runCatching { WeatherApi.search(name) }
-                runOnUiThread {
-                    val results = found.getOrNull()
-                    when {
-                        results == null -> toast(tr("Keine Verbindung zur Ortssuche"))
-                        results.isEmpty() -> toast(tr("Keinen Ort „{0}“ gefunden", name))
-                        else -> GlassMenu.show(this, tr("Ort wählen"), results.map { p ->
-                            GlassMenu.Item(if (p.region.isBlank()) p.name else "${p.name} · ${p.region}") {
-                                if (prefs.places.none { it.key == p.key }) prefs.places = prefs.places + p
-                                toast(tr("{0} hinzugefügt", p.name))
-                                render()
-                            }
-                        })
-                    }
-                }
-            }.start()
-        }
-    }
+    private fun addPlace() = PlaceSearch.ask(this) { render() }
 
     private fun chooseMedia(video: Boolean) = withPermission(Media.permission(video)) {
         val items = Media.list(this, video)
@@ -512,14 +491,18 @@ class SettingsActivity : Activity() {
     private fun chooseUpdateRepo() = withPin {
         TextPrompt.ask(this, tr("Update-Quelle"), tr("GitHub-Name/Projekt, z. B. name/glas-launcher")) { text ->
             val repo = text.trim().removePrefix("https://github.com/").trim('/')
-            prefs.updateRepo = repo.takeIf { it.count { c -> c == '/' } == 1 }
-            if (repo.isNotEmpty() && prefs.updateRepo == null) toast(tr("Bitte im Format Name/Projekt eingeben"))
+            // Empty goes back to the Glas Launcher's own project
+            when {
+                repo.isEmpty() -> prefs.updateRepo = Prefs.DEFAULT_UPDATE_REPO
+                repo.count { c -> c == '/' } == 1 -> prefs.updateRepo = repo
+                else -> toast(tr("Bitte im Format Name/Projekt eingeben"))
+            }
             render()
         }
     }
 
     private fun checkUpdate() {
-        val repo = prefs.updateRepo ?: return chooseUpdateRepo()
+        val repo = prefs.updateRepo
         toast(tr("Suche nach Updates …"))
         Thread {
             val result = runCatching { Updater.check(this, repo) }

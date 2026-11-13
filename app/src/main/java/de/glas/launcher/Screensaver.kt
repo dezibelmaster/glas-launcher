@@ -71,7 +71,7 @@ class ScreensaverView(context: Context) : FrameLayout(context) {
     }
 
     private fun refreshWeather() {
-        val place = Prefs(context).mainPlace
+        val place = Prefs(context).mainPlace ?: return
         WeatherApi.load(context, place) { w ->
             if (w == null) return@load
             weather.text = "${w.temp}° · ${WeatherApi.describe(w.code)} · ${place.name}"

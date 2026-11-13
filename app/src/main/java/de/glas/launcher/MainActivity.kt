@@ -98,10 +98,12 @@ class MainActivity : Activity() {
     private val weatherTick = object : Runnable {
         override fun run() {
             val places = prefs.places
-            val main = places.first()
-            WeatherApi.load(this@MainActivity, main) { showWeather(main, it) }
+            val main = places.firstOrNull()
+            if (main == null) showNoPlace() else {
+                WeatherApi.load(this@MainActivity, main) { showWeather(main, it) }
+                if (System.currentTimeMillis() - warningsFetched > 30 * 60_000L) loadWarnings(main)
+            }
             showOtherPlaces(places.drop(1))
-            if (System.currentTimeMillis() - warningsFetched > 30 * 60_000L) loadWarnings(main)
             checkForUpdate()
             handler.postDelayed(this, 5 * 60_000L)
         }
@@ -306,6 +308,32 @@ class MainActivity : Activity() {
         }
         setContentView(root)
         pointOutWhatsNew()
+        if (prefs.places.isEmpty()) handler.postDelayed({ welcome() }, 800)
+    }
+
+    /** First start: there is no place for the weather yet, so ask for one. */
+    private fun welcome() {
+        if (isDestroyed || prefs.places.isNotEmpty()) return
+        GlassMenu.show(this, tr("Willkommen beim Glas Launcher"), listOf(
+            GlassMenu.Item(tr("Ort für das Wetter suchen …")) { choosePlace() },
+            GlassMenu.Item(tr("Später")) {},
+        ), footer = tr("Der Glas Launcher zeigt das Wetter deines Ortes als Hintergrund und oben in der Statusleiste. Weitere Orte und alle Einstellungen findest du unter ⚙ Einstellungen."))
+    }
+
+    private fun choosePlace() = PlaceSearch.ask(this, tr("Ort für das Wetter suchen")) {
+        shownPlace = ""
+        handler.removeCallbacks(weatherTick)
+        handler.post(weatherTick)
+    }
+
+    /** No place chosen yet: the weather card and status bar invite to choose one. */
+    private fun showNoPlace() {
+        shownPlace = ""
+        haveWeather = false
+        temp.text = "–"
+        cond.text = tr("Ort festlegen")
+        extra.text = tr("Für das Wetter einen Ort wählen")
+        statusTemp.text = tr("Ort?")
     }
 
     /** After an update, once: says where to see what is new. */
@@ -670,7 +698,10 @@ class MainActivity : Activity() {
     }
 
     /** Detailed weather view, opened from the weather in the status bar or the weather card. */
-    private fun weatherDetails() = start(Intent(this, WeatherActivity::class.java), tr("Wetter"))
+    private fun weatherDetails() {
+        if (prefs.places.isEmpty()) return choosePlace()
+        start(Intent(this, WeatherActivity::class.java), tr("Wetter"))
+    }
 
     private fun openNetworkSettings() {
         val tries = listOf(
@@ -868,7 +899,7 @@ class MainActivity : Activity() {
     private fun showWarnings() {
         val first = warnings.firstOrNull() ?: return
         val source = if (first.official) tr("Quelle: Deutscher Wetterdienst") else tr("Berechnet aus der Vorhersage von Open-Meteo")
-        GlassMenu.show(this, tr("Wetterwarnung · {0}", prefs.mainPlace.name), warnings.map { w -> GlassMenu.Item("⚠  ${w.title}") {} },
+        GlassMenu.show(this, tr("Wetterwarnung · {0}", prefs.mainPlace?.name ?: ""), warnings.map { w -> GlassMenu.Item("⚠  ${w.title}") {} },
             footer = (first.detail.take(400).ifBlank { "" } + "\n\n" + source).trim())
     }
 
@@ -878,7 +909,7 @@ class MainActivity : Activity() {
 
     /** Once a day: if a newer version is on GitHub, say so. */
     private fun checkForUpdate() {
-        val repo = prefs.updateRepo ?: return
+        val repo = prefs.updateRepo
         if (System.currentTimeMillis() - updateChecked < 24 * 60 * 60_000L) return
         updateChecked = System.currentTimeMillis()
         Thread {
