@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hint_start">Buchseite ins Bild halten und auf den gelben Knopf drücken</string>
+    <string name="hint_auto">Automatik: Seite ruhig ins Bild halten, dann wird sie vorgelesen. Danach einfach umblättern.</string>
+    <string name="reading_page">Seite wird gelesen …</string>
+    <string name="no_text">Kein Text gefunden. Etwas näher heran, gerade halten oder mehr Licht.</string>
+    <string name="speaking">Wird vorgelesen …</string>
+    <string name="paused">Angehalten</string>
+    <string name="done">Fertig. Umblättern und die nächste Seite lesen lassen.</string>
+    <string name="tts_missing">Für Deutsch ist keine Stimme installiert. Bitte in den Android-Einstellungen unter Sprachausgabe die deutsche Stimme laden.</string>
+    <string name="tts_failed">Die Sprachausgabe des Handys konnte nicht gestartet werden.</string>
+    <string name="camera_denied">Ohne Kamera kann die App keine Seiten lesen. Bitte die Kamera-Berechtigung erlauben.</string>
+    <string name="camera_failed">Die Kamera konnte nicht gestartet werden.</string>
+    <string name="speed">Tempo</string>
+</resources>

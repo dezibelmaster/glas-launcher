@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Open book with sound waves -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#1E2A3A" android:pathData="M24,4h60a20,20 0 0 1 20,20v60a20,20 0 0 1 -20,20h-60a20,20 0 0 1 -20,-20v-60a20,20 0 0 1 20,-20z" />
+    <path android:fillColor="#F4EFE4" android:pathData="M18,34c10,-4 22,-4 32,2v42c-10,-6 -22,-6 -32,-2z" />
+    <path android:fillColor="#E6DDC9" android:pathData="M58,36c10,-6 22,-6 32,-2v42c-10,-4 -22,-4 -32,2z" />
+    <path android:strokeColor="#9AA7B8" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M24,44h20M24,52h20M24,60h16M64,46h20M64,54h20M64,62h14" />
+    <path android:strokeColor="#FFC24B" android:strokeWidth="4" android:strokeLineCap="round" android:pathData="M62,20q8,-6 16,0M58,14q12,-10 24,0" />
+</vector>

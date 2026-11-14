@@ -18,4 +18,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "GlasLauncher"
-include(":app", ":videos", ":browser")
+include(":app", ":videos", ":browser", ":vorlesen")

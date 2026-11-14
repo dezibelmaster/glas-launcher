@@ -116,6 +116,25 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
   Androids Frage, ob gelöscht werden darf, und wird mit der Fernbedienung bestätigt.
 - Erweiterungen, Projectivy-Plugins und die Google-TV-Oberfläche werden weiter am Fernseher eingestellt.
 
+## Glas Vorleser (Handy-App)
+
+Eigene App fürs Handy (Modul `vorlesen`, Android 7 und neuer): Buchseite vor die Kamera halten, die App erkennt den
+Text und liest die Geschichte mit der deutschen Stimme des Handys vor.
+
+- **Lesen:** gelben Knopf drücken, die Seite im Bild wird erkannt und vorgelesen. Der Satz, der gerade gesprochen
+  wird, ist im Text unten markiert.
+- **Automatik:** Buch einfach ins Bild halten. Sobald eine neue Seite ruhig im Bild ist, wird sie vorgelesen; nach
+  dem Umblättern geht es mit der nächsten Seite weiter. Dieselbe Seite wird nicht zweimal gelesen.
+- **Doppelseiten:** liegen beide Buchseiten im Bild, wird erst die linke, dann die rechte gelesen. Getrennte Wörter
+  am Zeilenende („Geschich-te“) werden zusammengefügt, Seitenzahlen übersprungen.
+- **Pause / Weiter, Nochmal, Stopp** und **Tempo** (0,5× bis 1,5×, voreingestellt 0,9×). **Licht** schaltet die
+  Taschenlampe ein, Tippen ins Bild stellt scharf.
+- Die Texterkennung (Google ML Kit) läuft komplett auf dem Handy, ohne Internet und ohne Konto; nichts wird
+  hochgeladen. Fehlt die deutsche Stimme, führt ein Tippen auf den Hinweis zur Installation.
+
+Installieren: `GlasVorleser-1.0.apk` aufs Handy laden und öffnen (Installation aus unbekannten Quellen erlauben),
+oder `adb install -r GlasVorleser-1.0.apk`.
+
 ## Bauen
 
 ```
@@ -129,6 +148,7 @@ Plattform 35 und 37.2 (der Glas Browser baut gegen das neueste SDK, weil GeckoVi
 - Browser: `browser/build/outputs/apk/debug/GlasBrowser-<Version>-<Prozessor>.apk`, je eine Datei für
   `arm64-v8a` (64 Bit) und `armeabi-v7a` (32 Bit), etwa 100 MB
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
+- Vorleser (Handy-App): `vorlesen/build/outputs/apk/debug/GlasVorleser-<Version>.apk`
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
 
