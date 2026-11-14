@@ -3,6 +3,8 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Only for downloading Piper voices -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Lets the app find the phone's speech engine on Android 11 and newer -->
     <queries>

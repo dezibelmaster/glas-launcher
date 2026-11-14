@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import android.view.View
+import android.app.Activity
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.RadioButton
@@ -60,22 +61,32 @@ object Voices {
     private fun base(v: Voice) = v.name.removeSuffix("-local").removeSuffix("-network")
 }
 
-/** The "Stimme" window: storytelling style, voice for quoted speech, voice and speech engine. */
+/** The "Stimme" window: storytelling style, quoted speech, Piper voices to download, and the phone's voices. */
 class VoiceDialog(
-    private val context: Context,
-    private val tts: TextToSpeech,
+    private val activity: Activity,
+    private val tts: TextToSpeech?,
     private val style: Style,
     private val quoteVoice: Boolean,
     private val engineName: String?,
+    /** "voiceId:speaker" of the chosen Piper voice, or null when a voice of the phone is used. */
+    private var piperChoice: String?,
     private val onStyle: (Style) -> Unit,
     private val onQuoteVoice: (Boolean) -> Unit,
+    private val onPiper: (PiperVoice, Int) -> Unit,
+    private val onPiperDeleted: (PiperVoice) -> Unit,
     private val onVoice: (Voice) -> Unit,
     private val onEngine: (String) -> Unit,
     private val onSample: () -> Unit,
     private val onInstallVoices: () -> Unit,
 ) {
+    private val context: Context = activity
     private val density = context.resources.displayMetrics.density
     private fun dp(v: Int) = (v * density).toInt()
+
+    // All voice choices, kept exclusive by hand because they sit in different sections
+    private val voiceRadios = mutableListOf<RadioButton>()
+    private val piperSection = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+    private val progressLabels = mutableMapOf<String, TextView>()
 
     fun show() {
         val list = LinearLayout(context).apply {
@@ -86,7 +97,7 @@ class VoiceDialog(
         list.addView(heading("Erzählstil"))
         val styles = RadioGroup(context)
         for (s in Style.entries) {
-            styles.addView(radio("${s.title}\n", s.description, s == style) { onStyle(s); onSample() })
+            styles.addView(radio("${s.title}\n${s.description}", s == style) { onStyle(s); onSample() })
         }
         list.addView(styles)
 
@@ -99,41 +110,138 @@ class VoiceDialog(
             setOnCheckedChangeListener { _, on -> onQuoteVoice(on); onSample() }
         })
 
-        list.addView(heading("Stimme"))
-        val voices = Voices.german(tts)
-        if (voices.isEmpty()) {
-            list.addView(note("Keine deutsche Stimme gefunden."))
-        } else {
-            val current = runCatching { tts.voice?.name }.getOrNull()
-            val group = RadioGroup(context)
-            for (choice in voices) {
-                group.addView(radio(choice.label, null, choice.voice.name == current) { onVoice(choice.voice); onSample() })
-            }
-            list.addView(group)
-        }
-        list.addView(note("Antippen spielt eine Hörprobe. Stimmen mit Internet klingen meist am natürlichsten."))
+        list.addView(heading("Natürliche Stimmen (Piper)"))
+        list.addView(note("Einmal herunterladen (am besten im WLAN), danach lesen sie ohne Internet vor."))
+        list.addView(piperSection)
+        renderPiper()
 
-        val engines = runCatching { tts.engines }.getOrNull().orEmpty()
-        if (engines.size > 1) {
-            list.addView(heading("Sprachprogramm"))
-            val group = RadioGroup(context)
-            val active = engineName ?: tts.defaultEngine
-            for (e in engines) {
-                group.addView(radio(e.label, null, e.name == active) { onEngine(e.name) })
-            }
-            list.addView(group)
-            list.addView(note("Nach dem Wechsel die Stimme hier neu wählen."))
-        }
+        list.addView(heading("Stimmen des Handys"))
+        addPhoneVoices(list)
 
-        list.addView(note("Mehr Stimmen: auf „Stimmen laden“ tippen und dort die deutschen Sprachdaten installieren. " +
-            "Andere Sprachprogramme aus dem Play Store erscheinen oben unter „Sprachprogramm“."))
+        list.addView(note("Mehr Handy-Stimmen: auf „Stimmen laden“ tippen und dort die deutschen Sprachdaten installieren."))
+
+        PiperStore.listener = object : PiperStore.Listener {
+            override fun onProgress(voice: PiperVoice, percent: Int, error: String?) {
+                if (percent >= 0) {
+                    progressLabels[voice.id]?.text = "Wird geladen … $percent %"
+                    return
+                }
+                if (error != null) {
+                    android.widget.Toast.makeText(context, "${voice.title}: $error", android.widget.Toast.LENGTH_LONG).show()
+                } else {
+                    // Freshly downloaded: take it straight away
+                    choosePiper(voice, voice.moods.firstOrNull()?.first ?: 0)
+                }
+                renderPiper()
+            }
+        }
 
         AlertDialog.Builder(context, android.R.style.Theme_Material_Dialog_Alert)
             .setTitle("Stimme")
             .setView(ScrollView(context).apply { addView(list) })
             .setPositiveButton("Fertig", null)
             .setNeutralButton("Stimmen laden") { _, _ -> onInstallVoices() }
+            .setOnDismissListener { PiperStore.listener = null }
             .show()
+    }
+
+    private fun choosePiper(voice: PiperVoice, speaker: Int) {
+        piperChoice = "${voice.id}:$speaker"
+        onPiper(voice, speaker)
+    }
+
+    private fun renderPiper() {
+        piperSection.removeAllViews()
+        progressLabels.clear()
+        voiceRadios.removeAll { it.tag is String }
+        for (voice in PiperVoice.ALL) {
+            val installed = voice.isInstalled(context)
+            val row = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, dp(10), 0, dp(2))
+            }
+            row.addView(TextView(context).apply {
+                text = "${voice.title}\n${voice.description} · ${voice.license}"
+                setTextColor(Color.WHITE)
+                textSize = 15f
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            val progress = PiperStore.progress(voice)
+            val action = TextView(context).apply {
+                textSize = 14f
+                setTextColor(Color.parseColor("#FFC24B"))
+                setPadding(dp(12), dp(8), 0, dp(8))
+                when {
+                    progress != null -> text = "Wird geladen … $progress %"
+                    installed -> {
+                        text = "Löschen"
+                        setTextColor(Color.parseColor("#99FFFFFF"))
+                        setOnClickListener {
+                            PiperStore.delete(context, voice)
+                            if (piperChoice?.substringBefore(':') == voice.id) piperChoice = null
+                            onPiperDeleted(voice)
+                            renderPiper()
+                        }
+                    }
+                    else -> {
+                        text = "Laden · ${voice.sizeMb} MB"
+                        setOnClickListener {
+                            PiperStore.download(context, voice)
+                            renderPiper()
+                        }
+                    }
+                }
+            }
+            if (progress != null) progressLabels[voice.id] = action
+            row.addView(action)
+            piperSection.addView(row)
+
+            if (installed) {
+                val options = voice.moods.ifEmpty { listOf(0 to "Diese Stimme nehmen") }
+                for ((speaker, label) in options) {
+                    val key = "${voice.id}:$speaker"
+                    piperSection.addView(voiceRadio(if (voice.moods.isEmpty()) label else "Stimmung: $label", key, piperChoice == key) {
+                        choosePiper(voice, speaker)
+                        onSample()
+                    })
+                }
+            }
+        }
+    }
+
+    private fun addPhoneVoices(list: LinearLayout) {
+        val tts = this.tts
+        if (tts == null) {
+            list.addView(note("Die Sprachausgabe des Handys ist nicht bereit."))
+            return
+        }
+        val voices = Voices.german(tts)
+        if (voices.isEmpty()) {
+            list.addView(note("Keine deutsche Stimme gefunden."))
+        } else {
+            val current = if (piperChoice == null) runCatching { tts.voice?.name }.getOrNull() else null
+            for (choice in voices) {
+                list.addView(voiceRadio(choice.label, null, choice.voice.name == current) {
+                    piperChoice = null
+                    onVoice(choice.voice)
+                    onSample()
+                })
+            }
+        }
+        list.addView(note("Antippen spielt eine Hörprobe. Handy-Stimmen mit Internet klingen meist natürlicher."))
+
+        val engines = runCatching { tts.engines }.getOrNull().orEmpty()
+        if (engines.size > 1) {
+            list.addView(heading("Sprachprogramm des Handys"))
+            val group = RadioGroup(context)
+            val active = engineName ?: tts.defaultEngine
+            for (e in engines) {
+                group.addView(radio(e.label, e.name == active) { onEngine(e.name) })
+            }
+            list.addView(group)
+            list.addView(note("Nach dem Wechsel die Stimme hier neu wählen."))
+        }
     }
 
     private fun heading(text: String) = TextView(context).apply {
@@ -151,14 +259,25 @@ class VoiceDialog(
         setPadding(0, dp(6), 0, dp(6))
     }
 
-    private fun radio(title: String, description: String?, checked: Boolean, onPick: () -> Unit): View =
-        RadioButton(context).apply {
-            id = View.generateViewId()
-            text = if (description == null) title else title + description
-            setTextColor(Color.WHITE)
-            textSize = 15f
-            setPadding(dp(8), dp(10), 0, dp(10))
-            isChecked = checked
-            setOnClickListener { onPick() }
+    private fun radio(text: String, checked: Boolean, onPick: () -> Unit) = RadioButton(context).apply {
+        id = View.generateViewId()
+        this.text = text
+        setTextColor(Color.WHITE)
+        textSize = 15f
+        setPadding(dp(8), dp(10), 0, dp(10))
+        isChecked = checked
+        setOnClickListener { onPick() }
+    }
+
+    /** A voice choice; checking it unchecks every other voice in the window. [tag] marks Piper rows. */
+    private fun voiceRadio(text: String, tag: String?, checked: Boolean, onPick: () -> Unit): RadioButton {
+        val button = radio(text, checked) {}
+        button.tag = tag
+        button.setOnClickListener {
+            voiceRadios.forEach { it.isChecked = it === button }
+            onPick()
         }
+        voiceRadios += button
+        return button
+    }
 }

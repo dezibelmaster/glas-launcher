@@ -118,7 +118,7 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
 
 ## Glas Vorleser (Handy-App)
 
-Eigene App fürs Handy (Modul `vorlesen`, Android 7 und neuer): Buchseite vor die Kamera halten, die App erkennt den
+Eigene App fürs Handy (Modul `vorlesen`, Android 8 und neuer): Buchseite vor die Kamera halten, die App erkennt den
 Text und liest die Geschichte mit der deutschen Stimme des Handys vor.
 
 - **Lesen:** gelben Knopf drücken, die Seite im Bild wird erkannt und vorgelesen. Der Satz, der gerade gesprochen
@@ -131,13 +131,19 @@ Text und liest die Geschichte mit der deutschen Stimme des Handys vor.
   und ein Erzählstil: *Märchenerzähler* (voreingestellt: ruhig, etwas tiefer, mit Pausen), *Großmutter*, *Großer Bär*,
   *Kleine Fee* oder *Normal*. Wörtliche Rede („…“) wird auf Wunsch mit etwas anderer Stimme gesprochen. Sind weitere
   Sprachprogramme installiert (etwa aus dem Play Store), lassen sie sich ebenfalls wählen.
+- **Natürliche Stimmen (Piper):** unter *Stimme* lassen sich offene Piper-Stimmen herunterladen (27 bis 116 MB,
+  am besten im WLAN). Danach lesen sie ohne Internet vor, berechnet auf dem Handy mit
+  [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). Zur Wahl stehen Thorsten (Empfehlung), Thorsten mit Gefühl
+  (ruhig, schläfrig, flüsternd, fröhlich, überrascht), Dii, Miro, Kerstin, Ramona, Eva, Karlsson, Pavoque und
+  Thorsten in bester Qualität (braucht ein schnelles Handy). Dii, Miro und Pavoque stehen unter CC BY-NC-SA und sind
+  nur für den privaten Gebrauch freigegeben.
 - **Pause / Weiter, Nochmal, Stopp** und **Tempo** (0,5× bis 1,5×). **Licht** schaltet die
   Taschenlampe ein, Tippen ins Bild stellt scharf.
 - Die Texterkennung (Google ML Kit) läuft komplett auf dem Handy, ohne Internet und ohne Konto; nichts wird
-  hochgeladen. Fehlt die deutsche Stimme, führt ein Tippen auf den Hinweis zur Installation.
+  hochgeladen. Internet braucht die App nur zum Herunterladen von Piper-Stimmen. Fehlt die deutsche Stimme, führt ein Tippen auf den Hinweis zur Installation.
 
-Installieren: `GlasVorleser-1.1.apk` aufs Handy laden und öffnen (Installation aus unbekannten Quellen erlauben),
-oder `adb install -r GlasVorleser-1.1.apk`.
+Installieren: `GlasVorleser-1.2.apk` aufs Handy laden und öffnen (Installation aus unbekannten Quellen erlauben),
+oder `adb install -r GlasVorleser-1.2.apk`.
 
 ## Bauen
 

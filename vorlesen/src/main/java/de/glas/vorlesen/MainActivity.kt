@@ -74,6 +74,9 @@ class MainActivity : ComponentActivity() {
 
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    private var phoneNarrator: Narrator? = null
+    private var piper: PiperNarrator? = null
+    private var piperReady = false
     private var style = Style.ERZAEHLER
     private var quoteVoice = true
 
@@ -158,6 +161,7 @@ class MainActivity : ComponentActivity() {
 
         setStatus(getString(if (autoMode) R.string.hint_auto else R.string.hint_start))
         startSpeech()
+        startPiper()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
@@ -174,6 +178,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         tts?.shutdown()
+        piper?.release()
         recognizer.close()
         cameraExecutor.shutdown()
         super.onDestroy()
@@ -324,20 +329,45 @@ class MainActivity : ComponentActivity() {
 
     // ---------- Speech ----------
 
+    // Both kinds of voices report back here, from any thread
+    private val narratorListener = object : NarratorListener {
+        override fun onStart(id: String) = runOnUiThread { onSentenceStart(id) }
+        override fun onDone(id: String) = runOnUiThread { onSentenceDone(id) }
+    }
+
+    /** The voice that reads now: the chosen Piper voice, otherwise the phone's own. */
+    private val narrator: Narrator?
+        get() = if (prefs.getString("piper", null) != null) piper?.takeIf { piperReady } else phoneNarrator?.takeIf { ttsReady }
+
+    private fun narratorOrComplain(): Narrator? {
+        narrator?.let { return it }
+        setStatus(
+            when {
+                prefs.getString("piper", null) != null && piper != null -> "Die Stimme wird noch geladen …"
+                prefs.getString("piper", null) != null -> "Die gewählte Stimme fehlt. Bitte unter „Stimme“ neu wählen."
+                else -> getString(R.string.tts_failed)
+            }
+        )
+        return null
+    }
+
     private fun startSpeech() {
         ttsReady = false
+        phoneNarrator = null
         tts = TextToSpeech(this, { result ->
             if (result != TextToSpeech.SUCCESS) {
-                setStatus(getString(R.string.tts_failed))
+                if (prefs.getString("piper", null) == null) setStatus(getString(R.string.tts_failed))
                 return@TextToSpeech
             }
             val engine = tts ?: return@TextToSpeech
             var lang = engine.setLanguage(Locale.GERMANY)
             if (lang < TextToSpeech.LANG_AVAILABLE) lang = engine.setLanguage(Locale.GERMAN)
             if (lang < TextToSpeech.LANG_AVAILABLE) {
-                setStatus(getString(R.string.tts_missing))
-                status.setOnClickListener {
-                    runCatching { startActivity(Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)) }
+                if (prefs.getString("piper", null) == null) {
+                    setStatus(getString(R.string.tts_missing))
+                    status.setOnClickListener {
+                        runCatching { startActivity(Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)) }
+                    }
                 }
                 return@TextToSpeech
             }
@@ -351,34 +381,78 @@ class MainActivity : ComponentActivity() {
             val saved = prefs.getString("voice", null)
             runCatching { engine.voices?.firstOrNull { it.name == saved }?.let { engine.voice = it } }
             engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(id: String) = runOnUiThread { onSentenceStart(id) }
-                override fun onDone(id: String) = runOnUiThread { onSentenceDone(id) }
+                override fun onStart(id: String) = narratorListener.onStart(id)
+                override fun onDone(id: String) = narratorListener.onDone(id)
                 @Deprecated("Deprecated in Java")
-                override fun onError(id: String) = runOnUiThread { onSentenceDone(id) }
+                override fun onError(id: String) = narratorListener.onDone(id)
             })
+            phoneNarrator = AndroidNarrator(engine)
             ttsReady = true
         }, prefs.getString("engine", null))
+    }
+
+    /** Loads the chosen Piper voice, if there is one; [sampleAfter] plays a short sample once it is ready. */
+    private fun startPiper(sampleAfter: Boolean = false) {
+        piper?.release()
+        piper = null
+        piperReady = false
+        val choice = prefs.getString("piper", null) ?: return
+        val voice = PiperVoice.byId(choice.substringBefore(':'))
+        if (voice == null || !voice.isInstalled(this)) {
+            prefs.edit().remove("piper").apply()
+            return
+        }
+        val speaker = choice.substringAfter(':').toIntOrNull() ?: 0
+        if (!speaking) setStatus("Stimme ${voice.title} wird geladen …")
+        lateinit var created: PiperNarrator
+        created = PiperNarrator(voice, voice.dir(this), speaker, narratorListener) { error ->
+            runOnUiThread {
+                if (piper !== created) return@runOnUiThread
+                if (error != null) {
+                    setStatus("Die Stimme ${voice.title} ließ sich nicht starten: ${error.message}")
+                    return@runOnUiThread
+                }
+                piperReady = true
+                if (!speaking && !paused) setStatus(getString(if (autoMode) R.string.hint_auto else R.string.hint_start))
+                if (sampleAfter) playSample()
+            }
+        }
+        piper = created
     }
 
     // ---------- Voices ----------
 
     private fun showVoices() {
-        val engine = tts
-        if (!ttsReady || engine == null) {
-            setStatus(getString(R.string.tts_failed))
-            return
-        }
         if (speaking) pauseReading()
+        val engine = tts?.takeIf { ttsReady }
         VoiceDialog(
-            this, engine, style, quoteVoice, prefs.getString("engine", null),
+            this, engine, style, quoteVoice, prefs.getString("engine", null), prefs.getString("piper", null),
             onStyle = { style = it; prefs.edit().putString("style", it.name).apply() },
             onQuoteVoice = { quoteVoice = it; prefs.edit().putBoolean("quoteVoice", it).apply() },
+            onPiper = { voice, speaker ->
+                val choice = "${voice.id}:$speaker"
+                val sameVoice = prefs.getString("piper", null) == choice
+                prefs.edit().putString("piper", choice).apply()
+                // A new voice or mood needs loading; the sample is played once it is ready
+                if (!sameVoice || piper == null) {
+                    narrator?.stop()
+                    startPiper(sampleAfter = true)
+                }
+            },
+            onPiperDeleted = { voice ->
+                if (prefs.getString("piper", null)?.substringBefore(':') == voice.id) {
+                    prefs.edit().remove("piper").apply()
+                    startPiper()
+                }
+            },
             onVoice = { voice ->
-                runCatching { engine.voice = voice }
-                prefs.edit().putString("voice", voice.name).apply()
+                prefs.edit().remove("piper").putString("voice", voice.name).apply()
+                startPiper()
+                runCatching { engine?.voice = voice }
             },
             onEngine = { name ->
-                prefs.edit().putString("engine", name).remove("voice").apply()
+                prefs.edit().putString("engine", name).remove("voice").remove("piper").apply()
+                startPiper()
                 tts?.shutdown()
                 startSpeech()
             },
@@ -390,47 +464,42 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun playSample() {
-        val engine = tts ?: return
-        if (!ttsReady) return
+        val voice = narrator ?: return
         if (speaking) pauseReading()
-        engine.stop()
-        queueSentence(engine, Voices.SAMPLE, "sample", TextToSpeech.QUEUE_FLUSH)
+        voice.play(sentenceItems(Voices.SAMPLE, "sample"))
     }
 
-    /** Queues one sentence in the chosen style; quoted speech gets a slightly different voice. */
-    private fun queueSentence(engine: TextToSpeech, sentence: String, id: String, firstMode: Int) {
+    /** One sentence in the chosen style; quoted speech gets a slightly different voice. */
+    private fun sentenceItems(sentence: String, id: String): List<Utterance> {
         val rate = speechRate(prefs.getInt("speed", 5)) * style.rate
         val parts = if (quoteVoice) PageText.speechParts(sentence) else listOf(PageText.Part(sentence, false))
-        parts.forEachIndexed { p, part ->
-            // Pitch and speed are taken along with each piece when it is queued
-            engine.setSpeechRate(rate * if (part.quoted) 1.06f else 1f)
-            engine.setPitch(style.pitch * if (part.quoted) 1.18f else 1f)
+        return parts.mapIndexed { p, part ->
             val last = if (p == parts.size - 1) 1 else 0
-            engine.speak(part.text, if (p == 0) firstMode else TextToSpeech.QUEUE_ADD, null, "$id:$last")
+            Utterance.Speech(
+                "$id:$last", part.text,
+                rate = rate * if (part.quoted) 1.06f else 1f,
+                pitch = style.pitch * if (part.quoted) 1.18f else 1f,
+            )
         }
     }
 
     private fun speakFrom(index: Int) {
-        val engine = tts
-        if (!ttsReady || engine == null) {
-            setStatus(getString(R.string.tts_failed))
-            return
-        }
+        val voice = narratorOrComplain() ?: return
         if (sentences.isEmpty()) return
         generation++
-        engine.stop()
         current = index.coerceIn(0, sentences.size - 1)
         speaking = true
         paused = false
+        val items = mutableListOf<Utterance>()
         for (i in current until sentences.size) {
-            val mode = if (i == current) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            queueSentence(engine, sentences[i].text, "$generation:$i", mode)
+            items += sentenceItems(sentences[i].text, "$generation:$i")
             // A breath after each sentence, a longer one between paragraphs
             val next = sentences.getOrNull(i + 1) ?: continue
             val newParagraph = text.substring(sentences[i].end, next.start).contains("\n\n")
             val pause = if (newParagraph) style.paragraphPause else style.sentencePause
-            if (pause > 0) engine.playSilentUtterance(pause, TextToSpeech.QUEUE_ADD, "pause")
+            if (pause > 0) items += Utterance.Silence("pause", pause)
         }
+        voice.play(items)
         pauseButton.text = "⏸  Pause"
         setStatus(getString(R.string.speaking))
     }
@@ -460,9 +529,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun silence() {
+        phoneNarrator?.stop()
+        piper?.stop()
+    }
+
     private fun pauseReading() {
         generation++
-        tts?.stop()
+        silence()
         speaking = false
         paused = true
         pauseButton.text = "▶  Weiter"
@@ -478,7 +552,7 @@ class MainActivity : ComponentActivity() {
 
     private fun stopSpeech() {
         generation++
-        tts?.stop()
+        silence()
         speaking = false
         paused = false
         pauseButton.text = "▶  Vorlesen"
