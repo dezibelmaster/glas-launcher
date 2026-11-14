@@ -142,6 +142,15 @@ class MainActivity : ComponentActivity() {
         isFocusable = true
     }
 
+    /** Runder Knopf nur mit Symbol, für die Leiste oben rechts. */
+    private fun symbolKnopf(s: String) = text(s, 24f).apply {
+        background = rund(0x99000000.toInt(), 28)
+        setPadding(0, 0, 0, 0)
+        includeFontPadding = false
+        isClickable = true
+        isFocusable = true
+    }
+
     private fun baueOberflaeche() {
         root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
 
@@ -186,22 +195,21 @@ class MainActivity : ComponentActivity() {
             setPadding(dp(16), dp(16), dp(16), dp(16))
         }
         albumKnopf = knopf("⭐ 0").apply { setOnClickListener { zeigeAlbum() } }
-        wechselKnopf = knopf("🔄").apply { setOnClickListener { wechsleKamera() } }
-        nahKnopf = knopf("🔍 Nah").apply {
+        wechselKnopf = symbolKnopf("🔄").apply { setOnClickListener { wechsleKamera() } }
+        nahKnopf = symbolKnopf("🔍").apply {
             visibility = View.GONE
             setOnClickListener { schalteNah() }
         }
         leiste.addView(albumKnopf)
         leiste.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
-        lichtKnopf = knopf("🔦").apply {
+        lichtKnopf = symbolKnopf("🔦").apply {
             visibility = View.GONE
             setOnClickListener { schalteLicht(!licht) }
         }
-        leiste.addView(lichtKnopf)
-        leiste.addView(View(this), LinearLayout.LayoutParams(dp(12), 1))
-        leiste.addView(nahKnopf)
-        leiste.addView(View(this), LinearLayout.LayoutParams(dp(12), 1))
-        leiste.addView(wechselKnopf)
+        val rund = { LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginStart = dp(8) } }
+        leiste.addView(lichtKnopf, rund())
+        leiste.addView(nahKnopf, rund())
+        leiste.addView(wechselKnopf, rund())
         root.addView(leiste, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
 
         karte = LinearLayout(this).apply {

@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.2**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.3**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -372,7 +372,7 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
 - **Album (⭐ oben links):** Alles, was das Kind schon entdeckt hat, sortiert nach Tieren, Fahrzeugen, Dingen und
   Essen. Noch nicht Entdecktes erscheint als ❔. Antippen spielt Name und Geräusch.
 - **🔄 oben rechts** wechselt zwischen hinterer und vorderer Kamera. Hoch- und Querformat gehen beide.
-- **🔍 Nah** schaltet auf die Weitwinkelkamera, für kleine Dinge ganz nah vor dem Handy (viele Handys stellen damit
+- **🔍 (Nah)** schaltet auf die Weitwinkelkamera, für kleine Dinge ganz nah vor dem Handy (viele Handys stellen damit
   näher scharf). Der Knopf erscheint nur, wenn das Handy eine Weitwinkelkamera hat. Je nach Handy schaltet die App
   dafür auf die eigene Weitwinkelkamera oder zoomt die Hauptkamera unter 1×. Antippen des Bildes stellt an der
   Stelle scharf.
