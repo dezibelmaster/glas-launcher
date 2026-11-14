@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var pauseButton: TextView
     private lateinit var autoButton: TextView
     private lateinit var lightButton: TextView
+    private lateinit var voiceButton: TextView
     private lateinit var speedLabel: TextView
 
     private val prefs by lazy { getSharedPreferences("vorleser", MODE_PRIVATE) }
@@ -73,6 +74,8 @@ class MainActivity : ComponentActivity() {
 
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    private var style = Style.ERZAEHLER
+    private var quoteVoice = true
 
     // What is being read: the page text, its sentences, which one is spoken now
     private var text = ""
@@ -110,6 +113,7 @@ class MainActivity : ComponentActivity() {
         pauseButton = findViewById(R.id.pauseButton)
         autoButton = findViewById(R.id.autoButton)
         lightButton = findViewById(R.id.lightButton)
+        voiceButton = findViewById(R.id.voiceButton)
         speedLabel = findViewById(R.id.speedLabel)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -135,9 +139,12 @@ class MainActivity : ComponentActivity() {
         autoButton.setTextColor(if (autoMode) Color.parseColor("#1E2A3A") else Color.WHITE)
         autoButton.setOnClickListener { setAuto(!autoMode) }
         lightButton.setOnClickListener { setTorch(!torchOn) }
+        style = Style.from(prefs.getString("style", null))
+        quoteVoice = prefs.getBoolean("quoteVoice", true)
+        voiceButton.setOnClickListener { showVoices() }
 
         val speed = findViewById<SeekBar>(R.id.speed)
-        speed.progress = prefs.getInt("speed", 4)
+        speed.progress = prefs.getInt("speed", 5)
         applySpeed(speed.progress)
         speed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -145,7 +152,8 @@ class MainActivity : ComponentActivity() {
                 prefs.edit().putInt("speed", progress).apply()
             }
             override fun onStartTrackingTouch(bar: SeekBar) {}
-            override fun onStopTrackingTouch(bar: SeekBar) {}
+            // The new speed applies from the sentence being read now
+            override fun onStopTrackingTouch(bar: SeekBar) { if (speaking) speakFrom(current) }
         })
 
         setStatus(getString(if (autoMode) R.string.hint_auto else R.string.hint_start))
@@ -317,7 +325,8 @@ class MainActivity : ComponentActivity() {
     // ---------- Speech ----------
 
     private fun startSpeech() {
-        tts = TextToSpeech(this) { result ->
+        ttsReady = false
+        tts = TextToSpeech(this, { result ->
             if (result != TextToSpeech.SUCCESS) {
                 setStatus(getString(R.string.tts_failed))
                 return@TextToSpeech
@@ -338,7 +347,9 @@ class MainActivity : ComponentActivity() {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build()
             )
-            engine.setSpeechRate(speechRate(prefs.getInt("speed", 4)))
+            // The voice picked earlier, if this engine still has it
+            val saved = prefs.getString("voice", null)
+            runCatching { engine.voices?.firstOrNull { it.name == saved }?.let { engine.voice = it } }
             engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(id: String) = runOnUiThread { onSentenceStart(id) }
                 override fun onDone(id: String) = runOnUiThread { onSentenceDone(id) }
@@ -346,6 +357,56 @@ class MainActivity : ComponentActivity() {
                 override fun onError(id: String) = runOnUiThread { onSentenceDone(id) }
             })
             ttsReady = true
+        }, prefs.getString("engine", null))
+    }
+
+    // ---------- Voices ----------
+
+    private fun showVoices() {
+        val engine = tts
+        if (!ttsReady || engine == null) {
+            setStatus(getString(R.string.tts_failed))
+            return
+        }
+        if (speaking) pauseReading()
+        VoiceDialog(
+            this, engine, style, quoteVoice, prefs.getString("engine", null),
+            onStyle = { style = it; prefs.edit().putString("style", it.name).apply() },
+            onQuoteVoice = { quoteVoice = it; prefs.edit().putBoolean("quoteVoice", it).apply() },
+            onVoice = { voice ->
+                runCatching { engine.voice = voice }
+                prefs.edit().putString("voice", voice.name).apply()
+            },
+            onEngine = { name ->
+                prefs.edit().putString("engine", name).remove("voice").apply()
+                tts?.shutdown()
+                startSpeech()
+            },
+            onSample = { playSample() },
+            onInstallVoices = {
+                runCatching { startActivity(Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)) }
+            },
+        ).show()
+    }
+
+    private fun playSample() {
+        val engine = tts ?: return
+        if (!ttsReady) return
+        if (speaking) pauseReading()
+        engine.stop()
+        queueSentence(engine, Voices.SAMPLE, "sample", TextToSpeech.QUEUE_FLUSH)
+    }
+
+    /** Queues one sentence in the chosen style; quoted speech gets a slightly different voice. */
+    private fun queueSentence(engine: TextToSpeech, sentence: String, id: String, firstMode: Int) {
+        val rate = speechRate(prefs.getInt("speed", 5)) * style.rate
+        val parts = if (quoteVoice) PageText.speechParts(sentence) else listOf(PageText.Part(sentence, false))
+        parts.forEachIndexed { p, part ->
+            // Pitch and speed are taken along with each piece when it is queued
+            engine.setSpeechRate(rate * if (part.quoted) 1.06f else 1f)
+            engine.setPitch(style.pitch * if (part.quoted) 1.18f else 1f)
+            val last = if (p == parts.size - 1) 1 else 0
+            engine.speak(part.text, if (p == 0) firstMode else TextToSpeech.QUEUE_ADD, null, "$id:$last")
         }
     }
 
@@ -363,32 +424,34 @@ class MainActivity : ComponentActivity() {
         paused = false
         for (i in current until sentences.size) {
             val mode = if (i == current) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-            engine.speak(sentences[i].text, mode, null, "$generation:$i")
-            // A short breath between paragraphs
-            val next = sentences.getOrNull(i + 1)
-            if (next != null && text.substring(sentences[i].end, next.start).contains("\n\n")) {
-                engine.playSilentUtterance(350, TextToSpeech.QUEUE_ADD, "$generation:pause")
-            }
+            queueSentence(engine, sentences[i].text, "$generation:$i", mode)
+            // A breath after each sentence, a longer one between paragraphs
+            val next = sentences.getOrNull(i + 1) ?: continue
+            val newParagraph = text.substring(sentences[i].end, next.start).contains("\n\n")
+            val pause = if (newParagraph) style.paragraphPause else style.sentencePause
+            if (pause > 0) engine.playSilentUtterance(pause, TextToSpeech.QUEUE_ADD, "pause")
         }
         pauseButton.text = "⏸  Pause"
         setStatus(getString(R.string.speaking))
     }
 
-    private fun parseId(id: String): Int? {
+    /** Utterance ids are "generation:sentence:lastPiece"; others (pauses, samples, older runs) give null. */
+    private fun parseId(id: String): Pair<Int, Boolean>? {
         val parts = id.split(':')
-        if (parts.size != 2 || parts[0] != generation.toString()) return null
-        return parts[1].toIntOrNull()
+        if (parts.size != 3 || parts[0] != generation.toString()) return null
+        val index = parts[1].toIntOrNull() ?: return null
+        return index to (parts[2] == "1")
     }
 
     private fun onSentenceStart(id: String) {
-        val index = parseId(id) ?: return
+        val index = parseId(id)?.first ?: return
         current = index
         highlight(index)
     }
 
     private fun onSentenceDone(id: String) {
-        val index = parseId(id) ?: return
-        if (index == sentences.size - 1 && speaking) {
+        val (index, lastPiece) = parseId(id) ?: return
+        if (index == sentences.size - 1 && lastPiece && speaking) {
             speaking = false
             current = 0
             highlight(-1)
@@ -426,7 +489,6 @@ class MainActivity : ComponentActivity() {
     private fun applySpeed(progress: Int) {
         val rate = speechRate(progress)
         speedLabel.text = String.format(Locale.GERMAN, "%.1f×", rate)
-        tts?.setSpeechRate(rate)
     }
 
     // ---------- Screen ----------

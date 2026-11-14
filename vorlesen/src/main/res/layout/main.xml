@@ -29,8 +29,23 @@
             android:layout_weight="1"
             android:text="Glas Vorleser"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textSize="18sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/voiceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/chip"
+            android:gravity="center"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:text="Stimme"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/autoButton"

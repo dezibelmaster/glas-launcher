@@ -123,6 +123,50 @@ object PageText {
         return word.length == 1 || word.lowercase() in ABBREVIATIONS
     }
 
+    /** A piece of a sentence and whether it is quoted speech („…“), so a character can sound different. */
+    data class Part(val text: String, val quoted: Boolean)
+
+    fun speechParts(sentence: String): List<Part> {
+        val parts = mutableListOf<Part>()
+        val sb = StringBuilder()
+        var quoted = false
+        fun flush() {
+            var t = sb.toString().trim()
+            sb.setLength(0)
+            // Punctuation at the start (", fragte sie") belongs to the piece before
+            if (parts.isNotEmpty() && !quoted) {
+                val lead = t.takeWhile { !it.isLetterOrDigit() && it !in "„»‹“\"" }
+                if (lead.isNotBlank() && lead.length < t.length) {
+                    parts[parts.size - 1] = parts.last().copy(text = parts.last().text + lead.trim())
+                    t = t.substring(lead.length).trim()
+                }
+            }
+            if (t.isEmpty()) return
+            // Bits without words (", ") go with the piece before them
+            if (t.none { it.isLetterOrDigit() } && parts.isNotEmpty()) {
+                parts[parts.size - 1] = parts.last().copy(text = parts.last().text + t)
+            } else {
+                parts += Part(t, quoted)
+            }
+        }
+        for (c in sentence) {
+            val opens = !quoted && (c in "„»‹“" || c == '"')
+            val closes = quoted && (c in "“”«›" || c == '"')
+            when {
+                opens -> { flush(); quoted = true; sb.append(c) }
+                closes -> { sb.append(c); flush(); quoted = false }
+                else -> sb.append(c)
+            }
+        }
+        flush()
+        // Merge neighbours of the same kind (after leftover punctuation was attached)
+        return parts.fold(mutableListOf()) { acc, p ->
+            if (acc.isNotEmpty() && acc.last().quoted == p.quoted) acc[acc.size - 1] = Part(acc.last().text + " " + p.text, p.quoted)
+            else acc += p
+            acc
+        }
+    }
+
     /** How much two texts share, from 0 (nothing) to 1 (the same words). */
     fun similarity(a: String, b: String): Double {
         val wa = words(a)

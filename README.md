@@ -127,13 +127,17 @@ Text und liest die Geschichte mit der deutschen Stimme des Handys vor.
   dem Umblättern geht es mit der nächsten Seite weiter. Dieselbe Seite wird nicht zweimal gelesen.
 - **Doppelseiten:** liegen beide Buchseiten im Bild, wird erst die linke, dann die rechte gelesen. Getrennte Wörter
   am Zeilenende („Geschich-te“) werden zusammengefügt, Seitenzahlen übersprungen.
-- **Pause / Weiter, Nochmal, Stopp** und **Tempo** (0,5× bis 1,5×, voreingestellt 0,9×). **Licht** schaltet die
+- **Stimme:** alle deutschen Stimmen des Handys zum Probehören (Stimmen mit Internet klingen meist am natürlichsten)
+  und ein Erzählstil: *Märchenerzähler* (voreingestellt: ruhig, etwas tiefer, mit Pausen), *Großmutter*, *Großer Bär*,
+  *Kleine Fee* oder *Normal*. Wörtliche Rede („…“) wird auf Wunsch mit etwas anderer Stimme gesprochen. Sind weitere
+  Sprachprogramme installiert (etwa aus dem Play Store), lassen sie sich ebenfalls wählen.
+- **Pause / Weiter, Nochmal, Stopp** und **Tempo** (0,5× bis 1,5×). **Licht** schaltet die
   Taschenlampe ein, Tippen ins Bild stellt scharf.
 - Die Texterkennung (Google ML Kit) läuft komplett auf dem Handy, ohne Internet und ohne Konto; nichts wird
   hochgeladen. Fehlt die deutsche Stimme, führt ein Tippen auf den Hinweis zur Installation.
 
-Installieren: `GlasVorleser-1.0.apk` aufs Handy laden und öffnen (Installation aus unbekannten Quellen erlauben),
-oder `adb install -r GlasVorleser-1.0.apk`.
+Installieren: `GlasVorleser-1.1.apk` aufs Handy laden und öffnen (Installation aus unbekannten Quellen erlauben),
+oder `adb install -r GlasVorleser-1.1.apk`.
 
 ## Bauen
 

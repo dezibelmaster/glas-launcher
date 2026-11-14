@@ -72,6 +72,19 @@ class PageTextTest {
     }
 
     @Test
+    fun quotedSpeechParts() {
+        assertEquals(
+            listOf(PageText.Part("„Wer bist du?“,", true), PageText.Part("fragte die Eule.", false)),
+            PageText.speechParts("„Wer bist du?“, fragte die Eule.")
+        )
+        assertEquals(
+            listOf(PageText.Part("Er rief:", false), PageText.Part("»Halt!«", true), PageText.Part("Dann lief er.", false)),
+            PageText.speechParts("Er rief: »Halt!« Dann lief er.")
+        )
+        assertEquals(listOf(PageText.Part("Ganz ohne Rede.", false)), PageText.speechParts("Ganz ohne Rede."))
+    }
+
+    @Test
     fun similarity() {
         assertTrue(PageText.similarity("Der kleine Bär schläft", "Der kleine Bär schläft.") > 0.9)
         assertTrue(PageText.similarity("Der kleine Bär schläft", "Ganz andere Wörter hier") < 0.1)

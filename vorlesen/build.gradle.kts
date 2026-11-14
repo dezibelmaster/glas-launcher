@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.vorlesen"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         // Phones have ARM processors; leaving out the x86 text recognition saves about 20 MB
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
