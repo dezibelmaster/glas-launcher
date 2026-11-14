@@ -28,7 +28,15 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import android.hardware.camera2.CameraCharacteristics
+import android.view.MotionEvent
+import androidx.annotation.OptIn
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -48,6 +56,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var hinweis: TextView
     private lateinit var albumKnopf: TextView
     private lateinit var wechselKnopf: TextView
+    private lateinit var nahKnopf: TextView
     private lateinit var leiste: LinearLayout
     private lateinit var karte: LinearLayout
     private lateinit var karteStreifen: View
@@ -67,6 +76,10 @@ class MainActivity : ComponentActivity() {
     private var vorschauFall: Preview? = null
     private var analyseFall: ImageAnalysis? = null
     private var vorne = false
+    private var nah = false // Weitwinkel für Dinge ganz nah vor der Kamera
+    private var kamera: Camera? = null
+    private var weitKamera: CameraInfo? = null // eigene Weitwinkelkamera, falls das Handy sie einzeln anbietet
+    private var zoomWeit = 1f // < 1: die Hauptkamera kann selbst auf Weitwinkel schalten
 
     @Volatile private var beschaeftigt = false // spricht gerade oder Album offen
     @Volatile private var vergessen = false
@@ -133,6 +146,15 @@ class MainActivity : ComponentActivity() {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         }
         root.addView(vorschau, FrameLayout.LayoutParams(-1, -1))
+        // Antippen stellt an dieser Stelle scharf (hilft bei Dingen ganz nah vor der Kamera)
+        vorschau.setOnTouchListener { v, e ->
+            if (e.action == MotionEvent.ACTION_UP) {
+                val punkt = vorschau.meteringPointFactory.createPoint(e.x, e.y)
+                kamera?.cameraControl?.startFocusAndMetering(FocusMeteringAction.Builder(punkt).build())
+                v.performClick()
+            }
+            true
+        }
         vorschau.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
             vorschauBreite = v.width
             vorschauHoehe = v.height
@@ -161,8 +183,14 @@ class MainActivity : ComponentActivity() {
         }
         albumKnopf = knopf("⭐ 0").apply { setOnClickListener { zeigeAlbum() } }
         wechselKnopf = knopf("🔄").apply { setOnClickListener { wechsleKamera() } }
+        nahKnopf = knopf("🔍 Nah").apply {
+            visibility = View.GONE
+            setOnClickListener { schalteNah() }
+        }
         leiste.addView(albumKnopf)
         leiste.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+        leiste.addView(nahKnopf)
+        leiste.addView(View(this), LinearLayout.LayoutParams(dp(12), 1))
         leiste.addView(wechselKnopf)
         root.addView(leiste, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
 
@@ -284,20 +312,79 @@ class MainActivity : ComponentActivity() {
             .setTargetRotation(rotation)
             .build()
         analysis.setAnalyzer(analyse) { analysiere(it) }
-        var auswahl = if (vorne) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
         try {
-            if (!p.hasCamera(auswahl)) {
-                vorne = !vorne
-                auswahl = if (vorne) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
+            if (!p.hasCamera(if (vorne) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA)) vorne = !vorne
+            weitKamera = findeWeitwinkel(p)
+            val eigeneWeit = weitKamera
+            val auswahl = when {
+                vorne -> CameraSelector.DEFAULT_FRONT_CAMERA
+                nah && eigeneWeit != null -> CameraSelector.Builder().addCameraFilter { l -> l.filter { it == eigeneWeit } }.build()
+                else -> CameraSelector.DEFAULT_BACK_CAMERA
             }
             p.unbindAll()
-            p.bindToLifecycle(this, auswahl, preview, analysis)
+            val cam = p.bindToLifecycle(this, auswahl, preview, analysis)
+            kamera = cam
             vorschauFall = preview
             analyseFall = analysis
+            if (!vorne && auswahl == CameraSelector.DEFAULT_BACK_CAMERA) {
+                zoomWeit = cam.cameraInfo.zoomState.value?.minZoomRatio ?: 1f
+                if (nah && zoomWeit < 0.95f) cam.cameraControl.setZoomRatio(zoomWeit)
+                // Manche Handys melden den Weitwinkel-Zoom erst, wenn die Kamera läuft
+                cam.cameraInfo.zoomState.removeObservers(this)
+                cam.cameraInfo.zoomState.observe(this) { z ->
+                    if (kamera === cam && z.minZoomRatio != zoomWeit) {
+                        zoomWeit = z.minZoomRatio
+                        zeigeNahKnopf()
+                    }
+                }
+            }
             val beide = p.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) && p.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)
             wechselKnopf.visibility = if (beide) View.VISIBLE else View.GONE
+            zeigeNahKnopf()
         } catch (e: Exception) {
+            if (nah) {
+                // Weitwinkel klappt auf diesem Handy nicht: zurück zur normalen Kamera
+                nah = false
+                weitKamera = null
+                binde()
+                return
+            }
             hinweis.text = "Die Kamera geht gerade nicht. 📷"
+        }
+    }
+
+    /** Die hintere Kamera mit der kürzesten Brennweite, wenn sie deutlich weitwinkliger ist als die Hauptkamera. */
+    @OptIn(ExperimentalCamera2Interop::class)
+    private fun findeWeitwinkel(p: ProcessCameraProvider): CameraInfo? = try {
+        val hinten = p.availableCameraInfos.filter { it.lensFacing == CameraSelector.LENS_FACING_BACK }
+        fun brennweite(i: CameraInfo) = Camera2CameraInfo.from(i)
+            .getCameraCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.minOrNull()
+        val haupt = CameraSelector.DEFAULT_BACK_CAMERA.filter(hinten).firstOrNull()
+        val hauptBw = haupt?.let { brennweite(it) }
+        val kuerzeste = hinten.mapNotNull { i -> brennweite(i)?.let { i to it } }.minByOrNull { it.second }
+        if (kuerzeste != null && hauptBw != null && kuerzeste.first != haupt && kuerzeste.second < hauptBw * 0.8f) kuerzeste.first else null
+    } catch (e: Exception) {
+        null
+    }
+
+    private fun zeigeNahKnopf() {
+        val moeglich = !vorne && (weitKamera != null || zoomWeit < 0.95f)
+        nahKnopf.visibility = if (moeglich) View.VISIBLE else View.GONE
+        nahKnopf.background = rund(if (nah) 0xEEFFB300.toInt() else 0x99000000.toInt(), 28)
+        nahKnopf.setTextColor(if (nah) 0xFF212121.toInt() else Color.WHITE)
+        hinweis.text = if (nah && moeglich) "Ganz nah ran! 🔍\nAntippen stellt scharf" else "Zeig mir etwas! 🔍"
+    }
+
+    private fun schalteNah() {
+        nah = !nah
+        vergessen = true
+        val cam = kamera
+        // Kann die Hauptkamera selbst umschalten, reicht der Zoom (geht ohne Neustart der Kamera)
+        if (weitKamera == null && cam != null && zoomWeit < 0.95f) {
+            cam.cameraControl.setZoomRatio(if (nah) zoomWeit else 1f)
+            zeigeNahKnopf()
+        } else {
+            binde()
         }
     }
 

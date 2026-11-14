@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.0**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.1**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -360,10 +360,10 @@ Eigene App für Handy und Tablet (Modul `entdecker`): Das Kind hält die Kamera 
 Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
 „Das ist ein Hund!“ – *Wau-Geräusch* – „Der Hund macht Wau wau!“
 
-- **Erkennt 279 Dinge:** 96 Tiere (Hund, Katze, Kuh, Pferd, Giraffe, Dinosaurier, Einhorn …), 44 Fahrzeuge
-  (Auto, Bus, Feuerwehr, Polizei, Bagger, Traktor, Hubschrauber, Dampflok …), 107 Dinge (Uhr, Gitarre, Teddy,
-  Puppe, Bauklötze, Staubsauger, Ball …) und 32 Sorten Essen. Auch **Spielzeug**, Kuscheltiere und Bilder werden erkannt,
-  nicht nur echte Dinge.
+- **Erkennt 489 Dinge:** 142 Tiere (Hund, Katze, Kuh, Pferd, Giraffe, Dinosaurier, Einhorn, Waschbär …),
+  75 Fahrzeuge (Auto, Bus, Feuerwehr, Bagger, Hubschrauber, Bobbycar, Laufrad, Piratenschiff …), 204 Dinge
+  (Teddy, Puppe, Bauklötze, Roboter, Kopfhörer, Gummistiefel, Schnuller, Quietscheente …) und 68 Sorten Essen.
+  Auch **Spielzeug**, Kuscheltiere und Bilder werden erkannt, nicht nur echte Dinge.
 - **Ohne Internet:** Die Erkennung läuft auf dem Gerät. Es werden keine Bilder gespeichert oder verschickt.
 - **Bedienung:** Ding in den hellen Rahmen halten und kurz stillhalten. Ausgewertet wird nur, was im Rahmen ist.
   Die Karte unten zeigt Bild, Namen und Spruch und verschwindet 3 Sekunden nach der Ansage; antippen spielt alles
@@ -372,6 +372,10 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
 - **Album (⭐ oben links):** Alles, was das Kind schon entdeckt hat, sortiert nach Tieren, Fahrzeugen, Dingen und
   Essen. Noch nicht Entdecktes erscheint als ❔. Antippen spielt Name und Geräusch.
 - **🔄 oben rechts** wechselt zwischen hinterer und vorderer Kamera. Hoch- und Querformat gehen beide.
+- **🔍 Nah** schaltet auf die Weitwinkelkamera, für kleine Dinge ganz nah vor dem Handy (viele Handys stellen damit
+  näher scharf). Der Knopf erscheint nur, wenn das Handy eine Weitwinkelkamera hat. Je nach Handy schaltet die App
+  dafür auf die eigene Weitwinkelkamera oder zoomt die Hauptkamera unter 1×. Antippen des Bildes stellt an der
+  Stelle scharf.
 - **Sprache:** Die Ansage kommt aus der deutschen Sprachausgabe des Geräts (*Einstellungen → System → Sprache →
   Sprachausgabe*, z. B. „Sprachausgabe von Google“ mit deutscher Stimme). Fehlt sie, spielt die App nur die Geräusche.
 - **Geräusche:** Alle 98 Geräusche sind am Rechner synthetisch erzeugt (`entdecker/tools/geraeusche.py`, keine
