@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 1.0**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -129,6 +129,7 @@ Plattform 35 und 37.2 (der Glas Browser baut gegen das neueste SDK, weil GeckoVi
 - Browser: `browser/build/outputs/apk/debug/GlasBrowser-<Version>-<Prozessor>.apk`, je eine Datei für
   `arm64-v8a` (64 Bit) und `armeabi-v7a` (32 Bit), etwa 100 MB
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
+- Kinder-App für Handy und Tablet: `entdecker/build/outputs/apk/debug/GlasEntdecker-<Version>.apk`, etwa 20 MB
 
 Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im Projektordner.
 
@@ -353,6 +354,33 @@ Seite schreiben (z. B. Suchbegriff, Anmeldung), Favoriten öffnen, merken und l�
 - Läuft gerade eine andere App, lässt Android das Öffnen des Browsers vom Handy aus manchmal nicht zu. Dann den
   Browser am Fernseher über das Dock öffnen.
 
+## Glas Entdecker (Kinder-App)
+
+Eigene App für Handy und Tablet (Modul `entdecker`): Das Kind hält die Kamera auf ein Tier, ein Fahrzeug oder einen
+Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
+„Das ist ein Hund!“ – *Wau-Geräusch* – „Der Hund macht Wau wau!“
+
+- **Erkennt 248 Dinge:** 86 Tiere (Hund, Katze, Kuh, Schwein, Schaf, Pferd, Ente, Löwe, Elefant, Frosch …),
+  40 Fahrzeuge (Auto, Feuerwehr, Polizei, Krankenwagen, Bus, Traktor, Müllauto, Dampflok, Flugzeug, Schiff,
+  Fahrrad …), 98 Dinge (Uhr, Telefon, Gitarre, Trommel, Staubsauger, Ball, Teddy …) und 24 Sorten Essen.
+- **Ohne Internet:** Die Erkennung läuft auf dem Gerät (EfficientNet-Lite mit 1000 Bildklassen, über MediaPipe).
+  Es werden keine Bilder gespeichert oder verschickt.
+- **Bedienung:** Ding in den hellen Rahmen halten und kurz stillhalten. Die Karte unten zeigt Bild, Namen und Spruch;
+  antippen spielt alles noch einmal. Dasselbe Ding wird frühestens nach 15 Sekunden wieder angesagt.
+- **Album (⭐ oben links):** Alles, was das Kind schon entdeckt hat, sortiert nach Tieren, Fahrzeugen, Dingen und
+  Essen. Noch nicht Entdecktes erscheint als ❔. Antippen spielt Name und Geräusch.
+- **🔄 oben rechts** wechselt zwischen hinterer und vorderer Kamera. Hoch- und Querformat gehen beide.
+- **Sprache:** Die Ansage kommt aus der deutschen Sprachausgabe des Geräts (*Einstellungen → System → Sprache →
+  Sprachausgabe*, z. B. „Sprachausgabe von Google“ mit deutscher Stimme). Fehlt sie, spielt die App nur die Geräusche.
+- **Geräusche:** Alle 98 Geräusche sind am Rechner synthetisch erzeugt (`entdecker/tools/geraeusche.py`, keine
+  fremden Aufnahmen). Echte Aufnahmen lassen sich ohne Neubauen einspielen: eine Datei mit dem Namen des Geräuschs
+  (z. B. `bellen.mp3`, `muhen.ogg`, `martinshorn.wav`) in den Ordner `Android/data/de.glas.entdecker/files/Geraeusche`
+  auf dem Gerät legen. Welches Ding welches Geräusch nutzt, steht in `entdecker/src/main/java/de/glas/entdecker/Katalog.kt`.
+- **Voraussetzung:** Android 7 oder neuer, 64-Bit-Prozessor (arm64), Kamera.
+- **Katalog erweitern:** In `Katalog.kt` einen Eintrag mit Name, Geschlecht (für „ein/eine“), Emoji, Geräusch, Spruch
+  und den Nummern der Bildklassen anlegen. Die Liste der 1000 Klassen steckt im Modell (`labels_without_background.txt`
+  im Zip-Teil von `entdecker/src/main/assets/erkenner.tflite`).
+
 ## Erweiterungen
 
 `GlasNaturVideos.apk` (Modul `videos`) bringt 12 ruhige Naturvideos von Wikimedia Commons (CC0) mit, in Echtzeit und
@@ -412,4 +440,6 @@ und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
 - Natur-Videos: Wikimedia Commons, CC0. Adressen: `videos/src/main/java/de/glas/launcher/videos/VideoProvider.kt`
 - Plugin-Schnittstelle: Projectivy Wallpaper Provider API, Apache 2.0
 - Glas Browser: [GeckoView](https://mozilla.github.io/geckoview/) von Mozilla, Mozilla Public License 2.0
+- Glas Entdecker: Bilderkennung [MediaPipe](https://ai.google.dev/edge/mediapipe) mit EfficientNet-Lite2 (ImageNet), Apache 2.0;
+  Kamera über AndroidX CameraX, Apache 2.0; Geräusche selbst erzeugt
 - Wetterdaten: Open-Meteo

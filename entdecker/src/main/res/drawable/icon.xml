@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lupe mit Pfote: etwas entdecken -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFB300" android:pathData="M0,0h108v108h-108z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M46,18a28,28 0,1 1,0 56a28,28 0,1 1,0 -56z" />
+    <path android:fillColor="#5D4037" android:pathData="M46,24a22,22 0,1 1,0 44a22,22 0,1 1,0 -44z" />
+    <path android:fillColor="#81D4FA" android:pathData="M46,28a18,18 0,1 1,0 36a18,18 0,1 1,0 -36z" />
+    <path android:fillColor="#5D4037" android:pathData="M64,66l8,-8l20,20a5.6,5.6 0,0 1,-8 8z" />
+    <path android:fillColor="#5D4037" android:pathData="M46,46a7,6 0,1 1,0 12a7,6 0,1 1,0 -12z" />
+    <path android:fillColor="#5D4037" android:pathData="M37,39a3.5,4.5 0,1 1,0 9a3.5,4.5 0,1 1,0 -9z" />
+    <path android:fillColor="#5D4037" android:pathData="M43,33a3.5,4.5 0,1 1,0 9a3.5,4.5 0,1 1,0 -9z" />
+    <path android:fillColor="#5D4037" android:pathData="M50,33a3.5,4.5 0,1 1,0 9a3.5,4.5 0,1 1,0 -9z" />
+    <path android:fillColor="#5D4037" android:pathData="M56,39a3.5,4.5 0,1 1,0 9a3.5,4.5 0,1 1,0 -9z" />
+</vector>
