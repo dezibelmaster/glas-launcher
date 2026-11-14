@@ -71,6 +71,9 @@ class MainActivity : ComponentActivity() {
     @Volatile private var beschaeftigt = false // spricht gerade oder Album offen
     @Volatile private var vergessen = false
     @Volatile private var zerstoert = false
+    @Volatile private var vorschauBreite = 0
+    @Volatile private var vorschauHoehe = 0
+    @Volatile private var sucherSeite = 0
     private var letzteAnalyse = 0L
     private var aktuell: Ding? = null
     private var zuletztGesagt: Ding? = null
@@ -130,10 +133,15 @@ class MainActivity : ComponentActivity() {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         }
         root.addView(vorschau, FrameLayout.LayoutParams(-1, -1))
+        vorschau.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+            vorschauBreite = v.width
+            vorschauHoehe = v.height
+        }
 
         // Rahmen in der Mitte: dort hinein halten
         sucher = View(this).apply { background = rund(0x22FFFFFF, 36, 5, 0xEEFFFFFF.toInt()) }
         root.addView(sucher, FrameLayout.LayoutParams(dp(260), dp(260), Gravity.CENTER))
+        sucher.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ -> sucherSeite = v.width }
         ObjectAnimator.ofFloat(sucher, "alpha", 1f, 0.45f).apply {
             duration = 1100
             repeatMode = ValueAnimator.REVERSE
@@ -268,7 +276,7 @@ class MainActivity : ComponentActivity() {
         val analysis = ImageAnalysis.Builder()
             .setResolutionSelector(
                 ResolutionSelector.Builder().setResolutionStrategy(
-                    ResolutionStrategy(Size(640, 480), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)
+                    ResolutionStrategy(Size(1280, 960), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)
                 ).build()
             )
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -316,8 +324,20 @@ class MainActivity : ComponentActivity() {
         } finally {
             bild.close()
         }
-        // Nur den Rahmen in der Mitte anschauen (quadratisch, wie das Modell es mag)
-        val seite = (min(ganz.width, ganz.height) * 0.85f).toInt()
+        // Genau das anschauen, was im Rahmen auf dem Bildschirm zu sehen ist (etwas großzügiger)
+        val gedreht = drehung % 180 != 0
+        val iw = (if (gedreht) ganz.height else ganz.width).toFloat()
+        val ih = (if (gedreht) ganz.width else ganz.height).toFloat()
+        val kurz = min(ganz.width, ganz.height)
+        val vw = vorschauBreite
+        val vh = vorschauHoehe
+        val sw = sucherSeite
+        val seite = if (vw > 0 && vh > 0 && sw > 0) {
+            val massstab = maxOf(vw / iw, vh / ih) // so skaliert die Vorschau das Bild (FILL_CENTER)
+            (sw / massstab * 1.15f).toInt().coerceIn(64, kurz)
+        } else {
+            (kurz * 0.6f).toInt()
+        }
         val mitte = Bitmap.createBitmap(ganz, (ganz.width - seite) / 2, (ganz.height - seite) / 2, seite, seite)
 
         val e = erkenner ?: try {
@@ -330,7 +350,7 @@ class MainActivity : ComponentActivity() {
             beruhiger.vergiss()
             vergessen = false
         }
-        val treffer = try { e.erkenne(mitte, drehung) } catch (ex: Exception) { emptyList() }
+        val treffer = try { e.erkenne(mitte, drehung) } catch (ex: Exception) { null }
         val sicher = beruhiger.neu(treffer) ?: return
         runOnUiThread { gefunden(sicher.ding) }
     }

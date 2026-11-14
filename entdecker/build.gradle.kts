@@ -9,12 +9,11 @@ android {
 
     defaultConfig {
         applicationId = "de.glas.entdecker"
-        // MediaPipe (Bilderkennung) braucht Android 7, CameraX ebenso
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
-        // MediaPipe gibt es nur für 64-Bit-ARM (alle Handys und Tablets der letzten Jahre)
+        versionCode = 3
+        versionName = "2.0"
+        // Handys und Tablets mit 64-Bit-ARM (alle der letzten Jahre); 32 Bit wäre für das Modell zu langsam
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
@@ -42,7 +41,7 @@ android {
 
     // Das Erkennungsmodell und die Geräusche unkomprimiert lassen (werden direkt aus der APK gelesen)
     androidResources {
-        noCompress += listOf("tflite", "ogg")
+        noCompress += listOf("onnx", "ogg")
     }
 
     packaging {
@@ -70,8 +69,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax")
     implementation("androidx.camera:camera-view:$camerax")
     implementation("androidx.activity:activity-ktx:1.9.3")
-    // Bilderkennung auf dem Gerät, ohne Internet (Apache License 2.0)
-    implementation("com.google.mediapipe:tasks-vision:0.10.26")
+    // Bilderkennung auf dem Gerät, ohne Internet (ONNX Runtime, MIT-Lizenz)
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.22.0")
 }
 
 // APK named with version, e.g. GlasEntdecker-1.0.apk
