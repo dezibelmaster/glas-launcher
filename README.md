@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.1**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -376,6 +376,8 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
   näher scharf). Der Knopf erscheint nur, wenn das Handy eine Weitwinkelkamera hat. Je nach Handy schaltet die App
   dafür auf die eigene Weitwinkelkamera oder zoomt die Hauptkamera unter 1×. Antippen des Bildes stellt an der
   Stelle scharf.
+- **🔦 Licht** schaltet das Kameralicht ein und aus (nur bei Kameras mit Blitz). Wird es dunkel, blinkt der Knopf
+  und die App schlägt vor, das Licht einzuschalten.
 - **Sprache:** Die Ansage kommt aus der deutschen Sprachausgabe des Geräts (*Einstellungen → System → Sprache →
   Sprachausgabe*, z. B. „Sprachausgabe von Google“ mit deutscher Stimme). Fehlt sie, spielt die App nur die Geräusche.
 - **Geräusche:** Alle 98 Geräusche sind am Rechner synthetisch erzeugt (`entdecker/tools/geraeusche.py`, keine

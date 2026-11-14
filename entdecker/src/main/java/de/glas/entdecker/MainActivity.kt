@@ -57,6 +57,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var albumKnopf: TextView
     private lateinit var wechselKnopf: TextView
     private lateinit var nahKnopf: TextView
+    private lateinit var lichtKnopf: TextView
+    private var licht = false
+    private var dunkel = false
+    private var lichtBlinken: ObjectAnimator? = null
     private lateinit var leiste: LinearLayout
     private lateinit var karte: LinearLayout
     private lateinit var karteStreifen: View
@@ -189,6 +193,12 @@ class MainActivity : ComponentActivity() {
         }
         leiste.addView(albumKnopf)
         leiste.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+        lichtKnopf = knopf("🔦").apply {
+            visibility = View.GONE
+            setOnClickListener { schalteLicht(!licht) }
+        }
+        leiste.addView(lichtKnopf)
+        leiste.addView(View(this), LinearLayout.LayoutParams(dp(12), 1))
         leiste.addView(nahKnopf)
         leiste.addView(View(this), LinearLayout.LayoutParams(dp(12), 1))
         leiste.addView(wechselKnopf)
@@ -341,6 +351,13 @@ class MainActivity : ComponentActivity() {
             val beide = p.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) && p.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)
             wechselKnopf.visibility = if (beide) View.VISIBLE else View.GONE
             zeigeNahKnopf()
+            // Licht bleibt beim Umschalten an, wenn die neue Kamera eines hat
+            if (cam.cameraInfo.hasFlashUnit()) {
+                if (licht) cam.cameraControl.enableTorch(true)
+            } else {
+                licht = false
+            }
+            zeigeLichtKnopf()
         } catch (e: Exception) {
             if (nah) {
                 // Weitwinkel klappt auf diesem Handy nicht: zurück zur normalen Kamera
@@ -367,12 +384,59 @@ class MainActivity : ComponentActivity() {
         null
     }
 
+    // ---------- Licht ----------
+
+    private fun schalteLicht(an: Boolean) {
+        val cam = kamera ?: return
+        if (!cam.cameraInfo.hasFlashUnit()) return
+        licht = an
+        cam.cameraControl.enableTorch(an)
+        zeigeLichtKnopf()
+    }
+
+    private fun zeigeLichtKnopf() {
+        val moeglich = kamera?.cameraInfo?.hasFlashUnit() == true
+        lichtKnopf.visibility = if (moeglich) View.VISIBLE else View.GONE
+        lichtKnopf.background = rund(if (licht) 0xEEFFEB3B.toInt() else 0x99000000.toInt(), 28)
+        // Ist es dunkel und das Licht aus: Knopf blinkt und der Hinweis schlägt Licht vor
+        val blinken = moeglich && dunkel && !licht
+        if (blinken && lichtBlinken == null) {
+            lichtBlinken = ObjectAnimator.ofFloat(lichtKnopf, "scaleX", 1f, 1.25f).apply {
+                duration = 500
+                repeatMode = ValueAnimator.REVERSE
+                repeatCount = ValueAnimator.INFINITE
+                addUpdateListener { lichtKnopf.scaleY = lichtKnopf.scaleX }
+                start()
+            }
+        } else if (!blinken) {
+            lichtBlinken?.cancel()
+            lichtBlinken = null
+            lichtKnopf.scaleX = 1f
+            lichtKnopf.scaleY = 1f
+        }
+        if (blinken) hinweis.text = "Zu dunkel! 🌙\nDrück auf 🔦 für Licht"
+        else if (hinweis.text.startsWith("Zu dunkel")) zeigeNahKnopf()
+    }
+
+    /** Aus dem Analyse-Thread: wie hell ist das Bild (0..255)? Mit etwas Abstand zwischen an und aus. */
+    private fun neueHelligkeit(h: Float) {
+        val neu = if (dunkel) h < 70f else h < 45f
+        if (neu != dunkel) runOnUiThread {
+            dunkel = neu
+            zeigeLichtKnopf()
+        }
+    }
+
     private fun zeigeNahKnopf() {
         val moeglich = !vorne && (weitKamera != null || zoomWeit < 0.95f)
         nahKnopf.visibility = if (moeglich) View.VISIBLE else View.GONE
         nahKnopf.background = rund(if (nah) 0xEEFFB300.toInt() else 0x99000000.toInt(), 28)
         nahKnopf.setTextColor(if (nah) 0xFF212121.toInt() else Color.WHITE)
-        hinweis.text = if (nah && moeglich) "Ganz nah ran! 🔍\nAntippen stellt scharf" else "Zeig mir etwas! 🔍"
+        hinweis.text = when {
+            dunkel && !licht && kamera?.cameraInfo?.hasFlashUnit() == true -> "Zu dunkel! 🌙\nDrück auf 🔦 für Licht"
+            nah && moeglich -> "Ganz nah ran! 🔍\nAntippen stellt scharf"
+            else -> "Zeig mir etwas! 🔍"
+        }
     }
 
     private fun schalteNah() {
@@ -411,6 +475,14 @@ class MainActivity : ComponentActivity() {
         } finally {
             bild.close()
         }
+        // Helligkeit grob schätzen (16 x 16 Stichproben), für den Licht-Vorschlag
+        var summe = 0f
+        for (yy in 0 until 16) for (xx in 0 until 16) {
+            val px = ganz.getPixel((xx * 2 + 1) * ganz.width / 32, (yy * 2 + 1) * ganz.height / 32)
+            summe += 0.299f * ((px shr 16) and 0xFF) + 0.587f * ((px shr 8) and 0xFF) + 0.114f * (px and 0xFF)
+        }
+        neueHelligkeit(summe / 256f)
+
         // Genau das anschauen, was im Rahmen auf dem Bildschirm zu sehen ist (etwas großzügiger)
         val gedreht = drehung % 180 != 0
         val iw = (if (gedreht) ganz.height else ganz.width).toFloat()
@@ -616,6 +688,9 @@ class MainActivity : ComponentActivity() {
         sprecher.stopp()
         beschaeftigt = album != null
         root.post(versteckeKarte)
+        // Android schaltet das Licht mit der Kamera aus; der Knopf soll das auch zeigen
+        licht = false
+        zeigeLichtKnopf()
     }
 
     override fun onDestroy() {
