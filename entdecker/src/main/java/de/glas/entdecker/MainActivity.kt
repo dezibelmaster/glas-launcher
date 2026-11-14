@@ -219,7 +219,19 @@ class MainActivity : ComponentActivity() {
         if (album != null) { schliesseAlbum(); zeigeAlbum() }
     }
 
+    /** Nach der Ansage die Karte wieder wegnehmen, damit das Kind das Nächste suchen kann. */
+    private val versteckeKarte = Runnable {
+        if (sprecher.spricht) return@Runnable
+        karte.animate().alpha(0f).scaleX(0.8f).scaleY(0.8f).setDuration(250).withEndAction {
+            karte.visibility = View.INVISIBLE
+            hinweis.visibility = View.VISIBLE
+        }.start()
+    }
+
+    private var erzaehlNummer = 0
+
     private fun zeigeKarte(ding: Ding, neu: Boolean) {
+        root.removeCallbacks(versteckeKarte)
         aktuell = ding
         karteStreifen.setBackgroundColor(ding.gruppe.farbe)
         karteEmoji.text = ding.emoji
@@ -326,7 +338,7 @@ class MainActivity : ComponentActivity() {
     private fun gefunden(ding: Ding) {
         if (zerstoert || beschaeftigt || sprecher.spricht) return
         val jetzt = SystemClock.uptimeMillis()
-        if (jetzt - endeZeit < 1500) return
+        if (jetzt - endeZeit < 1000) return
         if (ding == zuletztGesagt && jetzt - zuletztZeit < 15_000) return
         zuletztGesagt = ding
         zuletztZeit = jetzt
@@ -337,12 +349,24 @@ class MainActivity : ComponentActivity() {
 
     private fun erzaehle(ding: Ding) {
         beschaeftigt = true
-        sprecher.erzaehle(ding) {
-            beschaeftigt = album != null
-            endeZeit = SystemClock.uptimeMillis()
-            zuletztZeit = endeZeit
-            vergessen = true
+        val nummer = ++erzaehlNummer
+        val fertig = {
+            if (nummer == erzaehlNummer) {
+                beschaeftigt = album != null
+                endeZeit = SystemClock.uptimeMillis()
+                zuletztZeit = endeZeit
+                vergessen = true
+                root.postDelayed(versteckeKarte, 3000)
+            }
         }
+        sprecher.erzaehle(ding) { fertig() }
+        // Notbremse: Hängt die Ausgabe trotzdem, nach 25 Sekunden wieder suchen
+        root.postDelayed({
+            if (nummer == erzaehlNummer && sprecher.spricht) {
+                sprecher.stopp()
+                fertig()
+            }
+        }, 25_000)
     }
 
     private fun nochmal(ding: Ding) {
@@ -436,6 +460,7 @@ class MainActivity : ComponentActivity() {
         sprecher.stopp()
         beschaeftigt = false
         vergessen = true
+        root.postDelayed(versteckeKarte, 1000)
     }
 
     @Deprecated("Deprecated in Java")
@@ -483,6 +508,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         sprecher.stopp()
         beschaeftigt = album != null
+        root.post(versteckeKarte)
     }
 
     override fun onDestroy() {

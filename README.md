@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 1.0**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 1.1**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -365,8 +365,8 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
   Fahrrad …), 98 Dinge (Uhr, Telefon, Gitarre, Trommel, Staubsauger, Ball, Teddy …) und 24 Sorten Essen.
 - **Ohne Internet:** Die Erkennung läuft auf dem Gerät (EfficientNet-Lite mit 1000 Bildklassen, über MediaPipe).
   Es werden keine Bilder gespeichert oder verschickt.
-- **Bedienung:** Ding in den hellen Rahmen halten und kurz stillhalten. Die Karte unten zeigt Bild, Namen und Spruch;
-  antippen spielt alles noch einmal. Dasselbe Ding wird frühestens nach 15 Sekunden wieder angesagt.
+- **Bedienung:** Ding in den hellen Rahmen halten und kurz stillhalten. Die Karte unten zeigt Bild, Namen und Spruch
+  und verschwindet 3 Sekunden nach der Ansage; antippen spielt alles noch einmal. Dasselbe Ding wird frühestens nach 15 Sekunden wieder angesagt.
 - **Album (⭐ oben links):** Alles, was das Kind schon entdeckt hat, sortiert nach Tieren, Fahrzeugen, Dingen und
   Essen. Noch nicht Entdecktes erscheint als ❔. Antippen spielt Name und Geräusch.
 - **🔄 oben rechts** wechselt zwischen hinterer und vorderer Kamera. Hoch- und Querformat gehen beide.

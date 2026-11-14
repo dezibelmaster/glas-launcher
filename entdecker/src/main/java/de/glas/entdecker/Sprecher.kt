@@ -90,7 +90,10 @@ class Sprecher(private val context: Context, private val bereit: (sprache: Boole
         }
         val id = "e$meiner-${text.hashCode()}"
         schritte[id] = { if (meiner == lauf) danach() }
-        t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id)
+        val ok = t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id) == TextToSpeech.SUCCESS
+        // Manche Sprachausgaben melden nie "fertig": dann nach einer großzügigen Sprechdauer trotzdem weitermachen
+        val warte = if (ok) 2500L + text.length * 110L else 0L
+        main.postDelayed({ schritte.remove(id)?.invoke() }, warte)
     }
 
     private fun spiele(name: String, meiner: Int, danach: () -> Unit) {

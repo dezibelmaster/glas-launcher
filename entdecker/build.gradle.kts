@@ -12,8 +12,8 @@ android {
         // MediaPipe (Bilderkennung) braucht Android 7, CameraX ebenso
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         // MediaPipe gibt es nur für 64-Bit-ARM (alle Handys und Tablets der letzten Jahre)
         ndk {
             abiFilters += listOf("arm64-v8a")

@@ -53,7 +53,7 @@ class Erkenner(context: Context) : AutoCloseable {
  * Damit nicht jedes Wackeln eine Ansage auslöst: Ein Ding gilt erst als erkannt, wenn es in mehreren Bildern
  * hintereinander vorne liegt.
  */
-class Beruhiger(private val fenster: Int = 4, private val noetig: Int = 3, private val schwelle: Float = 0.25f) {
+class Beruhiger(private val fenster: Int = 4, private val noetig: Int = 3, private val schwelle: Float = 0.3f) {
     private val verlauf = ArrayDeque<Treffer?>()
 
     fun neu(treffer: List<Treffer>): Treffer? {
