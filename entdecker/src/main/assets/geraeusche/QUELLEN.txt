@@ -78,6 +78,12 @@ gackern.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s0978.html
 
+grunzen.ogg
+  Original: pig-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 heulen.ogg
   Original: Wolf howls.ogg
   Urheber:  unbekannt

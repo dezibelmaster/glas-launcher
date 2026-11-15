@@ -36,7 +36,8 @@ UA_BROWSER = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 
 UA_WIKI = {"User-Agent": "GlasEntdeckerSounds/1.0 (https://github.com; kids app sound credits)"}
 
 # Geräusch -> (Quelle, Länge des Ausschnitts in Sekunden)
-# Quelle: eine Nummer von BigSoundBank.com (vierstellig, steht in der Adresse der Seite: ...-s0283.html)
+# Quelle: eine Datei aus dem Ordner entdecker/tools/aufnahmen (dann in LOKAL eintragen),
+#         oder eine Nummer von BigSoundBank.com (vierstellig, steht in der Adresse der Seite: ...-s0283.html)
 #         oder der Dateiname auf Wikimedia Commons (ohne "File:")
 AUFNAHMEN = {
     # Tiere
@@ -63,7 +64,7 @@ AUFNAHMEN = {
     "brummen": ("Bear growl.ogg", 3.5),
     "troeten": ("Elephant voice - trumpeting.ogg", 3.0),
     "affe": ("Pant-hoot call made by a male chimpanzee.ogg", 4.5),
-    "grunzen": ("618483 foleyhaven piglet-squeal-01.flac", 3.0),
+    "grunzen": ("pig-sound-effect.mp3", 3.5),
     "schnattern": ("Geese Honking (loud).ogg", 3.5),
     "papagei": ("Ara militaris - Military Macaw XC250486.mp3", 3.5),
     "adler": ("Buteo jamaicensis - Red-tailed Hawk XC71575.mp3", 2.5),
@@ -88,6 +89,13 @@ AUFNAHMEN = {
     "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
     "flugzeug": ("2478", 6.0),
     "motorboot": ("WWS MSThti.ogg", 4.0),
+}
+
+
+# Aufnahmen, die als Datei im Ordner entdecker/tools/aufnahmen liegen (nicht automatisch ladbar)
+LOKAL = {
+    "pig-sound-effect.mp3": {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
+                             "seite": "https://www.freesoundslibrary.com/"},
 }
 
 
@@ -162,7 +170,10 @@ def main():
         if nur and name not in nur:
             continue
         roh = os.path.join(CACHE, name + (os.path.splitext(titel)[1] or ".mp3"))
-        if os.path.exists(roh) and quellen.get(name, {}).get("titel") == titel:
+        if titel in LOKAL:
+            roh = os.path.join(HIER, "aufnahmen", titel)
+            a = dict(LOKAL[titel], url="")
+        elif os.path.exists(roh) and quellen.get(name, {}).get("titel") == titel:
             a = quellen[name]  # schon geladen: Commons nicht noch einmal fragen
         else:
             try:
