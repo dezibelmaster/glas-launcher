@@ -288,6 +288,12 @@ troeten.ogg
   Lizenz:   CC0
   https://commons.wikimedia.org/wiki/File:Elephant_voice_-_trumpeting.ogg
 
+wal.ogg
+  Original: whale-sound.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 wiehern.ogg
   Original: 0863
   Urheber:  Joseph SARDIN - BigSoundBank.com
