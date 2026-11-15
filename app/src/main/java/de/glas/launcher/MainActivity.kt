@@ -393,6 +393,7 @@ class MainActivity : Activity() {
 
     override fun onStop() {
         super.onStop()
+        Snapshot.homeBehind = false
         started = false
     }
 
@@ -468,6 +469,7 @@ class MainActivity : Activity() {
         resumed = false
         // A picture of the background for the screen that opens now, so it doesn't start black
         if (::backdrop.isInitialized) Snapshot.take(backdrop)
+        Snapshot.homeBehind = true
         // Free the video decoder right away: TVs often have only one for 4K, and the app being
         // opened (e.g. YouTube) crashes if the launcher still holds it
         backdrop.pause()

@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.52",
+  "notes": {
+   "de": [
+    "Liquid Glass für Kontrollzentrum und Menüs auch auf Fernsehern ohne Weichzeichnen hinter Fenstern",
+    "Reddit: mehrere Wege zu den Bildern (auch RSS), Hochkant-Fotos werden übersprungen, bei Problemen steht der Grund dabei"
+   ],
+   "en": [
+    "Liquid Glass for the control centre and menus also on TVs without blur behind windows",
+    "Reddit: several ways to the pictures (also RSS), portrait photos are skipped, on problems the reason is shown"
+   ],
+   "fr": [
+    "Liquid Glass pour le centre de contrôle et les menus aussi sur les téléviseurs sans flou derrière les fenêtres",
+    "Reddit : plusieurs accès aux images (aussi RSS), les photos verticales sont ignorées, en cas de problème la raison est indiquée"
+   ],
+   "es": [
+    "Liquid Glass para el centro de control y los menús también en televisores sin desenfoque detrás de las ventanas",
+    "Reddit: varias vías hacia las imágenes (también RSS), se omiten fotos verticales, si hay problemas se muestra el motivo"
+   ],
+   "it": [
+    "Liquid Glass per centro di controllo e menu anche su televisori senza sfocatura dietro le finestre",
+    "Reddit: più vie per le immagini (anche RSS), le foto verticali vengono saltate, in caso di problemi viene indicato il motivo"
+   ],
+   "nl": [
+    "Liquid Glass voor bedieningscentrum en menu's ook op tv's zonder vervaging achter vensters",
+    "Reddit: meerdere wegen naar de afbeeldingen (ook RSS), staande foto's worden overgeslagen, bij problemen staat de reden erbij"
+   ]
+  }
+ },
+ {
   "version": "2.51",
   "notes": {
    "de": [

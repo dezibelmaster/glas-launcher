@@ -44,16 +44,21 @@ class PanelActivity : Activity() {
         window.setGravity(Gravity.END or Gravity.CENTER_VERTICAL)
         window.attributes = window.attributes.apply { x = dp(32) }
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        window.setDimAmount(if (blur) .12f else .35f)
-        window.setBackgroundDrawable(GradientDrawable().apply {
-            cornerRadius = dp(40f)
-            if (blur) {
+        window.setDimAmount(.12f)
+        if (blur) {
+            window.setBackgroundDrawable(GradientDrawable().apply {
+                cornerRadius = dp(40f)
                 // Light frosted glass like the background picker
                 orientation = GradientDrawable.Orientation.TOP_BOTTOM
                 colors = intArrayOf(0x52B4BCC8, 0x3D7C8592)
-            } else setColor(0xEB0E1218.toInt())
-            setStroke(dp(1), 0x73FFFFFF)
-        })
+                setStroke(dp(1), 0x73FFFFFF)
+            })
+        } else {
+            // No blur behind windows on this TV: glass from the home screen's picture, when it is behind
+            val glass = GlassDrawable(this, dp(40f), usePicture = Snapshot.homeBehind)
+            window.setBackgroundDrawable(glass)
+            glass.attach(window)
+        }
         if (blur && Build.VERSION.SDK_INT >= 31) window.setBackgroundBlurRadius(dp(36))
         window.attributes = window.attributes.apply { x = dp(28) }
 

@@ -119,6 +119,14 @@ object Ui {
     /** Background of a dialog window; with Liquid Glass it blurs what lies behind it. */
     fun styleDialog(dialog: android.app.Dialog, ctx: Context) {
         val w = dialog.window ?: return
+        if (liquid(ctx) && !canBlur(ctx)) {
+            // The TV doesn't blur behind windows: glass made from the home screen's picture instead
+            val glass = GlassDrawable(ctx, ctx.dp(34f), usePicture = true)
+            w.setBackgroundDrawable(glass)
+            glass.attach(w)
+            w.setDimAmount(.12f)
+            return
+        }
         w.setBackgroundDrawable(panel(ctx))
         if (liquid(ctx) && canBlur(ctx) && Build.VERSION.SDK_INT >= 31) {
             w.setBackgroundBlurRadius(ctx.dp(30))

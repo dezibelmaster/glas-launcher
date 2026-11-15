@@ -561,5 +561,7 @@
  "Fotos von Reddit": "Photos de Reddit",
  "Die besten Fotos der Woche im Querformat, geladen vom Fernseher. r/EarthPorn zeigt Landschaftsfotos. Im Dock nach oben drücken: weiterschalten, mit Vorschau wählen, ★ Favoriten. Bei klarem Himmel verschwindet die große Uhr auch hier hinter den Bergen.": "Les meilleures photos de la semaine au format paysage, chargées par le téléviseur. r/EarthPorn montre des photos de paysages. Appuyez vers le haut dans le dock : passer à la suivante, choisir avec aperçu, ★ favoris. Par ciel dégagé, la grande horloge disparaît ici aussi derrière les montagnes.",
  "Umbenennen …": "Renommer …",
- "Neuer Name für {0}": "Nouveau nom pour {0}"
+ "Neuer Name für {0}": "Nouveau nom pour {0}",
+ "keine passenden Bilder": "aucune image adaptée",
+ "Letzter Abruf fehlgeschlagen: {0}": "Dernière tentative échouée : {0}"
 }

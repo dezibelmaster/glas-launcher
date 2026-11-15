@@ -702,7 +702,8 @@ class SettingsActivity : Activity() {
                 }
             } +
             GlassMenu.Item(tr("Wechseln alle {0} Minuten …", prefs.pluginMinutes)) { choosePluginMinutes() }
-        GlassMenu.show(this, tr("Fotos von Reddit"), items, footer = tr("Die besten Fotos der Woche im Querformat, geladen vom Fernseher. r/EarthPorn zeigt Landschaftsfotos. Im Dock nach oben drücken: weiterschalten, mit Vorschau wählen, ★ Favoriten. Bei klarem Himmel verschwindet die große Uhr auch hier hinter den Bergen."))
+        val problem = Reddit.lastError?.let { "\n\n" + tr("Letzter Abruf fehlgeschlagen: {0}", it) }.orEmpty()
+        GlassMenu.show(this, tr("Fotos von Reddit"), items, footer = tr("Die besten Fotos der Woche im Querformat, geladen vom Fernseher. r/EarthPorn zeigt Landschaftsfotos. Im Dock nach oben drücken: weiterschalten, mit Vorschau wählen, ★ Favoriten. Bei klarem Himmel verschwindet die große Uhr auch hier hinter den Bergen.") + problem)
     }
 
     /** Tiles removed from the dock that aren't in "Alle Apps", to put back. */
