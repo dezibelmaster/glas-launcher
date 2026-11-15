@@ -12,6 +12,12 @@ adler.ogg
   Lizenz:   CC BY-SA 3.0
   https://commons.wikimedia.org/wiki/File:Buteo_jamaicensis_-_Red-tailed_Hawk_XC71575.mp3
 
+affe.ogg
+  Original: Pant-hoot call made by a male chimpanzee.ogg
+  Urheber:  Pawel Fedurek et al.
+  Lizenz:   CC BY 4.0
+  https://commons.wikimedia.org/wiki/File:Pant-hoot_call_made_by_a_male_chimpanzee.ogg
+
 bagger.ogg
   Original: 2147
   Urheber:  Joseph SARDIN - BigSoundBank.com
@@ -127,10 +133,10 @@ maehen.ogg
   https://bigsoundbank.com/s2343.html
 
 martinshorn.ogg
-  Original: 1464
-  Urheber:  Joseph SARDIN - BigSoundBank.com
-  Lizenz:   CC0
-  https://bigsoundbank.com/s1464.html
+  Original: WWS Fireenginesiren.ogg
+  Urheber:  Work With Sounds / Konrad Gutkowski
+  Lizenz:   CC BY 4.0
+  https://commons.wikimedia.org/wiki/File:WWS_Fireenginesiren.ogg
 
 meckern.ogg
   Original: 0279
@@ -186,11 +192,23 @@ quaken.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s0276.html
 
+rennauto.ogg
+  Original: Williams-Renault FW18 (1996).ogg
+  Urheber:  Edvvc
+  Lizenz:   CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Williams-Renault_FW18_(1996).ogg
+
 schiff.ogg
   Original: 0261
   Urheber:  Joseph SARDIN - BigSoundBank.com
   Lizenz:   CC0
   https://bigsoundbank.com/s0261.html
+
+schnattern.ogg
+  Original: Geese Honking (loud).ogg
+  Urheber:  U.S. Fish and Wildlife Service
+  Lizenz:   Public domain
+  https://commons.wikimedia.org/wiki/File:Geese_Honking_(loud).ogg
 
 strassenbahn.ogg
   Original: 3374

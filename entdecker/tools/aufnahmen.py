@@ -84,7 +84,7 @@ AUFNAHMEN = {
     "klingel": ("0275", 2.5),
     "moped": ("0603", 5.0),
     "piepen": ("1298", 3.5),
-    "martinshorn": ("1464", 5.0),
+    "martinshorn": ("WWS Fireenginesiren.ogg", 5.0),
     "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
     "flugzeug": ("2478", 6.0),
     "motorboot": ("WWS MSThti.ogg", 4.0),
