@@ -20,6 +20,9 @@ object Snapshot {
     /** True while the home screen is still visible behind another window (e.g. the control centre). */
     @Volatile var homeBehind = false
 
+    /** Set just before the control centre opens over the home screen: its video keeps running. */
+    @Volatile var keepPlaying = false
+
     fun take(backdrop: Backdrop) {
         val w = backdrop.width / 8
         val h = backdrop.height / 8
@@ -71,6 +74,21 @@ class GlassDrawable(private val ctx: Context, private val radius: Float, private
     private val sheen = android.graphics.Paint()
     private val rim = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE }
     private val density = ctx.resources.displayMetrics.density
+    private val frost = Prefs(ctx).windowFrost.coerceIn(0, 3)
+    /** The picture made softer still for milkier glass. */
+    private var soft: Bitmap? = null
+    private var softOf: Bitmap? = null
+
+    private fun picture(shot: Bitmap): Bitmap {
+        if (frost <= 1) return shot
+        if (softOf !== shot) {
+            val f = if (frost == 2) 2 else 4
+            val small = Bitmap.createScaledBitmap(shot, (shot.width / f).coerceAtLeast(1), (shot.height / f).coerceAtLeast(1), true)
+            soft = Bitmap.createScaledBitmap(small, shot.width, shot.height, true)
+            softOf = shot
+        }
+        return soft ?: shot
+    }
 
     override fun draw(c: Canvas) {
         val b = bounds
@@ -85,9 +103,12 @@ class GlassDrawable(private val ctx: Context, private val radius: Float, private
             val sx = shot.width / dm.widthPixels.toFloat()
             val sy = shot.height / dm.heightPixels.toFloat()
             src.set((screen.left * sx).toInt(), (screen.top * sy).toInt(), (screen.right * sx).toInt(), (screen.bottom * sy).toInt())
-            c.drawBitmap(shot, src, rect, pic)
-            // A grey veil keeps white writing readable on any picture, the sheen makes it glassy
-            veil.color = 0x47181C24
+            c.drawBitmap(picture(shot), src, rect, pic)
+            // A grey veil keeps white writing readable on any picture; a milky white layer, as strong
+            // as set, frosts it; the sheen makes it glassy
+            veil.color = 0x40181C24
+            c.drawRect(rect, veil)
+            veil.color = (intArrayOf(0x00, 0x1A, 0x33, 0x4D)[frost] shl 24) or 0xD8DEE8
             c.drawRect(rect, veil)
             sheen.shader = android.graphics.LinearGradient(0f, rect.top, 0f, rect.bottom,
                 intArrayOf(0x40FFFFFF, 0x14FFFFFF, 0x08FFFFFF), floatArrayOf(0f, .45f, 1f), android.graphics.Shader.TileMode.CLAMP)

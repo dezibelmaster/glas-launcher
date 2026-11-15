@@ -86,6 +86,10 @@ class SettingsActivity : Activity() {
         section(tr("Aussehen"))
         row(tr("Hintergrund"), backgroundLabel()) { chooseBackground() }
         row(tr("Milchglas"), Ui.glassNames[prefs.glass]) { chooseGlass() }
+        if (Ui.liquid(this)) row(tr("Milchglas der Fenster"), frostNames()[prefs.windowFrost.coerceIn(0, 3)]) {
+            GlassMenu.show(this, tr("Milchglas der Fenster"), frostNames().mapIndexed { i, n -> GlassMenu.Item(n) { prefs.windowFrost = i; render() } },
+                focus = prefs.windowFrost.coerceIn(0, 3), footer = tr("Wie milchig Kontrollzentrum und Menüs sind. Gilt für das nächste Öffnen."))
+        }
         row(tr("Milchglas über Videos"), rateLabel(prefs.glassVideoRate)) { chooseGlassRate() }
         row(tr("Eigene Bilder und Videos verwalten")) { manageMedia() }
         row(tr("Heruntergeladene Videos löschen"), megabytes(MediaCache.size(this))) { clearDownloads() }
@@ -685,6 +689,8 @@ class SettingsActivity : Activity() {
         }, focus = ids.indexOf(prefs.weatherSource).coerceAtLeast(0),
             footer = tr("Antwortet die gewählte Quelle nicht, nimmt der Launcher automatisch eine der anderen. Woher das Wetter gerade kommt, steht oben rechts in der Wetteransicht. Luftqualität und Pollen kommen immer von Open-Meteo."))
     }
+
+    private fun frostNames() = listOf(tr("Durchsichtig"), tr("Leicht milchig"), tr("Milchig"), tr("Sehr milchig"))
 
     /** Photos from a Reddit community; r/EarthPorn has landscape photos. */
     private fun chooseReddit() {

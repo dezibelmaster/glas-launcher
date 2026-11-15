@@ -563,5 +563,11 @@
  "Umbenennen …": "Rinomina …",
  "Neuer Name für {0}": "Nuovo nome per {0}",
  "keine passenden Bilder": "nessuna immagine adatta",
- "Letzter Abruf fehlgeschlagen: {0}": "Ultimo tentativo non riuscito: {0}"
+ "Letzter Abruf fehlgeschlagen: {0}": "Ultimo tentativo non riuscito: {0}",
+ "Milchglas der Fenster": "Vetro smerigliato delle finestre",
+ "Wie milchig Kontrollzentrum und Menüs sind. Gilt für das nächste Öffnen.": "Quanto sono lattiginosi centro di controllo e menu. Vale alla prossima apertura.",
+ "Durchsichtig": "Trasparente",
+ "Leicht milchig": "Leggermente lattiginoso",
+ "Milchig": "Lattiginoso",
+ "Sehr milchig": "Molto lattiginoso"
 }

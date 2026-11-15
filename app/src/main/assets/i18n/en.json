@@ -563,5 +563,11 @@
  "Umbenennen …": "Rename …",
  "Neuer Name für {0}": "New name for {0}",
  "keine passenden Bilder": "no suitable pictures",
- "Letzter Abruf fehlgeschlagen: {0}": "Last attempt failed: {0}"
+ "Letzter Abruf fehlgeschlagen: {0}": "Last attempt failed: {0}",
+ "Milchglas der Fenster": "Frosted glass of windows",
+ "Wie milchig Kontrollzentrum und Menüs sind. Gilt für das nächste Öffnen.": "How milky the control centre and menus are. Applies the next time they open.",
+ "Durchsichtig": "Clear",
+ "Leicht milchig": "Slightly milky",
+ "Milchig": "Milky",
+ "Sehr milchig": "Very milky"
 }

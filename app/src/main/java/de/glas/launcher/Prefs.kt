@@ -70,6 +70,11 @@ class Prefs(context: Context) {
         }.getOrDefault(emptyMap())
         set(v) = sp.edit().putString("names", org.json.JSONObject(v).toString()).apply()
 
+    /** How milky the glass of windows (control centre, menus) is: 0 clear … 3 very milky. */
+    var windowFrost: Int
+        get() = sp.getInt("windowFrost", 1)
+        set(v) = sp.edit().putInt("windowFrost", v).apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

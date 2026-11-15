@@ -1,5 +1,40 @@
 [
  {
+  "version": "2.53",
+  "notes": {
+   "de": [
+    "Das Hintergrundvideo läuft weiter, während das Kontrollzentrum offen ist",
+    "Milchglas der Fenster einstellbar: durchsichtig bis sehr milchig (Einstellungen → Aussehen)",
+    "Reddit: auch Galerie-Beiträge, z. B. aus r/LandscapePhotography"
+   ],
+   "en": [
+    "The background video keeps running while the control centre is open",
+    "Frosted glass of windows adjustable: clear to very milky (Settings → Appearance)",
+    "Reddit: gallery posts too, e.g. from r/LandscapePhotography"
+   ],
+   "fr": [
+    "La vidéo d'arrière-plan continue pendant que le centre de contrôle est ouvert",
+    "Verre dépoli des fenêtres réglable : transparent à très dépoli (Paramètres → Apparence)",
+    "Reddit : aussi les publications en galerie, p. ex. de r/LandscapePhotography"
+   ],
+   "es": [
+    "El vídeo de fondo sigue reproduciéndose mientras el centro de control está abierto",
+    "Cristal esmerilado de las ventanas ajustable: de transparente a muy esmerilado (Ajustes → Apariencia)",
+    "Reddit: también publicaciones de galería, p. ej. de r/LandscapePhotography"
+   ],
+   "it": [
+    "Il video di sfondo continua mentre il centro di controllo è aperto",
+    "Vetro smerigliato delle finestre regolabile: da trasparente a molto lattiginoso (Impostazioni → Aspetto)",
+    "Reddit: anche post con galleria, ad es. da r/LandscapePhotography"
+   ],
+   "nl": [
+    "De achtergrondvideo blijft lopen terwijl het bedieningscentrum open is",
+    "Matglas van vensters instelbaar: doorzichtig tot zeer melkachtig (Instellingen → Weergave)",
+    "Reddit: ook galerijberichten, bijv. van r/LandscapePhotography"
+   ]
+  }
+ },
+ {
   "version": "2.52",
   "notes": {
    "de": [

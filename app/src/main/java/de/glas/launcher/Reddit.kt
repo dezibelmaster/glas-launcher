@@ -114,6 +114,7 @@ object Reddit {
         return (0 until children.length()).mapNotNull { i ->
             val d = children.getJSONObject(i).optJSONObject("data") ?: return@mapNotNull null
             if (d.optBoolean("over_18") || d.optBoolean("spoiler") || d.optBoolean("is_video")) return@mapNotNull null
+            gallery(d)?.let { return@mapNotNull it }
             val source = d.optJSONObject("preview")?.optJSONArray("images")?.optJSONObject(0)?.optJSONObject("source")
             val direct = d.optString("url").takeIf { Regex("""\.(jpe?g|png)$""", RegexOption.IGNORE_CASE).containsMatchIn(it) }
             // Landscape format, sharp enough for a TV (when Reddit tells the size; otherwise checked when loading)
@@ -126,6 +127,22 @@ object Reddit {
             if (url.isBlank()) return@mapNotNull null
             Post(d.optString("id"), clean(d.optString("title")), d.optString("author"), url)
         }
+    }
+
+    /** Gallery posts (several pictures) list them under media_metadata; the first landscape one is taken. */
+    private fun gallery(d: JSONObject): Post? {
+        if (!d.optBoolean("is_gallery")) return null
+        val meta = d.optJSONObject("media_metadata") ?: return null
+        val order = d.optJSONObject("gallery_data")?.optJSONArray("items")?.let { arr -> (0 until arr.length()).map { arr.getJSONObject(it).optString("media_id") } }
+            ?: meta.keys().asSequence().toList()
+        for (id in order) {
+            val s = meta.optJSONObject(id)?.optJSONObject("s") ?: continue
+            val w = s.optInt("x")
+            val h = s.optInt("y")
+            val url = s.optString("u").ifEmpty { continue }
+            if (w >= 1200 && w >= h * 1.2) return Post(d.optString("id"), clean(d.optString("title")), d.optString("author"), url)
+        }
+        return null
     }
 
     /** Titles often end in camera and size details like "[OC] [4000x3000]"; those go. */

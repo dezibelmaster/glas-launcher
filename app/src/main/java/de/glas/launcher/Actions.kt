@@ -39,8 +39,8 @@ object Actions {
         runCatching {
             when {
                 action == "home" -> ctx.startActivity(home)
-                action == "panel" -> ctx.startActivity(PanelActivity.intent(ctx, PanelActivity.MODE_PANEL))
-                action == "inputs" -> ctx.startActivity(PanelActivity.intent(ctx, PanelActivity.MODE_INPUTS))
+                action == "panel" -> { Snapshot.keepPlaying = ctx is MainActivity; ctx.startActivity(PanelActivity.intent(ctx, PanelActivity.MODE_PANEL)) }
+                action == "inputs" -> { Snapshot.keepPlaying = ctx is MainActivity; ctx.startActivity(PanelActivity.intent(ctx, PanelActivity.MODE_INPUTS)) }
                 action == "weather" -> ctx.startActivity(home.putExtra(EXTRA_OPEN, "weather"))
                 action == "settings" -> ctx.startActivity(home.putExtra(EXTRA_OPEN, "settings"))
                 action == "screensaver" -> ctx.startActivity(

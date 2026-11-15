@@ -563,5 +563,11 @@
  "Umbenennen …": "Cambiar nombre …",
  "Neuer Name für {0}": "Nuevo nombre para {0}",
  "keine passenden Bilder": "ninguna imagen adecuada",
- "Letzter Abruf fehlgeschlagen: {0}": "El último intento falló: {0}"
+ "Letzter Abruf fehlgeschlagen: {0}": "El último intento falló: {0}",
+ "Milchglas der Fenster": "Cristal esmerilado de las ventanas",
+ "Wie milchig Kontrollzentrum und Menüs sind. Gilt für das nächste Öffnen.": "Lo esmerilado que se ven el centro de control y los menús. Se aplica la próxima vez que se abran.",
+ "Durchsichtig": "Transparente",
+ "Leicht milchig": "Ligeramente esmerilado",
+ "Milchig": "Esmerilado",
+ "Sehr milchig": "Muy esmerilado"
 }

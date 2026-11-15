@@ -563,5 +563,11 @@
  "Umbenennen …": "Renommer …",
  "Neuer Name für {0}": "Nouveau nom pour {0}",
  "keine passenden Bilder": "aucune image adaptée",
- "Letzter Abruf fehlgeschlagen: {0}": "Dernière tentative échouée : {0}"
+ "Letzter Abruf fehlgeschlagen: {0}": "Dernière tentative échouée : {0}",
+ "Milchglas der Fenster": "Verre dépoli des fenêtres",
+ "Wie milchig Kontrollzentrum und Menüs sind. Gilt für das nächste Öffnen.": "Degré de dépoli du centre de contrôle et des menus. S'applique à la prochaine ouverture.",
+ "Durchsichtig": "Transparent",
+ "Leicht milchig": "Légèrement dépoli",
+ "Milchig": "Dépoli",
+ "Sehr milchig": "Très dépoli"
 }

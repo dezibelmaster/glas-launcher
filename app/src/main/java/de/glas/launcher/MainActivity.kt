@@ -394,6 +394,8 @@ class MainActivity : Activity() {
     override fun onStop() {
         super.onStop()
         Snapshot.homeBehind = false
+        // Also when an app was opened from the control centre: now the decoder must be free
+        if (::backdrop.isInitialized) backdrop.pause()
         started = false
     }
 
@@ -471,8 +473,9 @@ class MainActivity : Activity() {
         if (::backdrop.isInitialized) Snapshot.take(backdrop)
         Snapshot.homeBehind = true
         // Free the video decoder right away: TVs often have only one for 4K, and the app being
-        // opened (e.g. YouTube) crashes if the launcher still holds it
-        backdrop.pause()
+        // opened (e.g. YouTube) crashes if the launcher still holds it. The control centre is only
+        // a panel over the home screen, so there the video keeps running.
+        if (Snapshot.keepPlaying) Snapshot.keepPlaying = false else backdrop.pause()
         handler.removeCallbacksAndMessages(null)
     }
 
