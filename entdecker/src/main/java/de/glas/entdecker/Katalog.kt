@@ -244,7 +244,7 @@ object Katalog {
         fahrzeug("drachen_flug", "Drachen", Genus.M, "🪁", "wind", "Der Drachen fliegt im Wind!")
         fahrzeug("segelflugzeug", "Segelflugzeug", Genus.N, "✈️", "wind", "Das Segelflugzeug fliegt ohne Motor!")
         fahrzeug("jet", "Düsenjet", Genus.M, "🛩️", "flugzeug", "Der Düsenjet ist superschnell!")
-        fahrzeug("faehre", "Fähre", Genus.F, "⛴️", "schiff", "Die Fähre bringt Autos übers Wasser!")
+        fahrzeug("faehre", "Fähre", Genus.F, "⛴️", "schlepper", "Die Fähre bringt Autos übers Wasser!")
         fahrzeug("piratenschiff", "Piratenschiff", Genus.N, "🏴‍☠️", "schiff", "Ahoi, das Piratenschiff!")
         fahrzeug("ruderboot", "Ruderboot", Genus.N, "🚣", "platschen", "Im Ruderboot wird gerudert!")
         fahrzeug("luftmatratze", "Schwimmring", Genus.M, "🛟", "platschen", "Mit dem Schwimmring geht es ins Wasser!")

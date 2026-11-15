@@ -30,6 +30,12 @@ bellen.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s2955.html
 
+blubbern.ogg
+  Original: pool-bubbles-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 bruellen.ogg
   Original: Lion raring-sound1TamilNadu178.ogg
   Urheber:  த*உழவன்
@@ -60,11 +66,17 @@ eule.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s1764.html
 
+fiepen.ogg
+  Original: guinea-pig-noises.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 flugzeug.ogg
-  Original: 2478
-  Urheber:  Joseph SARDIN - BigSoundBank.com
-  Lizenz:   CC0
-  https://bigsoundbank.com/s2478.html
+  Original: realistic-fighter-jet-flyby-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
 
 frosch.ogg
   Original: 0819
@@ -174,6 +186,12 @@ motor.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s0189.html
 
+motorboot.ogg
+  Original: ferry-boat-engine-sound-effects.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 muhen.ogg
   Original: 2383
   Urheber:  Joseph SARDIN - BigSoundBank.com
@@ -192,6 +210,12 @@ piepen.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s1298.html
 
+platschen.ogg
+  Original: water-splash-sound.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 propeller.ogg
   Original: 0264
   Urheber:  Joseph SARDIN - BigSoundBank.com
@@ -204,17 +228,35 @@ quaken.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s0276.html
 
+rakete.ogg
+  Original: spaceship-launching-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 rennauto.ogg
   Original: Williams-Renault FW18 (1996).ogg
   Urheber:  Edvvc
   Lizenz:   CC BY-SA 3.0
   https://commons.wikimedia.org/wiki/File:Williams-Renault_FW18_(1996).ogg
 
+robbe.ogg
+  Original: seal-barking-sound.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 schiff.ogg
-  Original: 0261
-  Urheber:  Joseph SARDIN - BigSoundBank.com
-  Lizenz:   CC0
-  https://bigsoundbank.com/s0261.html
+  Original: boat-horn-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
+schlepper.ogg
+  Original: tugboat-horn-sound-effect-near-harbor.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
 
 schnattern.ogg
   Original: Geese Honking (loud).ogg
@@ -257,6 +299,12 @@ zirpen.ogg
   Urheber:  Joseph SARDIN - BigSoundBank.com
   Lizenz:   CC0
   https://bigsoundbank.com/s1020.html
+
+zischen.ogg
+  Original: snake-hiss-sound-effect.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
 
 zug.ogg
   Original: 2847

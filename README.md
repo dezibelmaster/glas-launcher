@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.7**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.8**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -380,8 +380,8 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
   und die App schlägt vor, das Licht einzuschalten.
 - **Sprache:** Die Ansage kommt aus der deutschen Sprachausgabe des Geräts (*Einstellungen → System → Sprache →
   Sprachausgabe*, z. B. „Sprachausgabe von Google“ mit deutscher Stimme). Fehlt sie, spielt die App nur die Geräusche.
-- **Geräusche:** Tiere und Fahrzeuge klingen echt: rund 45 kurze Aufnahmen von
-  [BigSoundBank.com](https://bigsoundbank.com) (Joseph Sardin, CC0) und Wikimedia Commons (gemeinfrei oder Creative
+- **Geräusche:** Tiere und Fahrzeuge klingen echt: rund 55 kurze Aufnahmen von
+  [BigSoundBank.com](https://bigsoundbank.com) (Joseph Sardin, CC0), Free Sounds Library (CC BY 4.0) und Wikimedia Commons (gemeinfrei oder Creative
   Commons). Urheber und Lizenz jeder Aufnahme stehen in `entdecker/src/main/assets/geraeusche/QUELLEN.txt`,
   geladen und geschnitten werden sie mit `entdecker/tools/aufnahmen.py`. Die übrigen Geräusche (Instrumente, Geräte,
   Spielsachen) sind am Rechner erzeugt (`entdecker/tools/geraeusche.py`). Eigene Aufnahmen lassen sich ohne Neubauen

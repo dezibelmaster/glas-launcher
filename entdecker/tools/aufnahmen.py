@@ -69,7 +69,11 @@ AUFNAHMEN = {
     "papagei": ("parrot-sound.mp3", 4.0),
     "adler": ("Buteo jamaicensis - Red-tailed Hawk XC71575.mp3", 2.5),
     "wal": ("Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga", 5.5),
-    "fiepen": ("Guinea Pig Feeding Wheek.ogg", 3.5),
+    "fiepen": ("guinea-pig-noises.mp3", 3.5),
+    "robbe": ("seal-barking-sound.mp3", 4.0),
+    "zischen": ("snake-hiss-sound-effect.mp3", 3.5),
+    "blubbern": ("pool-bubbles-sound-effect.mp3", 4.0),
+    "platschen": ("water-splash-sound.mp3", 2.2),
     # Fahrzeuge
     "hupe": ("0258", 2.5),
     "motor": ("0189", 5.0),
@@ -81,24 +85,28 @@ AUFNAHMEN = {
     "zug": ("2847", 4.5),
     "strassenbahn": ("3374", 5.0),
     "propeller": ("0264", 5.0),
-    "schiff": ("0261", 5.0),
+    "schiff": ("boat-horn-sound-effect.mp3", 5.0),
+    "schlepper": ("tugboat-horn-sound-effect-near-harbor.mp3", 4.5),
+    "rakete": ("spaceship-launching-sound-effect.mp3", 6.0),
     "klingel": ("0275", 2.5),
     "moped": ("0603", 5.0),
     "piepen": ("1298", 3.5),
     "martinshorn": ("WWS Fireenginesiren.ogg", 5.0),
     "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
-    "flugzeug": ("2478", 6.0),
-    "motorboot": ("WWS MSThti.ogg", 4.0),
+    "flugzeug": ("realistic-fighter-jet-flyby-sound-effect.mp3", 6.0),
+    "motorboot": ("ferry-boat-engine-sound-effects.mp3", 4.5),
 }
 
 
 # Aufnahmen, die als Datei im Ordner entdecker/tools/aufnahmen liegen (nicht automatisch ladbar)
-LOKAL = {
-    "pig-sound-effect.mp3": {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
-                             "seite": "https://www.freesoundslibrary.com/"},
-    "parrot-sound.mp3": {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
-                         "seite": "https://www.freesoundslibrary.com/"},
-}
+_FSL = {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
+        "seite": "https://www.freesoundslibrary.com/"}
+LOKAL = {name: _FSL for name in [
+    "pig-sound-effect.mp3", "parrot-sound.mp3", "guinea-pig-noises.mp3", "seal-barking-sound.mp3",
+    "snake-hiss-sound-effect.mp3", "pool-bubbles-sound-effect.mp3", "water-splash-sound.mp3",
+    "boat-horn-sound-effect.mp3", "tugboat-horn-sound-effect-near-harbor.mp3", "spaceship-launching-sound-effect.mp3",
+    "realistic-fighter-jet-flyby-sound-effect.mp3", "ferry-boat-engine-sound-effects.mp3",
+]}
 
 
 def hole(url, ziel=None):
