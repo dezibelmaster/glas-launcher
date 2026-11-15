@@ -97,10 +97,13 @@ object Ui {
     /** Opaque dark panel for dialogs, which live in their own window and can't blur the home screen. */
     fun panel(ctx: Context) = GradientDrawable().apply {
         if (liquid(ctx)) {
-            // Clear glass: from Android 12 the window blurs what is behind it, otherwise a darker veil
+            // Clear, light glass: from Android 12 the window blurs what is behind it, otherwise a darker veil
             cornerRadius = ctx.dp(34f)
-            setColor(if (canBlur(ctx)) 0x590E1218 else 0xD90E1218.toInt())
-            setStroke(ctx.dp(1), 0x59FFFFFF)
+            if (canBlur(ctx)) {
+                orientation = GradientDrawable.Orientation.TOP_BOTTOM
+                colors = intArrayOf(0x52B4BCC8, 0x3D7C8592)
+            } else setColor(0xD90E1218.toInt())
+            setStroke(ctx.dp(1), 0x73FFFFFF)
         } else {
             cornerRadius = ctx.dp(26f)
             setColor(0xF20D1117.toInt())
@@ -117,7 +120,11 @@ object Ui {
     fun styleDialog(dialog: android.app.Dialog, ctx: Context) {
         val w = dialog.window ?: return
         w.setBackgroundDrawable(panel(ctx))
-        if (liquid(ctx) && canBlur(ctx) && Build.VERSION.SDK_INT >= 31) w.setBackgroundBlurRadius(ctx.dp(30))
+        if (liquid(ctx) && canBlur(ctx) && Build.VERSION.SDK_INT >= 31) {
+            w.setBackgroundBlurRadius(ctx.dp(30))
+            // Android darkens everything behind a dialog; with clear glass only a little
+            w.setDimAmount(.12f)
+        }
     }
 
     /** Rows in the Liquid Glass look: frosted pills that turn white with dark writing when focused. */

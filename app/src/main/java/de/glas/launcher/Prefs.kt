@@ -62,6 +62,14 @@ class Prefs(context: Context) {
         get() = sp.getString("redditPost", null)
         set(v) = sp.edit().apply { if (v == null) remove("redditPost") else putString("redditPost", v) }.apply()
 
+    /** Names given to apps by hand, by component ("package/activity"). */
+    var names: Map<String, String>
+        get() = runCatching {
+            val o = org.json.JSONObject(sp.getString("names", "{}")!!)
+            o.keys().asSequence().associateWith { o.getString(it) }
+        }.getOrDefault(emptyMap())
+        set(v) = sp.edit().putString("names", org.json.JSONObject(v).toString()).apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

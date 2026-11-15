@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.50**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.51**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -29,7 +29,7 @@ Aktuelle Versionen: **Glas Launcher 2.50**, **Glas Browser 1.3**, **Glas Natur-V
   erscheinen sofort auf dem Fernseher.
 - **Statusleiste oben mittig:** Datum, Uhrzeit, Wettersymbol mit Temperatur, WLAN-Signalstärke und Zahnrad zu den
   Fernseher-Einstellungen. Auf Wunsch eingeklappt, dann nur die Uhrzeit oben rechts. Alternativ große Uhr mit Wetterkarte.
-- **Dock:** Apps hinzufügen, entfernen und verschieben. Alle Symbole als einheitlich abgerundete Quadrate.
+- **Dock:** Apps hinzufügen, entfernen, verschieben und umbenennen. Alle Symbole als einheitlich abgerundete Quadrate.
 - **Kindersicherung:** Apps, „Alle Apps“ und die Einstellungen mit 4-stelligem PIN sperren. Zeitfenster pro App
   (z. B. 06:00 bis 20:00 Uhr), außerhalb nur mit PIN; solche Apps tragen ⏰.
 - **Unwetterwarnungen:** amtliche DWD-Warnungen (über Bright Sky) in Deutschland, sonst aus der Open-Meteo-Vorhersage

@@ -156,11 +156,13 @@ object Pin {
 
 /** Asks for a line of text; on the TV the on-screen keyboard opens when OK is pressed on the field. */
 object TextPrompt {
-    fun ask(ctx: Context, title: String, hint: String, onText: (String) -> Unit) {
+    fun ask(ctx: Context, title: String, hint: String, initial: String = "", onText: (String) -> Unit) {
         val dialog = Dialog(ctx)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         val field = android.widget.EditText(ctx).apply {
             this.hint = hint
+            setText(initial)
+            setSelection(initial.length)
             setSingleLine()
             textSize = 20f
             setTextColor(0xFFFFFFFF.toInt())

@@ -887,10 +887,20 @@ class MainActivity : Activity() {
         if (drawer.visibility != View.VISIBLE) dock.getChildAt(index)?.requestFocus()
     }
 
-    private fun dockMenu(app: AppEntry) = moveMenu(app.component, app.label, listOf(
+    private fun dockMenu(app: AppEntry) = moveMenu(app.component, prefs.names[app.component] ?: app.label, listOf(
+        renameItem(app),
         lockItem(app) { buildDock(app.component) },
         timeItem(app) { buildDock(app.component) },
     ))
+
+    /** Own name for an app, e.g. "Fernsehen" instead of "MagentaTV: TV & Streaming"; empty brings back the original. */
+    private fun renameItem(app: AppEntry) = GlassMenu.Item(tr("Umbenennen …")) {
+        TextPrompt.ask(this, tr("Neuer Name für {0}", app.label), app.label, prefs.names[app.component] ?: app.label) { text ->
+            val name = text.trim()
+            prefs.names = if (name.isEmpty() || name == app.label) prefs.names - app.component else prefs.names + (app.component to name)
+            buildDock(app.component)
+        }
+    }
 
     /** Move left or right, or remove from the dock; for apps and the inputs tile alike. */
     private fun moveMenu(id: String, label: String, extra: List<GlassMenu.Item>) {
@@ -1082,7 +1092,7 @@ class MainActivity : Activity() {
     // ---- Tiles ----
 
     private fun appTile(app: AppEntry, inDock: Boolean) = tile(
-        label = app.label,
+        label = prefs.names[app.component] ?: app.label,
         icon = app.icon,
         glyph = null,
         locked = app.pkg in prefs.locked,

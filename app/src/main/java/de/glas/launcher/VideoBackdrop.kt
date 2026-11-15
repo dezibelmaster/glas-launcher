@@ -45,6 +45,8 @@ class VideoBackdrop(
     private var isPinned = false
     private var released = false
     private var prepared = false
+    /** Whether the first picture of the video has arrived; before that the snapshot shows instead of black. */
+    private var showing = false
     private var paused = false
     private var resumeAt = 0
     private var failed = false
@@ -65,6 +67,7 @@ class VideoBackdrop(
         // Until the first frame: the picture of the home screen's background, not black
         background = Snapshot.drawable(context) ?: android.graphics.drawable.ColorDrawable(Color.BLACK)
         texture.surfaceTextureListener = this
+        texture.alpha = 0f
         addView(texture, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
 
@@ -214,7 +217,12 @@ class VideoBackdrop(
     }
 
     override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, width: Int, height: Int) {}
-    override fun onSurfaceTextureUpdated(st: SurfaceTexture) {}
+    override fun onSurfaceTextureUpdated(st: SurfaceTexture) {
+        if (!showing && prepared) {
+            showing = true
+            texture.alpha = 1f
+        }
+    }
 
     override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
         release()
@@ -225,7 +233,7 @@ class VideoBackdrop(
         val w = width
         val h = height
         if (w == 0) return
-        if (!prepared) {
+        if (!prepared || !showing) {
             Snapshot.bitmap?.let { c.drawBitmap(it, null, RectF(0f, 0f, w.toFloat(), h.toFloat()), paint) }
             return
         }
@@ -264,6 +272,9 @@ class VideoBackdrop(
         runCatching { p.release() }
         player = null
         prepared = false
+        // After the pause the surface starts empty again
+        showing = false
+        texture.alpha = 0f
     }
 
     /**

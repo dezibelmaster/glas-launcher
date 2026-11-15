@@ -44,11 +44,15 @@ class PanelActivity : Activity() {
         window.setGravity(Gravity.END or Gravity.CENTER_VERTICAL)
         window.attributes = window.attributes.apply { x = dp(32) }
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        window.setDimAmount(.35f)
+        window.setDimAmount(if (blur) .12f else .35f)
         window.setBackgroundDrawable(GradientDrawable().apply {
             cornerRadius = dp(40f)
-            setColor(if (blur) 0x4D0E1218 else 0xEB0E1218.toInt())
-            setStroke(dp(1), 0x40FFFFFF)
+            if (blur) {
+                // Light frosted glass like the background picker
+                orientation = GradientDrawable.Orientation.TOP_BOTTOM
+                colors = intArrayOf(0x52B4BCC8, 0x3D7C8592)
+            } else setColor(0xEB0E1218.toInt())
+            setStroke(dp(1), 0x73FFFFFF)
         })
         if (blur && Build.VERSION.SDK_INT >= 31) window.setBackgroundBlurRadius(dp(36))
         window.attributes = window.attributes.apply { x = dp(28) }
@@ -320,7 +324,6 @@ class PanelActivity : Activity() {
         setOnFocusChangeListener { v, f ->
             v.background = pillBackground(f)
             recolor(v as LinearLayout, f)
-            v.animate().scaleX(if (f) 1.03f else 1f).scaleY(if (f) 1.03f else 1f).setDuration(150).start()
         }
         setOnClickListener { onClick() }
     }
@@ -338,7 +341,6 @@ class PanelActivity : Activity() {
         setOnFocusChangeListener { v, f ->
             v.background = pillBackground(f, radius = dp(20f))
             recolor(v as LinearLayout, f)
-            v.animate().scaleX(if (f) 1.06f else 1f).scaleY(if (f) 1.06f else 1f).setDuration(150).start()
         }
         setOnClickListener { onClick() }
     }

@@ -1,5 +1,46 @@
 [
  {
+  "version": "2.51",
+  "notes": {
+   "de": [
+    "Apps im Dock umbenennen (OK lange drücken → Umbenennen)",
+    "Wetter öffnet ohne schwarzen Moment",
+    "Menüs, Wetterwarnung und Kontrollzentrum in hellem Liquid Glass",
+    "Knöpfe im Kontrollzentrum ohne Vergrößern, nichts wird mehr abgeschnitten"
+   ],
+   "en": [
+    "Rename apps in the dock (hold OK → Rename)",
+    "Weather opens without a black moment",
+    "Menus, weather warning and control centre in light Liquid Glass",
+    "Control centre buttons without zoom, nothing is cut off any more"
+   ],
+   "fr": [
+    "Renommer les applis du dock (maintenir OK → Renommer)",
+    "La météo s'ouvre sans moment noir",
+    "Menus, alerte météo et centre de contrôle en Liquid Glass clair",
+    "Boutons du centre de contrôle sans agrandissement, plus rien n'est coupé"
+   ],
+   "es": [
+    "Cambiar el nombre de apps en el dock (mantener OK → Cambiar nombre)",
+    "El tiempo se abre sin momento negro",
+    "Menús, aviso meteorológico y centro de control en Liquid Glass claro",
+    "Botones del centro de control sin ampliar, ya no se corta nada"
+   ],
+   "it": [
+    "Rinominare le app nel dock (tieni premuto OK → Rinomina)",
+    "Il meteo si apre senza momento nero",
+    "Menu, allerta meteo e centro di controllo in Liquid Glass chiaro",
+    "Pulsanti del centro di controllo senza ingrandimento, niente viene più tagliato"
+   ],
+   "nl": [
+    "Apps in het dock hernoemen (OK ingedrukt houden → Hernoemen)",
+    "Het weer opent zonder zwart moment",
+    "Menu's, weerwaarschuwing en bedieningscentrum in licht Liquid Glass",
+    "Knoppen in het bedieningscentrum zonder vergroting, er wordt niets meer afgesneden"
+   ]
+  }
+ },
+ {
   "version": "2.50",
   "notes": {
    "de": [
