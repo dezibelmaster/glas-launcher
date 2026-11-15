@@ -31,7 +31,9 @@ SR = 22050
 HIER = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HIER, ".cache", "aufnahmen")
 OUT = os.path.join(HIER, "..", "src", "main", "assets", "geraeusche")
-UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) GlasEntdeckerSounds/1.0", "Accept": "*/*"}
+# BigSoundBank liefert nur an Browser-Kennungen, Wikimedia weist genau die ab und will eine beschreibende Kennung
+UA_BROWSER = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36", "Accept": "*/*"}
+UA_WIKI = {"User-Agent": "GlasEntdeckerSounds/1.0 (https://github.com; kids app sound credits)"}
 
 # Geräusch -> (Quelle, Länge des Ausschnitts in Sekunden)
 # Quelle: eine Nummer von BigSoundBank.com (vierstellig, steht in der Adresse der Seite: ...-s0283.html)
@@ -82,9 +84,9 @@ AUFNAHMEN = {
     "klingel": ("0275", 2.5),
     "moped": ("0603", 5.0),
     "piepen": ("1298", 3.5),
-    "martinshorn": ("WWS Fireenginesiren.ogg", 5.0),
+    "martinshorn": ("1464", 5.0),
     "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
-    "flugzeug": ("428086 inspectorj airplane-boeing-flyby-right-to-left-a.wav", 6.0),
+    "flugzeug": ("2478", 6.0),
     "motorboot": ("WWS MSThti.ogg", 4.0),
 }
 
@@ -92,7 +94,7 @@ AUFNAHMEN = {
 def hole(url, ziel=None):
     for versuch in range(6):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA_WIKI if "wikimedia.org" in url else UA_BROWSER), timeout=60) as r:
                 daten = r.read()
             if ziel:
                 with open(ziel, "wb") as f:

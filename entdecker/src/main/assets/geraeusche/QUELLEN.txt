@@ -6,6 +6,12 @@ in Mono umgewandelt und in der Lautstärke angeglichen. Die bearbeiteten Ausschn
 derselben Lizenz wie das jeweilige Original.
 Alle anderen Geräusche in diesem Ordner sind selbst erzeugt (entdecker/tools/geraeusche.py).
 
+adler.ogg
+  Original: Buteo jamaicensis - Red-tailed Hawk XC71575.mp3
+  Urheber:  Jonathon Jongsma
+  Lizenz:   CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Buteo_jamaicensis_-_Red-tailed_Hawk_XC71575.mp3
+
 bagger.ogg
   Original: 2147
   Urheber:  Joseph SARDIN - BigSoundBank.com
@@ -47,6 +53,12 @@ eule.ogg
   Urheber:  Joseph SARDIN - BigSoundBank.com
   Lizenz:   CC0
   https://bigsoundbank.com/s1764.html
+
+flugzeug.ogg
+  Original: 2478
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2478.html
 
 frosch.ogg
   Original: 0819
@@ -113,6 +125,12 @@ maehen.ogg
   Urheber:  Joseph SARDIN - BigSoundBank.com
   Lizenz:   CC0
   https://bigsoundbank.com/s2343.html
+
+martinshorn.ogg
+  Original: 1464
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1464.html
 
 meckern.ogg
   Original: 0279
