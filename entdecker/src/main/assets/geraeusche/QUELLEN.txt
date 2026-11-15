@@ -1,0 +1,38 @@
+Echte Aufnahmen im Glas Entdecker
+=================================
+
+Quelle: Wikimedia Commons. Jede Aufnahme wurde gekürzt (lautester Ausschnitt), ein- und ausgeblendet,
+in Mono umgewandelt und in der Lautstärke angeglichen. Die bearbeiteten Ausschnitte stehen unter
+derselben Lizenz wie das jeweilige Original.
+Alle anderen Geräusche in diesem Ordner sind selbst erzeugt (entdecker/tools/geraeusche.py).
+
+bellen.ogg
+  Original: Barking of a dog 2.ogg
+  Urheber:  Amada44
+  Lizenz:   CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Barking_of_a_dog_2.ogg
+
+bruellen.ogg
+  Original: Lion raring-sound1TamilNadu178.ogg
+  Urheber:  த*உழவன்
+  Lizenz:   Public domain
+  https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg
+
+brummen.ogg
+  Original: Bear growl.ogg
+  Urheber:  Shizhao
+  Lizenz:   CC BY 3.0
+  https://commons.wikimedia.org/wiki/File:Bear_growl.ogg
+
+heulen.ogg
+  Original: Wolf howls.ogg
+  Urheber:  unbekannt
+  Lizenz:   Public domain
+  https://commons.wikimedia.org/wiki/File:Wolf_howls.ogg
+
+miauen.ogg
+  Original: Felis silvestris catus meows.ogg
+  Urheber:  Tobias Puderer
+  Lizenz:   CC BY-SA 3.0
+  https://commons.wikimedia.org/wiki/File:Felis_silvestris_catus_meows.ogg
+
