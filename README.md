@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.47**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -119,13 +119,14 @@ geht es auch mit der angezeigten Adresse, z. B. `http://192.168.178.173:8765/#k7
 ## Bauen
 
 ```
-./gradlew assembleDebug
+./gradlew :app:assembleRelease :browser:assembleDebug :videos:assembleDebug
 ```
 
 Das Projekt bringt Gradle selbst mit (`gradlew`, Gradle 9). Gebraucht werden Java 17 und das Android-SDK mit
 Plattform 35 und 37.2 (der Glas Browser baut gegen das neueste SDK, weil GeckoView es verlangt).
 
-- Launcher: `app/build/outputs/apk/debug/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.46.apk`
+- Launcher: `app/build/outputs/apk/release/GlasLauncher-<Version>.apk`, z. B. `GlasLauncher-2.47.apk`. Den Launcher
+  immer als Release bauen: Eine Debug-Version (`DEBUGGABLE`) ist für Updates und Fire-TV-Werkzeuge ungeeignet.
 - Browser: `browser/build/outputs/apk/debug/GlasBrowser-<Version>-<Prozessor>.apk`, je eine Datei für
   `arm64-v8a` (64 Bit) und `armeabi-v7a` (32 Bit), etwa 100 MB
 - Erweiterung: `videos/build/outputs/apk/debug/GlasNaturVideos-<Version>.apk`
@@ -136,7 +137,7 @@ Die Versionsnummer steckt immer im Dateinamen. Die fertigen APKs liegen auch im 
 werden damit signiert, so lassen sich Updates von jedem Rechner aus über die alte Version installieren. Den Ordner
 `keystore` nicht löschen. Da der Schlüssel öffentlich im Projekt liegt, ist er nur für den privaten Gebrauch gedacht.
 
-**Updates über GitHub:** Ein Release mit dem Tag `v2.46` anlegen und `GlasLauncher-2.46.apk` anhängen. Der Launcher
+**Updates über GitHub:** Ein Release mit dem Tag `v2.47` anlegen und `GlasLauncher-2.47.apk` anhängen. Der Launcher
 sucht von sich aus in `dezibelmaster/glas-launcher` (änderbar unter *Einstellungen → Updates*) und meldet die neue Version.
 Die beiden `GlasBrowser-…apk` nur anhängen, wenn sich der Browser geändert hat: Der Launcher sucht sie in den letzten
 15 Releases und nimmt die neueste, die zum Prozessor des Fernsehers passt.
@@ -172,7 +173,7 @@ Bei Updates bleiben Dock, PIN und Einstellungen erhalten.
 
 ```
 adb connect 192.168.178.173
-adb install -r GlasLauncher-2.46.apk
+adb install -r GlasLauncher-2.47.apk
 adb install -r GlasNaturVideos-1.2.apk
 ```
 

@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.launcher"
         minSdk = 25
         targetSdk = 35
-        versionCode = 48
-        versionName = "2.46"
+        versionCode = 49
+        versionName = "2.47"
     }
 
     // One fixed key for every build, so updates install over earlier versions

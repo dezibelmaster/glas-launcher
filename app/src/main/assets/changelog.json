@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.47",
+  "notes": {
+   "de": [
+    "Fire TV: Der Glas Launcher erscheint jetzt im „Launcher Manager“ und lässt sich dort auf die Home-Taste legen",
+    "Der Launcher wird als Release-Version gebaut statt als Debug-Version"
+   ],
+   "en": [
+    "Fire TV: Glas Launcher now shows up in “Launcher Manager” and can be put on the Home button there",
+    "The launcher is built as a release version instead of a debug version"
+   ],
+   "fr": [
+    "Fire TV : Glas Launcher apparaît désormais dans « Launcher Manager » et peut y être associé au bouton Accueil",
+    "Le launcher est compilé en version release au lieu d’une version debug"
+   ],
+   "es": [
+    "Fire TV: Glas Launcher aparece ahora en «Launcher Manager» y se puede asignar allí al botón de inicio",
+    "El launcher se compila como versión release en lugar de versión debug"
+   ],
+   "it": [
+    "Fire TV: Glas Launcher ora compare in «Launcher Manager» e lì si può assegnare al tasto Home",
+    "Il launcher viene compilato come versione release invece che debug"
+   ],
+   "nl": [
+    "Fire TV: Glas Launcher verschijnt nu in „Launcher Manager” en kan daar aan de Home-knop worden gekoppeld",
+    "De launcher wordt als releaseversie gebouwd in plaats van als debugversie"
+   ]
+  }
+ },
+ {
   "version": "2.46",
   "notes": {
    "de": [
