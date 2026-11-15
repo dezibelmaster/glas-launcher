@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.3**.
+Aktuelle Versionen: **Glas Launcher 2.46**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**, **Glas Entdecker 2.4**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -380,10 +380,14 @@ Gegenstand, die App sagt, was es ist, und spielt das passende Geräusch:
   und die App schlägt vor, das Licht einzuschalten.
 - **Sprache:** Die Ansage kommt aus der deutschen Sprachausgabe des Geräts (*Einstellungen → System → Sprache →
   Sprachausgabe*, z. B. „Sprachausgabe von Google“ mit deutscher Stimme). Fehlt sie, spielt die App nur die Geräusche.
-- **Geräusche:** Alle 98 Geräusche sind am Rechner synthetisch erzeugt (`entdecker/tools/geraeusche.py`, keine
-  fremden Aufnahmen). Echte Aufnahmen lassen sich ohne Neubauen einspielen: eine Datei mit dem Namen des Geräuschs
-  (z. B. `bellen.mp3`, `muhen.ogg`, `martinshorn.wav`) in den Ordner `Android/data/de.glas.entdecker/files/Geraeusche`
-  auf dem Gerät legen. Welches Ding welches Geräusch nutzt, steht in `entdecker/src/main/java/de/glas/entdecker/Katalog.kt`.
+- **Geräusche:** Tiere und Fahrzeuge klingen echt: rund 45 kurze Aufnahmen von
+  [BigSoundBank.com](https://bigsoundbank.com) (Joseph Sardin, CC0) und Wikimedia Commons (gemeinfrei oder Creative
+  Commons). Urheber und Lizenz jeder Aufnahme stehen in `entdecker/src/main/assets/geraeusche/QUELLEN.txt`,
+  geladen und geschnitten werden sie mit `entdecker/tools/aufnahmen.py`. Die übrigen Geräusche (Instrumente, Geräte,
+  Spielsachen) sind am Rechner erzeugt (`entdecker/tools/geraeusche.py`). Eigene Aufnahmen lassen sich ohne Neubauen
+  einspielen: eine Datei mit dem Namen des Geräuschs (z. B. `bellen.mp3`, `muhen.ogg`, `martinshorn.wav`) in den Ordner
+  `Android/data/de.glas.entdecker/files/Geraeusche` auf dem Gerät legen. Welches Ding welches Geräusch nutzt, steht in
+  `entdecker/src/main/java/de/glas/entdecker/Katalog.kt`.
 - **Voraussetzung:** Android 7 oder neuer, 64-Bit-Prozessor (arm64), Kamera. Die APK ist etwa 100 MB groß, fast alles
   davon ist das Erkennungsmodell.
 
@@ -463,5 +467,6 @@ und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
 - Glas Browser: [GeckoView](https://mozilla.github.io/geckoview/) von Mozilla, Mozilla Public License 2.0
 - Glas Entdecker: Bilderkennung mit [OpenAI CLIP](https://github.com/openai/CLIP) ViT-B/32, MIT-Lizenz (ONNX-Fassung von
   Xenova/clip-vit-base-patch32), ausgeführt mit ONNX Runtime, MIT-Lizenz; Kamera über AndroidX CameraX, Apache 2.0;
-  Geräusche selbst erzeugt
+  Tier- und Fahrzeuggeräusche von BigSoundBank.com (Joseph Sardin, CC0) und Wikimedia Commons, Einzelnachweise in
+  `entdecker/src/main/assets/geraeusche/QUELLEN.txt`; übrige Geräusche selbst erzeugt
 - Wetterdaten: Open-Meteo

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Ersetzt die erzeugten Tier- und Fahrzeuggeräusche des Glas Entdeckers durch echte Aufnahmen.
 
-Die Aufnahmen kommen von Wikimedia Commons (gemeinfrei oder Creative Commons). Aus jeder wird der lauteste
+Die Aufnahmen kommen von BigSoundBank.com (Joseph Sardin, CC0) und von Wikimedia Commons (gemeinfrei oder
+Creative Commons). Aus jeder wird der lauteste
 Ausschnitt von wenigen Sekunden geschnitten, ein- und ausgeblendet und auf gleiche Lautstärke gebracht.
 Urheber und Lizenz jeder Aufnahme landen in entdecker/src/main/assets/geraeusche/QUELLEN.txt.
 
@@ -9,7 +10,8 @@ Aufruf aus dem Projektordner (braucht numpy, scipy, ffmpeg):
     python3 entdecker/tools/aufnahmen.py            alle
     python3 entdecker/tools/aufnahmen.py bellen     nur diese
 
-Ein anderes Geräusch nehmen: in AUFNAHMEN den Dateinamen von Commons eintragen (ohne "File:") und neu aufrufen.
+Ein anderes Geräusch nehmen: in AUFNAHMEN die Nummer von BigSoundBank oder den Dateinamen von Commons eintragen
+und neu aufrufen.
 Geräusche, die hier nicht stehen, erzeugt weiter geraeusche.py.
 """
 import html
@@ -29,53 +31,61 @@ SR = 22050
 HIER = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HIER, ".cache", "aufnahmen")
 OUT = os.path.join(HIER, "..", "src", "main", "assets", "geraeusche")
-UA = {"User-Agent": "GlasEntdeckerSounds/1.0 (sound credits tool)"}
+UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) GlasEntdeckerSounds/1.0", "Accept": "*/*"}
 
-# Geräusch -> (Datei auf Wikimedia Commons, Länge des Ausschnitts in Sekunden)
+# Geräusch -> (Quelle, Länge des Ausschnitts in Sekunden)
+# Quelle: eine Nummer von BigSoundBank.com (vierstellig, steht in der Adresse der Seite: ...-s0283.html)
+#         oder der Dateiname auf Wikimedia Commons (ohne "File:")
 AUFNAHMEN = {
     # Tiere
-    "bellen": ("Barking of a dog 2.ogg", 3.5),
+    "bellen": ("2955", 3.5),
+    "miauen": ("1890", 3.0),
+    "muhen": ("2383", 3.5),
+    "wiehern": ("0863", 4.0),
+    "maehen": ("2343", 2.0),
+    "meckern": ("0279", 2.5),
+    "iah": ("1550", 4.5),
+    "kraehen": ("0283", 3.5),
+    "gackern": ("0978", 4.0),
+    "quaken": ("0276", 4.0),
+    "eule": ("1764", 5.0),
+    "frosch": ("0819", 4.0),
+    "summen": ("1000", 4.0),
+    "zirpen": ("1020", 3.5),
+    "kraechzen": ("3463", 3.0),
+    "moewe": ("2573", 4.0),
+    "hufe": ("0611", 4.0),
+    "zwitschern": ("3486", 5.0),
     "heulen": ("Wolf howls.ogg", 5.0),
-    "miauen": ("Felis silvestris catus meows.ogg", 3.5),
     "bruellen": ("Lion raring-sound1TamilNadu178.ogg", 4.5),
     "brummen": ("Bear growl.ogg", 3.5),
     "troeten": ("Elephant voice - trumpeting.ogg", 3.0),
     "affe": ("Pant-hoot call made by a male chimpanzee.ogg", 4.5),
-    "wiehern": ("Wiehern.ogg", 3.0),
     "grunzen": ("618483 foleyhaven piglet-squeal-01.flac", 3.0),
-    "muhen": ("Single Cow Moo.ogg", 4.0),
-    "maehen": ("Sheep bleating.ogg", 3.5),
-    "kraehen": ("Rooster crowing.ogg", 4.0),
-    "gackern": ("Hen announcing shes lain an egg.ogg", 4.0),
-    "quaken": ("Anas platyrhynchos - Mallard XC62258.mp3", 3.5),
     "schnattern": ("Geese Honking (loud).ogg", 3.5),
-    "zwitschern": ("Erithacus rubecula - European Robin XC509375.mp3", 4.5),
     "papagei": ("Ara militaris - Military Macaw XC250486.mp3", 3.5),
-    "eule": ("Strix aluco male.oga", 5.0),
     "adler": ("Buteo jamaicensis - Red-tailed Hawk XC71575.mp3", 2.5),
-    "frosch": ("Single Frog Croak.oga", 3.5),
     "wal": ("Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga", 5.5),
-    "summen": ("Bombus buzz.ogg", 3.5),
-    "zirpen": ("Field cricket Gryllus pennsylvanicus.ogg", 3.5),
     "fiepen": ("Guinea Pig Feeding Wheek.ogg", 3.5),
-    "hufe": ("Six Horses Galloping By.ogg", 4.0),
-    "blubbern": ("Water bubbles chortling.ogg", 3.5),
     # Fahrzeuge
-    "hupe": ("Car Horn.wav", 3.0),
-    "motor": ("Plymouth Duster - engine and exhaust sound (YouTube FWzja7TuZiw).opus", 4.5),
-    "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
+    "hupe": ("0258", 2.5),
+    "motor": ("0189", 5.0),
+    "bus": ("3593", 3.5),
+    "lkw": ("2721", 3.5),
+    "traktor": ("0499", 4.5),
+    "bagger": ("2147", 4.0),
+    "dampflok": ("3015", 5.5),
+    "zug": ("2847", 4.5),
+    "strassenbahn": ("3374", 5.0),
+    "propeller": ("0264", 5.0),
+    "schiff": ("0261", 5.0),
+    "klingel": ("0275", 2.5),
+    "moped": ("0603", 5.0),
+    "piepen": ("1298", 3.5),
     "martinshorn": ("WWS Fireenginesiren.ogg", 5.0),
-    "bus": ("WWS CityBusMANSG220horn.ogg", 3.5),
-    "traktor": ("WWS TractorUrsusC328engine.ogg", 4.0),
-    "dampflok": ("WWS SteamWhistle.ogg", 4.5),
-    "zug": ("CC203 Horn.wav", 3.5),
+    "rennauto": ("Williams-Renault FW18 (1996).ogg", 5.0),
     "flugzeug": ("428086 inspectorj airplane-boeing-flyby-right-to-left-a.wav", 6.0),
-    "propeller": ("Helicopter flying overhead.wav", 5.0),
-    "schiff": ("Cruise ship Albatros ship horn.ogg", 4.5),
     "motorboot": ("WWS MSThti.ogg", 4.0),
-    "klingel": ("Bell-ring.flac", 3.0),
-    "moped": ("Moped driving by.ogg", 4.5),
-    "sonar": ("Sonar pings.ogg", 3.7),
 }
 
 
@@ -101,7 +111,10 @@ def text(wert):
 
 
 def angaben(titel):
-    """Adresse, Urheber und Lizenz einer Datei von Commons."""
+    """Adresse, Urheber und Lizenz einer Aufnahme."""
+    if re.fullmatch(r"\d{4}", titel):
+        return {"url": f"https://bigsoundbank.com/UPLOAD/mp3/{titel}.mp3", "seite": f"https://bigsoundbank.com/s{titel}.html",
+                "urheber": "Joseph SARDIN - BigSoundBank.com", "lizenz": "CC0"}
     q = urllib.parse.urlencode({"action": "query", "format": "json", "titles": "File:" + titel, "prop": "imageinfo",
                                 "iiprop": "url|extmetadata", "iiextmetadatafilter": "LicenseShortName|Artist|LicenseUrl"})
     seite = next(iter(json.loads(hole("https://commons.wikimedia.org/w/api.php?" + q))["query"]["pages"].values()))
@@ -146,15 +159,16 @@ def main():
     for name, (titel, laenge) in AUFNAHMEN.items():
         if nur and name not in nur:
             continue
-        roh = os.path.join(CACHE, name + os.path.splitext(titel)[1])
+        roh = os.path.join(CACHE, name + (os.path.splitext(titel)[1] or ".mp3"))
         if os.path.exists(roh) and quellen.get(name, {}).get("titel") == titel:
             a = quellen[name]  # schon geladen: Commons nicht noch einmal fragen
         else:
             try:
+                wiki = not titel.isdigit()
                 a = angaben(titel)
-                time.sleep(3)
+                time.sleep(3 if wiki else 0)
                 hole(a["url"], roh)
-                time.sleep(3)
+                time.sleep(3 if wiki else 0.5)
             except Exception as e:
                 print(f"{name:12} FEHLER: {e}")
                 continue
@@ -164,6 +178,9 @@ def main():
         x = x.astype(np.float32)
         x -= x.mean()
         x = ausschnitt(x, laenge)
+        if len(x) < 1.3 * SR:
+            # Sehr kurze Rufe (ein "Mäh", ein Hupen) zweimal hintereinander
+            x = np.concatenate([x, np.zeros(SR // 4, dtype=np.float32), x])
         x = x / (np.abs(x).max() or 1.0) * 0.89
         wavfile.write(wav, SR, np.int16(x * 32767))
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-c:a", "libvorbis", "-q:a", "4",
@@ -175,7 +192,7 @@ def main():
     with open(os.path.join(OUT, "QUELLEN.txt"), "w", encoding="utf-8") as f:
         f.write("Echte Aufnahmen im Glas Entdecker\n"
                 "=================================\n\n"
-                "Quelle: Wikimedia Commons. Jede Aufnahme wurde gekürzt (lautester Ausschnitt), ein- und ausgeblendet,\n"
+                "Quellen: BigSoundBank.com (Joseph Sardin) und Wikimedia Commons. Jede Aufnahme wurde gekürzt (lautester Ausschnitt), ein- und ausgeblendet,\n"
                 "in Mono umgewandelt und in der Lautstärke angeglichen. Die bearbeiteten Ausschnitte stehen unter\n"
                 "derselben Lizenz wie das jeweilige Original.\n"
                 "Alle anderen Geräusche in diesem Ordner sind selbst erzeugt (entdecker/tools/geraeusche.py).\n\n")

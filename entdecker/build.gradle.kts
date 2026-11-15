@@ -11,8 +11,8 @@ android {
         applicationId = "de.glas.entdecker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 6
-        versionName = "2.3"
+        versionCode = 7
+        versionName = "2.4"
         // Handys und Tablets mit 64-Bit-ARM (alle der letzten Jahre); 32 Bit wäre für das Modell zu langsam
         ndk {
             abiFilters += listOf("arm64-v8a")

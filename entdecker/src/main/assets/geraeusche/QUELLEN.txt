@@ -1,16 +1,22 @@
 Echte Aufnahmen im Glas Entdecker
 =================================
 
-Quelle: Wikimedia Commons. Jede Aufnahme wurde gekürzt (lautester Ausschnitt), ein- und ausgeblendet,
+Quellen: BigSoundBank.com (Joseph Sardin) und Wikimedia Commons. Jede Aufnahme wurde gekürzt (lautester Ausschnitt), ein- und ausgeblendet,
 in Mono umgewandelt und in der Lautstärke angeglichen. Die bearbeiteten Ausschnitte stehen unter
 derselben Lizenz wie das jeweilige Original.
 Alle anderen Geräusche in diesem Ordner sind selbst erzeugt (entdecker/tools/geraeusche.py).
 
+bagger.ogg
+  Original: 2147
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2147.html
+
 bellen.ogg
-  Original: Barking of a dog 2.ogg
-  Urheber:  Amada44
-  Lizenz:   CC BY-SA 3.0
-  https://commons.wikimedia.org/wiki/File:Barking_of_a_dog_2.ogg
+  Original: 2955
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2955.html
 
 bruellen.ogg
   Original: Lion raring-sound1TamilNadu178.ogg
@@ -24,15 +30,195 @@ brummen.ogg
   Lizenz:   CC BY 3.0
   https://commons.wikimedia.org/wiki/File:Bear_growl.ogg
 
+bus.ogg
+  Original: 3593
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s3593.html
+
+dampflok.ogg
+  Original: 3015
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s3015.html
+
+eule.ogg
+  Original: 1764
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1764.html
+
+frosch.ogg
+  Original: 0819
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0819.html
+
+gackern.ogg
+  Original: 0978
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0978.html
+
 heulen.ogg
   Original: Wolf howls.ogg
   Urheber:  unbekannt
   Lizenz:   Public domain
   https://commons.wikimedia.org/wiki/File:Wolf_howls.ogg
 
+hufe.ogg
+  Original: 0611
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0611.html
+
+hupe.ogg
+  Original: 0258
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0258.html
+
+iah.ogg
+  Original: 1550
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1550.html
+
+klingel.ogg
+  Original: 0275
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0275.html
+
+kraechzen.ogg
+  Original: 3463
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s3463.html
+
+kraehen.ogg
+  Original: 0283
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0283.html
+
+lkw.ogg
+  Original: 2721
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2721.html
+
+maehen.ogg
+  Original: 2343
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2343.html
+
+meckern.ogg
+  Original: 0279
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0279.html
+
 miauen.ogg
-  Original: Felis silvestris catus meows.ogg
-  Urheber:  Tobias Puderer
-  Lizenz:   CC BY-SA 3.0
-  https://commons.wikimedia.org/wiki/File:Felis_silvestris_catus_meows.ogg
+  Original: 1890
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1890.html
+
+moewe.ogg
+  Original: 2573
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2573.html
+
+moped.ogg
+  Original: 0603
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0603.html
+
+motor.ogg
+  Original: 0189
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0189.html
+
+muhen.ogg
+  Original: 2383
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2383.html
+
+piepen.ogg
+  Original: 1298
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1298.html
+
+propeller.ogg
+  Original: 0264
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0264.html
+
+quaken.ogg
+  Original: 0276
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0276.html
+
+schiff.ogg
+  Original: 0261
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0261.html
+
+strassenbahn.ogg
+  Original: 3374
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s3374.html
+
+summen.ogg
+  Original: 1000
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1000.html
+
+traktor.ogg
+  Original: 0499
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0499.html
+
+troeten.ogg
+  Original: Elephant voice - trumpeting.ogg
+  Urheber:  தகவலுழவன்
+  Lizenz:   CC0
+  https://commons.wikimedia.org/wiki/File:Elephant_voice_-_trumpeting.ogg
+
+wiehern.ogg
+  Original: 0863
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s0863.html
+
+zirpen.ogg
+  Original: 1020
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s1020.html
+
+zug.ogg
+  Original: 2847
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s2847.html
+
+zwitschern.ogg
+  Original: 3486
+  Urheber:  Joseph SARDIN - BigSoundBank.com
+  Lizenz:   CC0
+  https://bigsoundbank.com/s3486.html
 
