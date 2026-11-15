@@ -180,6 +180,12 @@ muhen.ogg
   Lizenz:   CC0
   https://bigsoundbank.com/s2383.html
 
+papagei.ogg
+  Original: parrot-sound.mp3
+  Urheber:  Free Sounds Library (freesoundslibrary.com)
+  Lizenz:   CC BY 4.0
+  https://www.freesoundslibrary.com/
+
 piepen.ogg
   Original: 1298
   Urheber:  Joseph SARDIN - BigSoundBank.com

@@ -66,7 +66,7 @@ AUFNAHMEN = {
     "affe": ("Pant-hoot call made by a male chimpanzee.ogg", 4.5),
     "grunzen": ("pig-sound-effect.mp3", 3.5),
     "schnattern": ("Geese Honking (loud).ogg", 3.5),
-    "papagei": ("Ara militaris - Military Macaw XC250486.mp3", 3.5),
+    "papagei": ("parrot-sound.mp3", 4.0),
     "adler": ("Buteo jamaicensis - Red-tailed Hawk XC71575.mp3", 2.5),
     "wal": ("Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga", 5.5),
     "fiepen": ("Guinea Pig Feeding Wheek.ogg", 3.5),
@@ -96,6 +96,8 @@ AUFNAHMEN = {
 LOKAL = {
     "pig-sound-effect.mp3": {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
                              "seite": "https://www.freesoundslibrary.com/"},
+    "parrot-sound.mp3": {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
+                         "seite": "https://www.freesoundslibrary.com/"},
 }
 
 
