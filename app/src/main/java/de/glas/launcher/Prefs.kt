@@ -52,6 +52,16 @@ class Prefs(context: Context) {
         get() = sp.getString("landscape", null)
         set(v) = sp.edit().apply { if (v == null) remove("landscape") else putString("landscape", v) }.apply()
 
+    /** Reddit community for photo backgrounds, e.g. "EarthPorn". */
+    var redditSub: String
+        get() = sp.getString("redditSub", null) ?: "EarthPorn"
+        set(v) = sp.edit().putString("redditSub", v).apply()
+
+    /** Reddit photo chosen by hand (its post id); null lets them change by themselves. */
+    var redditPost: String?
+        get() = sp.getString("redditPost", null)
+        set(v) = sp.edit().apply { if (v == null) remove("redditPost") else putString("redditPost", v) }.apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

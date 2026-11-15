@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.49**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.50**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -55,6 +55,10 @@ Aktuelle Versionen: **Glas Launcher 2.49**, **Glas Browser 1.3**, **Glas Natur-V
   Glas- und Fernseher-Einstellungen, Suche, Einstellen per Handy und dem Wetter von heute und morgen.
 - **Landschaften für die große Uhr:** acht gemalte Landschaften (Alpenglühen, Bergsee, Winterberge, Nebelwald, Fjord,
   Sonnenuntergang, Dünen, Sternennacht), passend zur Tageszeit, mit Regen und Schnee je nach Wetter.
+- **Fotos von Reddit:** die besten Fotos der Woche aus einer Reddit-Community (z. B. r/EarthPorn, r/SkyPorn oder
+  eine eigene), nur Querformat und ab 1600 Pixel Breite, ohne NSFW. Der Fernseher lädt sie selbst; Titel und Fotograf
+  (u/…) stehen in der Schnellauswahl. Bei klarem Himmel erkennt der Launcher die Bergkante und die große Uhr
+  verschwindet auch hier dahinter (ebenso bei eigenen Bildern).
 - **Eingänge:** HDMI-Anschlüsse und TV-Empfang direkt wählen, über die Kachel „Eingänge“ im Dock (verschieb- und ausblendbar wie Apps) oder das Kontrollzentrum.
 - **Tasten neu belegen:** Tasten der Fernbedienung bekommen neue Aufgaben, einmal, zweimal oder lange gedrückt
   (App, Eingang, Kontrollzentrum, Bildschirm aus …). Braucht „Home-Taste umleiten“.

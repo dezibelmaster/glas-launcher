@@ -35,7 +35,7 @@ class PhotoScene(
     private val loader: (Sky, Boolean) -> Photo?,
 ) : Scene {
     /** [mask] marks the landscape in front of the sky (white), for the clock that disappears behind it. */
-    class Photo(val bitmap: Bitmap, val dim: Boolean, val mask: Bitmap? = null)
+    class Photo(val bitmap: Bitmap, val dim: Boolean, val mask: Bitmap? = null, val autoMask: Boolean = false)
 
     /** [front] is the photo with only the landscape kept; [horizon] where it begins, as a fraction of the height. */
     private class Layer(val photo: Photo, val small: Bitmap, val start: Long, val front: Bitmap?, val horizon: Float?, val skyLight: Float?)
@@ -74,8 +74,10 @@ class PhotoScene(
         val mine = ++token
         Thread {
             val photo = loader(sky, day)
-            val front = photo?.mask?.let { runCatching { front(photo.bitmap, it) }.getOrNull() }
-            val horizon = photo?.mask?.let { horizon(it) }
+            // Photos without a prepared mask get one found automatically, when the skyline is clear
+            val mask = photo?.mask ?: if (photo?.autoMask == true) SkyDetector.mask(photo.bitmap) else null
+            val front = if (photo != null && mask != null) runCatching { front(photo.bitmap, mask) }.getOrNull() else null
+            val horizon = mask?.let { horizon(it) }
             val light = if (photo != null && horizon != null) skyLight(photo.bitmap, horizon) else null
             main.post {
                 if (mine != token) return@post
@@ -233,7 +235,7 @@ object PhotoLoader {
         val names = if (day) listOf("${base}_day") else listOf("${base}_night", "${base}_day")
         for (name in names) {
             // Own photos have no mask; the built-in ones may come with one
-            fromUserFolder(ctx, name)?.let { return PhotoScene.Photo(it, dim = !day && name.endsWith("_day")) }
+            fromUserFolder(ctx, name)?.let { return PhotoScene.Photo(it, dim = !day && name.endsWith("_day"), autoMask = true) }
             val bmp = fromAssets(ctx, name) ?: continue
             val mask = runCatching { ctx.assets.open("weather/mask/$name.png").use { BitmapFactory.decodeStream(it) } }.getOrNull()
             return PhotoScene.Photo(bmp, dim = !day && name.endsWith("_day"), mask = mask)
@@ -243,7 +245,7 @@ object PhotoLoader {
 
     fun fromUri(ctx: Context, uri: String?): PhotoScene.Photo? {
         if (uri == null) return null
-        return decode(ctx) { ctx.contentResolver.openInputStream(Uri.parse(uri)) }?.let { PhotoScene.Photo(it, false) }
+        return decode(ctx) { ctx.contentResolver.openInputStream(Uri.parse(uri)) }?.let { PhotoScene.Photo(it, false, autoMask = true) }
     }
 
     private fun fromUserFolder(ctx: Context, name: String): Bitmap? {

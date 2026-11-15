@@ -266,6 +266,7 @@ class SettingsActivity : Activity() {
 
     private fun backgroundLabel() = when (prefs.background) {
         "image" -> tr("Eigenes Bild")
+        "reddit" -> "Reddit · r/" + prefs.redditSub
         "landscape" -> if (prefs.landscape == null) tr("Landschaften · nach Tageszeit") else tr("Landschaft")
         "video" -> if (prefs.videoUri == null) tr("Eigene Videos · alle") else tr("Eigenes Video")
         "extension" -> if (prefs.extUri == null) tr("Erweiterung · alle Videos") else tr("Erweiterung")
@@ -287,6 +288,7 @@ class SettingsActivity : Activity() {
                 GlassMenu.Item(tr("Wetter · Realistisch animiert"), weather("lifelike")),
                 GlassMenu.Item(tr("Wetter · Modern (gezeichnet)"), weather("modern")),
                 GlassMenu.Item(tr("Wetter · Abstrakt (Farbverläufe)"), weather("abstract")),
+                GlassMenu.Item(tr("Fotos von Reddit …")) { chooseReddit() },
                 GlassMenu.Item(tr("Landschaften für die große Uhr")) {
                     prefs.background = "landscape"
                     prefs.landscape = null
@@ -682,6 +684,25 @@ class SettingsActivity : Activity() {
             }
         }, focus = ids.indexOf(prefs.weatherSource).coerceAtLeast(0),
             footer = tr("Antwortet die gewählte Quelle nicht, nimmt der Launcher automatisch eine der anderen. Woher das Wetter gerade kommt, steht oben rechts in der Wetteransicht. Luftqualität und Pollen kommen immer von Open-Meteo."))
+    }
+
+    /** Photos from a Reddit community; r/EarthPorn has landscape photos. */
+    private fun chooseReddit() {
+        fun use(sub: String) {
+            prefs.redditSub = sub
+            prefs.redditPost = null
+            prefs.background = "reddit"
+            render()
+        }
+        val items = Reddit.suggested.map { sub -> GlassMenu.Item("r/$sub" + if (prefs.background == "reddit" && sub == prefs.redditSub) "  ✓" else "") { use(sub) } } +
+            GlassMenu.Item(tr("Andere Community …")) {
+                TextPrompt.ask(this, tr("Reddit-Community"), tr("Name ohne r/, z. B. EarthPorn")) { text ->
+                    val sub = text.trim().removePrefix("/").removePrefix("r/").trim('/')
+                    if (Regex("[A-Za-z0-9_]{2,21}").matches(sub)) use(sub) else if (sub.isNotEmpty()) toast(tr("Diesen Namen gibt es so nicht"))
+                }
+            } +
+            GlassMenu.Item(tr("Wechseln alle {0} Minuten …", prefs.pluginMinutes)) { choosePluginMinutes() }
+        GlassMenu.show(this, tr("Fotos von Reddit"), items, footer = tr("Die besten Fotos der Woche im Querformat, geladen vom Fernseher. r/EarthPorn zeigt Landschaftsfotos. Im Dock nach oben drücken: weiterschalten, mit Vorschau wählen, ★ Favoriten. Bei klarem Himmel verschwindet die große Uhr auch hier hinter den Bergen."))
     }
 
     /** Tiles removed from the dock that aren't in "Alle Apps", to put back. */

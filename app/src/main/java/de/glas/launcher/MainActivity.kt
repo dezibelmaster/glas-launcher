@@ -737,6 +737,7 @@ class MainActivity : Activity() {
                 if (prefs.background == "extension") backdrop.uriAt(row.index)?.let { prefs.extUri = it; prefs.extType = "video" }
                 if (prefs.background == "video") backdrop.uriAt(row.index)?.let { prefs.videoUri = it }
                 if (prefs.background == "landscape") backdrop.uriAt(row.index)?.let { prefs.landscape = it.removePrefix("landscape:") }
+                if (prefs.background == "reddit") backdrop.uriAt(row.index)?.let { prefs.redditPost = it.removePrefix("reddit:") }
             }
             else -> {
                 prefs.favoritesOnly = row.mode == ROW_FAVORITES
@@ -744,6 +745,7 @@ class MainActivity : Activity() {
                 if (prefs.background == "extension") prefs.extUri = null
                 if (prefs.background == "video") prefs.videoUri = null
                 if (prefs.background == "landscape") prefs.landscape = null
+                if (prefs.background == "reddit") prefs.redditPost = null
                 // Switching through favourites: start with one of them
                 if (row.mode == ROW_FAVORITES && !isFavorite(backdrop.current)) backdrop.next()
             }

@@ -134,7 +134,7 @@ open class SceneBackdrop(context: Context, protected val scene: Scene) : Backdro
 
 object Backdrops {
     /** Changes whenever the background has to be rebuilt. */
-    fun key(p: Prefs) = listOf(p.background, p.weatherStyle, p.imageUri, p.videoUri, p.extAuthority, p.extUri, p.extType, p.plugin, p.landscape).joinToString("|")
+    fun key(p: Prefs) = listOf(p.background, p.weatherStyle, p.imageUri, p.videoUri, p.extAuthority, p.extUri, p.extType, p.plugin, p.landscape, p.redditSub, p.redditPost).joinToString("|")
 
     fun create(ctx: Context, p: Prefs): Backdrop {
         val backdrop = when (p.background) {
@@ -145,6 +145,7 @@ object Backdrops {
             "video" -> ownVideos(ctx, p.videoUri)
             "extension" -> extension(ctx, p)
             "landscape" -> LandscapeBackdrop(ctx)
+            "reddit" -> RedditBackdrop(ctx)
             "plugin" -> {
                 val plugin = ProjectivyPlugins.find(ctx, p.plugin)
                 if (plugin == null) SceneBackdrop(ctx, ModernScene())

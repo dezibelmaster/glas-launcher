@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.50",
+  "notes": {
+   "de": [
+    "Neuer Hintergrund: Fotos von Reddit, z. B. r/EarthPorn, mit Schnellauswahl und Favoriten",
+    "Die große Uhr erkennt bei Fotos ohne Maske (Reddit, eigene Bilder) die Bergkante selbst, wenn der Himmel klar ist"
+   ],
+   "en": [
+    "New background: photos from Reddit, e.g. r/EarthPorn, with quick selection and favourites",
+    "For photos without a mask (Reddit, own pictures) the large clock finds the skyline itself when the sky is clear"
+   ],
+   "fr": [
+    "Nouvel arrière-plan : photos de Reddit, p. ex. r/EarthPorn, avec sélection rapide et favoris",
+    "Pour les photos sans masque (Reddit, images personnelles), la grande horloge détecte elle-même la ligne d'horizon par ciel dégagé"
+   ],
+   "es": [
+    "Nuevo fondo: fotos de Reddit, p. ej. r/EarthPorn, con selección rápida y favoritos",
+    "En fotos sin máscara (Reddit, imágenes propias) el reloj grande detecta solo la línea del horizonte si el cielo está despejado"
+   ],
+   "it": [
+    "Nuovo sfondo: foto da Reddit, ad es. r/EarthPorn, con selezione rapida e preferiti",
+    "Per le foto senza maschera (Reddit, immagini personali) l'orologio grande trova da solo la linea dell'orizzonte con il cielo sereno"
+   ],
+   "nl": [
+    "Nieuwe achtergrond: foto's van Reddit, bijv. r/EarthPorn, met snelkeuze en favorieten",
+    "Bij foto's zonder masker (Reddit, eigen afbeeldingen) vindt de grote klok zelf de horizon als de lucht helder is"
+   ]
+  }
+ },
+ {
   "version": "2.49",
   "notes": {
    "de": [
