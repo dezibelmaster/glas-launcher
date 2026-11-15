@@ -40,7 +40,7 @@ class PanelActivity : Activity() {
         super.onCreate(savedInstanceState)
         mode = intent.getStringExtra(EXTRA_MODE) ?: MODE_PANEL
         val dm = resources.displayMetrics
-        window.setLayout(dp(620), dm.heightPixels - dp(64))
+        window.setLayout(dp(560), dm.heightPixels - dp(56))
         window.setGravity(Gravity.END or Gravity.CENTER_VERTICAL)
         window.attributes = window.attributes.apply { x = dp(32) }
         window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
@@ -51,10 +51,11 @@ class PanelActivity : Activity() {
             setStroke(dp(1), 0x40FFFFFF)
         })
         if (blur && Build.VERSION.SDK_INT >= 31) window.setBackgroundBlurRadius(dp(36))
+        window.attributes = window.attributes.apply { x = dp(28) }
 
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(30), dp(28), dp(30), dp(28))
+            setPadding(dp(24), dp(20), dp(24), dp(20))
         }
         setContentView(ScrollView(this).apply {
             isVerticalScrollBarEnabled = false
@@ -83,7 +84,11 @@ class PanelActivity : Activity() {
     private fun render(keepFocus: Boolean = false) {
         val focusedTag = if (keepFocus) currentFocus?.tag else null
         content.removeAllViews()
-        if (mode == MODE_INPUTS) inputs() else panel()
+        when (mode) {
+            MODE_INPUTS -> inputs()
+            MODE_SLEEP -> sleep()
+            else -> panel()
+        }
         val target = focusedTag?.let { content.findViewWithTag<View>(it) } ?: firstFocusable(content)
         target?.requestFocus()
     }
@@ -109,23 +114,29 @@ class PanelActivity : Activity() {
             pill("bt", Glyph.Kind.BLUETOOTH, tr("Bluetooth"), tr("Einstellungen")) { open(Settings.ACTION_BLUETOOTH_SETTINGS) },
             pill("mem", Glyph.Kind.MEMORY, tr("Arbeitsspeicher"), tr("{0} % belegt", used), progress = used) { freeMemory() },
             pill("sound", Glyph.Kind.SOUND, tr("Ton"), tr("Ausgabe und Lautsprecher")) { open(Settings.ACTION_SOUND_SETTINGS) },
-            pill("timer", Glyph.Kind.TIMER, tr("Schlummertimer"), if (left > 0) tr("noch {0} Min.", left) else tr("Aus")) { nextTimer() },
             pill("saver", Glyph.Kind.SPARKLE, tr("Bildschirmschoner"), tr("Jetzt starten")) {
                 startActivity(Intent(this, ScreensaverActivity::class.java)); finish()
             },
-            pill("off", Glyph.Kind.POWER, tr("Bildschirm aus"), tr("Fernseher schlafen legen"), accent = 0xFFFF5252.toInt()) { screenOff() },
-            pill("phone", Glyph.Kind.PHONE, tr("Einstellen per Handy"), tr("QR-Code zeigen")) { PhoneRemote.show(this) },
+            pill("off", Glyph.Kind.POWER, tr("Bildschirm aus"), if (left > 0) tr("in {0} Min.", left) else tr("Jetzt oder mit Timer"), accent = 0xFFFF5252.toInt()) {
+                mode = MODE_SLEEP; render()
+            },
         )
         val squares = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
             square("inputs", Glyph.Kind.INPUT, tr("Eingänge")) { mode = MODE_INPUTS; render() },
             square("glas", Glyph.Kind.PANEL, tr("Glas Launcher")) { Actions.run(this, "settings"); finish() },
-            square("tv", Glyph.Kind.GEAR, tr("Fernseher")) { open(Settings.ACTION_SETTINGS) },
+            square("tv", Glyph.Kind.GEAR, tr("Fernseher")) {
+                // The TV settings stay behind the PIN when the settings are protected
+                val prefs = Prefs(this)
+                if (prefs.protectSettings) Pin.verify(this, prefs, tr("Einstellungen sind gesperrt")) { open(Settings.ACTION_SETTINGS) }
+                else open(Settings.ACTION_SETTINGS)
+            },
             square("search", Glyph.Kind.SEARCH, tr("Suche")) { search() },
+            square("phone", Glyph.Kind.PHONE, tr("Handy")) { PhoneRemote.show(this) },
         ).forEachIndexed { i, v ->
-            squares.addView(v, LinearLayout.LayoutParams(0, dp(84), 1f).apply { if (i > 0) marginStart = dp(12) })
+            squares.addView(v, LinearLayout.LayoutParams(0, dp(66), 1f).apply { if (i > 0) marginStart = dp(10) })
         }
-        content.addView(squares, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(14) })
+        content.addView(squares, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(2) })
         weatherRow()
     }
 
@@ -138,7 +149,7 @@ class PanelActivity : Activity() {
             isFocusable = true
             isClickable = true
             tag = "weather"
-            setPadding(dp(22), dp(14), dp(22), dp(14))
+            setPadding(dp(18), dp(8), dp(18), dp(8))
             background = pillBackground(false)
             setOnFocusChangeListener { v, f -> v.background = pillBackground(f); recolor(v as LinearLayout, f) }
             setOnClickListener { Actions.run(this@PanelActivity, "weather"); finish() }
@@ -146,19 +157,19 @@ class PanelActivity : Activity() {
         fun half(title: String, sub: String, code: Int?, day: Boolean) = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            if (code != null) addView(WeatherIcon(this@PanelActivity).apply { set(WeatherApi.skyFor(code), day) }, LinearLayout.LayoutParams(dp(34), dp(34)))
+            if (code != null) addView(WeatherIcon(this@PanelActivity).apply { set(WeatherApi.skyFor(code), day) }, LinearLayout.LayoutParams(dp(28), dp(28)))
             addView(LinearLayout(this@PanelActivity).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(dp(12), 0, 0, 0)
-                addView(text(title, 17f, bold = true))
-                addView(text(sub, 13f))
+                setPadding(dp(10), 0, 0, 0)
+                addView(text(title, 14f, bold = true))
+                addView(text(sub, 12f))
             })
         }
         row.addView(half(if (now != null) "${now.temp}° · ${place.name}" else place.name,
             now?.let { WeatherApi.describe(it.code) } ?: "–", now?.code, now?.isDay ?: true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         val tomorrow = LinearLayout(this)
         row.addView(tomorrow, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        content.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(14) })
+        content.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(10) })
         // Tomorrow comes from the full forecast, fetched in the background
         Thread {
             val f = runCatching { WeatherApi.forecast(this, place).forecast }.getOrNull()
@@ -169,6 +180,31 @@ class PanelActivity : Activity() {
                 recolor(row, row.hasFocus() || row.isFocused)
             }
         }.start()
+    }
+
+    // ---- Screen off, now or later ----
+
+    private fun sleep() {
+        heading(tr("Bildschirm aus"))
+        val left = SleepTimer.minutesLeft(this)
+        val pills = mutableListOf(
+            pill("now", Glyph.Kind.POWER, tr("Jetzt"), tr("Fernseher schlafen legen"), accent = 0xFFFF5252.toInt()) { screenOff() },
+        )
+        for (m in SleepTimer.choices.filter { it > 0 }) {
+            pills += pill("t$m", Glyph.Kind.TIMER, tr("In {0} Minuten", m), if (left > 0 && m == SleepTimer.chosen(this)) tr("läuft, noch {0} Min.", left) else null) {
+                SleepTimer.set(this, m)
+                toast(tr("Der Fernseher schläft in {0} Minuten ein", m))
+                finish()
+            }
+        }
+        if (left > 0) pills += pill("toff", Glyph.Kind.TIMER, tr("Timer aus"), tr("noch {0} Min.", left)) {
+            SleepTimer.set(this, 0)
+            toast(tr("Schlummertimer aus"))
+            mode = MODE_PANEL; render()
+        }
+        grid(*pills.toTypedArray())
+        content.addView(square("back", Glyph.Kind.PANEL, tr("Zurück zum Kontrollzentrum")) { mode = MODE_PANEL; render() },
+            LinearLayout.LayoutParams(MATCH_PARENT, dp(56)).apply { topMargin = dp(2) })
     }
 
     // ---- Inputs ----
@@ -187,7 +223,7 @@ class PanelActivity : Activity() {
         }
         if (intent.getStringExtra(EXTRA_MODE) != MODE_INPUTS) {
             content.addView(square("back", Glyph.Kind.PANEL, tr("Zurück zum Kontrollzentrum")) { mode = MODE_PANEL; render() },
-                LinearLayout.LayoutParams(MATCH_PARENT, dp(64)).apply { topMargin = dp(14) })
+                LinearLayout.LayoutParams(MATCH_PARENT, dp(56)).apply { topMargin = dp(2) })
         }
     }
 
@@ -226,15 +262,6 @@ class PanelActivity : Activity() {
         }.start()
     }
 
-    private fun nextTimer() {
-        val left = SleepTimer.minutesLeft(this)
-        // Next step up from what is left; after the longest it goes off
-        val next = SleepTimer.choices.firstOrNull { it > left } ?: 0
-        SleepTimer.set(this, next)
-        toast(if (next == 0) tr("Schlummertimer aus") else tr("Der Fernseher schläft in {0} Minuten ein", next))
-        render(keepFocus = true)
-    }
-
     private fun screenOff() {
         toast(tr("Einen Moment …"))
         val app = applicationContext
@@ -254,17 +281,17 @@ class PanelActivity : Activity() {
     // ---- Building blocks ----
 
     private fun heading(t: String) {
-        content.addView(text(t, 24f, bold = true).apply { setPadding(dp(6), 0, 0, dp(16)) })
+        content.addView(text(t, 20f, bold = true).apply { setPadding(dp(6), 0, 0, dp(12)) })
     }
 
     private fun grid(vararg pills: View) {
         for (pair in pills.toList().chunked(2)) {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             pair.forEachIndexed { i, v ->
-                row.addView(v, LinearLayout.LayoutParams(0, dp(78), 1f).apply { if (i > 0) marginStart = dp(12) })
+                row.addView(v, LinearLayout.LayoutParams(0, dp(60), 1f).apply { if (i > 0) marginStart = dp(10) })
             }
-            if (pair.size == 1) row.addView(View(this), LinearLayout.LayoutParams(0, dp(78), 1f).apply { marginStart = dp(12) })
-            content.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(12) })
+            if (pair.size == 1) row.addView(View(this), LinearLayout.LayoutParams(0, dp(60), 1f).apply { marginStart = dp(10) })
+            content.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = dp(10) })
         }
     }
 
@@ -276,24 +303,24 @@ class PanelActivity : Activity() {
         isFocusable = true
         isClickable = true
         this.tag = tag
-        setPadding(dp(20), 0, dp(18), 0)
+        setPadding(dp(18), 0, dp(14), 0)
         background = pillBackground(false)
         addView(ImageView(this@PanelActivity).apply {
             setImageDrawable(Glyph(kind, accent ?: Color.WHITE))
             this.tag = GlyphTag(kind, accent)
-        }, LinearLayout.LayoutParams(dp(30), dp(30)))
+        }, LinearLayout.LayoutParams(dp(24), dp(24)))
         addView(LinearLayout(this@PanelActivity).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), 0, 0, 0)
-            addView(text(title, 17f, bold = true))
-            if (sub != null) addView(text(sub, 13f))
+            setPadding(dp(12), 0, 0, 0)
+            addView(text(title, 15f, bold = true))
+            if (sub != null) addView(text(sub, 12f))
             if (progress != null) addView(View(this@PanelActivity).apply { background = bar(progress) },
                 LinearLayout.LayoutParams(MATCH_PARENT, dp(4)).apply { topMargin = dp(6); marginEnd = dp(6) })
         }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         setOnFocusChangeListener { v, f ->
             v.background = pillBackground(f)
             recolor(v as LinearLayout, f)
-            v.animate().scaleX(if (f) 1.04f else 1f).scaleY(if (f) 1.04f else 1f).setDuration(150).start()
+            v.animate().scaleX(if (f) 1.03f else 1f).scaleY(if (f) 1.03f else 1f).setDuration(150).start()
         }
         setOnClickListener { onClick() }
     }
@@ -304,12 +331,12 @@ class PanelActivity : Activity() {
         isFocusable = true
         isClickable = true
         this.tag = tag
-        background = pillBackground(false, radius = dp(24f))
+        background = pillBackground(false, radius = dp(20f))
         addView(ImageView(this@PanelActivity).apply { setImageDrawable(Glyph(kind)); this.tag = GlyphTag(kind, null) },
-            LinearLayout.LayoutParams(dp(28), dp(28)))
-        addView(text(label, 12f).apply { setPadding(0, dp(4), 0, 0); gravity = Gravity.CENTER })
+            LinearLayout.LayoutParams(dp(22), dp(22)))
+        addView(text(label, 11f).apply { setPadding(dp(4), dp(3), dp(4), 0); gravity = Gravity.CENTER })
         setOnFocusChangeListener { v, f ->
-            v.background = pillBackground(f, radius = dp(24f))
+            v.background = pillBackground(f, radius = dp(20f))
             recolor(v as LinearLayout, f)
             v.animate().scaleX(if (f) 1.06f else 1f).scaleY(if (f) 1.06f else 1f).setDuration(150).start()
         }
@@ -332,7 +359,7 @@ class PanelActivity : Activity() {
         }
     }
 
-    private fun pillBackground(focused: Boolean, radius: Float = dp(39f)) = GradientDrawable().apply {
+    private fun pillBackground(focused: Boolean, radius: Float = dp(30f)) = GradientDrawable().apply {
         cornerRadius = radius
         if (focused) {
             setColor(0xF5FFFFFF.toInt())
@@ -365,6 +392,7 @@ class PanelActivity : Activity() {
         const val EXTRA_MODE = "mode"
         const val MODE_PANEL = "panel"
         const val MODE_INPUTS = "inputs"
+        const val MODE_SLEEP = "sleep"
 
         fun intent(ctx: Context, mode: String) = Intent(ctx, PanelActivity::class.java)
             .putExtra(EXTRA_MODE, mode)

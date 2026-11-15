@@ -315,7 +315,7 @@ object PhoneRemote {
             addView(off, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = activity.dp(6) })
         }
         dialog.setContentView(column)
-        dialog.window?.setBackgroundDrawable(Ui.panel(activity))
+        Ui.styleDialog(dialog, activity)
         dialog.show()
         dialog.window?.setLayout(activity.dp(820), WRAP_CONTENT)
         done.requestFocus()

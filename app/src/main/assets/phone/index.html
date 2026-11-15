@@ -241,7 +241,7 @@ function backgroundCard() {
     class: 'choice' + (S.background === 'video' && !S.videoUri ? ' on' : ''), onclick: () => set({ video: null }),
   }, t('Alle eigenen Videos abwechselnd')));
   const current = S.background === 'image' ? t('Eigenes Bild') : S.background === 'video' && S.videoUri ? t('Eigenes Video') : S.otherBackground;
-  const glassNames = [t('Hell'), t('Mittel'), t('Dunkel'), t('Liquid Glass (wie tvOS 26)')];
+  const glassNames = [t('Hell'), t('Mittel'), t('Dunkel'), t('Liquid Glass')];
   return section(t('Hintergrund'),
     current ? h('p', { class: 'note', style: 'margin:0 2px 10px' }, t('Gerade: {0}', current)) : null,
     h('div', { class: 'choices' }, choices),

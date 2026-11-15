@@ -35,7 +35,7 @@ object GlassMenu {
             setPadding(0, ctx.dp(14), 0, 0)
         })
         dialog.setContentView(ScrollView(ctx).apply { addView(list) })
-        dialog.window?.setBackgroundDrawable(Ui.panel(ctx))
+        Ui.styleDialog(dialog, ctx)
         dialog.show()
         dialog.window?.setLayout(ctx.dp(560), WRAP_CONTENT)
         rows.getOrNull(focus.coerceIn(0, (rows.size - 1).coerceAtLeast(0)))?.requestFocus()
@@ -123,7 +123,7 @@ object Pin {
             }
         }
         dialog.setContentView(column)
-        dialog.window?.setBackgroundDrawable(Ui.panel(ctx))
+        Ui.styleDialog(dialog, ctx)
         dialog.show()
         buttons[4].requestFocus()
     }
@@ -186,7 +186,7 @@ object TextPrompt {
             addView(Ui.row(ctx, tr("Suchen")) { submit() }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = ctx.dp(10) })
         }
         dialog.setContentView(column)
-        dialog.window?.setBackgroundDrawable(Ui.panel(ctx))
+        Ui.styleDialog(dialog, ctx)
         dialog.show()
         dialog.window?.setLayout(ctx.dp(560), WRAP_CONTENT)
         field.requestFocus()

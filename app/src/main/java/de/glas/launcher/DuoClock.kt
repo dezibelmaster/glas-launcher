@@ -53,7 +53,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         }
         val baseline = top + digitH
         // On a bright sky (snow, fog) the glass turns grey so the clock stays readable
-        val bright = (depth?.skyLight() ?: 0f) > .62f
+        val bright = (depth?.skyLight() ?: 0f) > .75f
 
         // Greeting and date above the clock
         small.textSize = h * .028f

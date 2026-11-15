@@ -197,7 +197,8 @@ class PhotoScene(
         val cur = current
         if (cur == null) {
             // Keep the screen dark while the first photo loads, then fall back to the drawn sky
-            if (loaded) fallback.draw(c, now, lowRes) else c.drawColor(Color.BLACK)
+            if (loaded) fallback.draw(c, now, lowRes)
+            else Snapshot.bitmap?.let { c.drawBitmap(it, null, android.graphics.RectF(0f, 0f, w, h), paint) } ?: c.drawColor(Color.BLACK)
             return
         }
         val fade = ((now - cur.start) / 1500f).coerceIn(0f, 1f)

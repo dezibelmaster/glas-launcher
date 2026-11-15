@@ -98,7 +98,7 @@ interface Scene {
     fun release() {}
 }
 
-class SceneBackdrop(context: Context, private val scene: Scene) : Backdrop(context) {
+open class SceneBackdrop(context: Context, protected val scene: Scene) : Backdrop(context) {
     private var last = 0L
     private var now = 0L
 
@@ -134,7 +134,7 @@ class SceneBackdrop(context: Context, private val scene: Scene) : Backdrop(conte
 
 object Backdrops {
     /** Changes whenever the background has to be rebuilt. */
-    fun key(p: Prefs) = listOf(p.background, p.weatherStyle, p.imageUri, p.videoUri, p.extAuthority, p.extUri, p.extType, p.plugin).joinToString("|")
+    fun key(p: Prefs) = listOf(p.background, p.weatherStyle, p.imageUri, p.videoUri, p.extAuthority, p.extUri, p.extType, p.plugin, p.landscape).joinToString("|")
 
     fun create(ctx: Context, p: Prefs): Backdrop {
         val backdrop = when (p.background) {
@@ -144,6 +144,7 @@ object Backdrops {
             }
             "video" -> ownVideos(ctx, p.videoUri)
             "extension" -> extension(ctx, p)
+            "landscape" -> LandscapeBackdrop(ctx)
             "plugin" -> {
                 val plugin = ProjectivyPlugins.find(ctx, p.plugin)
                 if (plugin == null) SceneBackdrop(ctx, ModernScene())

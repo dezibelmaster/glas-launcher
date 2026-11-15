@@ -1,5 +1,58 @@
 [
  {
+  "version": "2.49",
+  "notes": {
+   "de": [
+    "Liquid Glass jetzt auch in den Einstellungen und allen Menüs",
+    "Bildschirm aus mit Timer (15 Minuten bis 2 Stunden)",
+    "Kachel „Eingänge“ lässt sich verschieben und entfernen, ausgeblendete Kacheln unter Einstellungen → Dock",
+    "Kontrollzentrum kompakter, Schalter in der Statusleiste statt Zahnrad",
+    "Kein dunkler Moment mehr beim Öffnen des Wetters",
+    "Neue Landschaften für die große Uhr, passend zur Tageszeit"
+   ],
+   "en": [
+    "Liquid Glass now also in the settings and all menus",
+    "Screen off with timer (15 minutes to 2 hours)",
+    "The “Inputs” tile can be moved and removed; hidden tiles under Settings → Dock",
+    "More compact control centre, switch in the status bar instead of the gear",
+    "No more dark moment when opening the weather",
+    "New landscapes for the large clock, matching the time of day"
+   ],
+   "fr": [
+    "Liquid Glass aussi dans les paramètres et tous les menus",
+    "Écran éteint avec minuterie (15 minutes à 2 heures)",
+    "La tuile « Entrées » peut être déplacée et retirée ; tuiles masquées sous Paramètres → Dock",
+    "Centre de contrôle plus compact, bouton dans la barre d'état au lieu de l'engrenage",
+    "Plus de moment sombre à l'ouverture de la météo",
+    "Nouveaux paysages pour la grande horloge, selon l'heure"
+   ],
+   "es": [
+    "Liquid Glass también en los ajustes y todos los menús",
+    "Apagar pantalla con temporizador (15 minutos a 2 horas)",
+    "El mosaico «Entradas» se puede mover y quitar; mosaicos ocultos en Ajustes → Dock",
+    "Centro de control más compacto, botón en la barra de estado en lugar del engranaje",
+    "Sin momento oscuro al abrir el tiempo",
+    "Nuevos paisajes para el reloj grande, según la hora del día"
+   ],
+   "it": [
+    "Liquid Glass anche nelle impostazioni e in tutti i menu",
+    "Schermo spento con timer (da 15 minuti a 2 ore)",
+    "Il riquadro «Ingressi» si può spostare e rimuovere; riquadri nascosti in Impostazioni → Dock",
+    "Centro di controllo più compatto, pulsante nella barra di stato al posto dell'ingranaggio",
+    "Nessun momento scuro all'apertura del meteo",
+    "Nuovi paesaggi per l'orologio grande, secondo l'ora del giorno"
+   ],
+   "nl": [
+    "Liquid Glass nu ook in de instellingen en alle menu's",
+    "Scherm uit met timer (15 minuten tot 2 uur)",
+    "De tegel ‘Ingangen’ kan worden verplaatst en verwijderd; verborgen tegels onder Instellingen → Dock",
+    "Compacter bedieningscentrum, knop in de statusbalk in plaats van het tandwiel",
+    "Geen donker moment meer bij het openen van het weer",
+    "Nieuwe landschappen voor de grote klok, passend bij het tijdstip"
+   ]
+  }
+ },
+ {
   "version": "2.48",
   "notes": {
    "de": [

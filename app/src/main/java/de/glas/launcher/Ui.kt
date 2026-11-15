@@ -26,7 +26,7 @@ object Ui {
     val thin: Typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
     val light: Typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
 
-    val glassNames get() = listOf(tr("Hell"), tr("Mittel"), tr("Dunkel"), tr("Liquid Glass (wie tvOS 26)"))
+    val glassNames get() = listOf(tr("Hell"), tr("Mittel"), tr("Dunkel"), tr("Liquid Glass"))
 
     /** The bright, clear glass of tvOS 26 with a light rim, instead of dark frosted glass. */
     const val LIQUID = 3
@@ -96,9 +96,39 @@ object Ui {
 
     /** Opaque dark panel for dialogs, which live in their own window and can't blur the home screen. */
     fun panel(ctx: Context) = GradientDrawable().apply {
-        cornerRadius = ctx.dp(26f)
-        setColor(0xF20D1117.toInt())
-        setStroke(ctx.dp(1), 0x2EFFFFFF)
+        if (liquid(ctx)) {
+            // Clear glass: from Android 12 the window blurs what is behind it, otherwise a darker veil
+            cornerRadius = ctx.dp(34f)
+            setColor(if (canBlur(ctx)) 0x590E1218 else 0xD90E1218.toInt())
+            setStroke(ctx.dp(1), 0x59FFFFFF)
+        } else {
+            cornerRadius = ctx.dp(26f)
+            setColor(0xF20D1117.toInt())
+            setStroke(ctx.dp(1), 0x2EFFFFFF)
+        }
+    }
+
+    fun liquid(ctx: Context) = ctx.getSharedPreferences("glas", Context.MODE_PRIVATE).getInt("glass", 2) == LIQUID
+
+    fun canBlur(ctx: Context) = Build.VERSION.SDK_INT >= 31 &&
+        (ctx.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager).isCrossWindowBlurEnabled
+
+    /** Background of a dialog window; with Liquid Glass it blurs what lies behind it. */
+    fun styleDialog(dialog: android.app.Dialog, ctx: Context) {
+        val w = dialog.window ?: return
+        w.setBackgroundDrawable(panel(ctx))
+        if (liquid(ctx) && canBlur(ctx) && Build.VERSION.SDK_INT >= 31) w.setBackgroundBlurRadius(ctx.dp(30))
+    }
+
+    /** Rows in the Liquid Glass look: frosted pills that turn white with dark writing when focused. */
+    private fun liquidRow(ctx: Context, focused: Boolean) = GradientDrawable().apply {
+        cornerRadius = ctx.dp(20f)
+        if (focused) setColor(0xF2FFFFFF.toInt())
+        else {
+            orientation = GradientDrawable.Orientation.TOP_BOTTOM
+            colors = intArrayOf(0x38FFFFFF, 0x14FFFFFF)
+            setStroke(ctx.dp(1), 0x47FFFFFF)
+        }
     }
 
     /** Focusable row with a title and an optional value on the right, used in menus and settings. */
@@ -107,11 +137,19 @@ object Ui {
         gravity = Gravity.CENTER_VERTICAL
         isFocusable = true
         isClickable = true
-        background = rowBackground(ctx, false)
+        val liquid = liquid(ctx)
+        background = if (liquid) liquidRow(ctx, false) else rowBackground(ctx, false)
         setPadding(ctx.dp(20), ctx.dp(14), ctx.dp(20), ctx.dp(14))
-        addView(text(ctx, 17f).apply { text = title }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        if (value != null) addView(text(ctx, 15f, color = MUTED).apply { text = value })
-        setOnFocusChangeListener { v, f -> v.background = rowBackground(ctx, f) }
+        val t = text(ctx, 17f).apply { text = title }
+        addView(t, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        val v = if (value != null) text(ctx, 15f, color = MUTED).apply { text = value }.also { addView(it) } else null
+        setOnFocusChangeListener { row, f ->
+            if (liquid) {
+                row.background = liquidRow(ctx, f)
+                t.setTextColor(if (f) 0xFF15181D.toInt() else Color.WHITE)
+                v?.setTextColor(if (f) 0xFF4A5059.toInt() else MUTED)
+            } else row.background = rowBackground(ctx, f)
+        }
         setOnClickListener { onClick() }
     }
 }

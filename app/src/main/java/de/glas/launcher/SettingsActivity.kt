@@ -37,7 +37,9 @@ class SettingsActivity : Activity() {
             setPadding(0, dp(40), 0, dp(60))
         }
         val root = FrameLayout(this).apply {
-            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(0xFF1A2230.toInt(), 0xFF07090D.toInt()))
+            // Liquid Glass: the home screen's background, softly blurred, behind the settings
+            background = (if (Ui.liquid(this@SettingsActivity)) Snapshot.drawable(this@SettingsActivity, 0x80000000.toInt()) else null)
+                ?: GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(0xFF1A2230.toInt(), 0xFF07090D.toInt()))
             addView(ScrollView(this@SettingsActivity).apply {
                 clipToPadding = false
                 addView(list)
@@ -98,7 +100,7 @@ class SettingsActivity : Activity() {
                 GlassMenu.Item(tr("Große Uhr und Wetterkarte")) { prefs.topStyle = "classic"; render() },
                 GlassMenu.Item(tr("Große Uhr in der Mitte (iPhone-Stil)")) { prefs.topStyle = "duo"; render() },
             ), focus = styles.indexOf(prefs.topStyle).coerceAtLeast(0),
-                footer = tr("Bei den eingebauten Wetterfotos (Wetter · Realistisch) verschwindet die große Uhr in der Mitte teilweise hinter Bergen und Wäldern."))
+                footer = tr("Mit dem Hintergrund „Landschaften für die große Uhr“ und bei den eingebauten Wetterfotos (Wetter · Realistisch) verschwindet die große Uhr in der Mitte teilweise hinter Bergen und Wäldern."))
         }
         note(
             tr("Eigene Wetterfotos: Lege Bilder in den Ordner Pictures/GlasLauncher auf dem Fernseher, z. B. clear_day.jpg, partly_day.jpg, overcast_day.jpg, fog_day.jpg, rain_day.jpg, snow_day.jpg, storm_day.jpg und für die Nacht z. B. clear_night.jpg. Sie ersetzen die eingebauten Fotos."),
@@ -118,8 +120,10 @@ class SettingsActivity : Activity() {
         row(tr("Dock zurücksetzen")) {
             prefs.dock = null
             prefs.browserInDock = false
+            prefs.inputsTileAdded = false
             toast(tr("Das Dock zeigt wieder YouTube, Netflix, MagentaTV und Jellyfin"))
         }
+        row(tr("Ausgeblendete Kacheln")) { hiddenTiles() }
 
         section(tr("Browser"))
         val browserVersion = GlasBrowser.version(this)
@@ -262,6 +266,7 @@ class SettingsActivity : Activity() {
 
     private fun backgroundLabel() = when (prefs.background) {
         "image" -> tr("Eigenes Bild")
+        "landscape" -> if (prefs.landscape == null) tr("Landschaften · nach Tageszeit") else tr("Landschaft")
         "video" -> if (prefs.videoUri == null) tr("Eigene Videos · alle") else tr("Eigenes Video")
         "extension" -> if (prefs.extUri == null) tr("Erweiterung · alle Videos") else tr("Erweiterung")
         "plugin" -> ProjectivyPlugins.find(this, prefs.plugin)?.name ?: tr("Plugin nicht mehr installiert")
@@ -282,6 +287,11 @@ class SettingsActivity : Activity() {
                 GlassMenu.Item(tr("Wetter · Realistisch animiert"), weather("lifelike")),
                 GlassMenu.Item(tr("Wetter · Modern (gezeichnet)"), weather("modern")),
                 GlassMenu.Item(tr("Wetter · Abstrakt (Farbverläufe)"), weather("abstract")),
+                GlassMenu.Item(tr("Landschaften für die große Uhr")) {
+                    prefs.background = "landscape"
+                    prefs.landscape = null
+                    render()
+                },
                 GlassMenu.Item(tr("Eigenes Bild …")) { chooseMedia(video = false) },
                 GlassMenu.Item(tr("Eigenes Video …")) { chooseMedia(video = true) },
             ) + Extensions.installed(this).map { ext ->
@@ -674,6 +684,19 @@ class SettingsActivity : Activity() {
             footer = tr("Antwortet die gewählte Quelle nicht, nimmt der Launcher automatisch eine der anderen. Woher das Wetter gerade kommt, steht oben rechts in der Wetteransicht. Luftqualität und Pollen kommen immer von Open-Meteo."))
     }
 
+    /** Tiles removed from the dock that aren't in "Alle Apps", to put back. */
+    private fun hiddenTiles() {
+        val dock = prefs.dock.orEmpty()
+        val items = mutableListOf<GlassMenu.Item>()
+        if (TvInputs.list(this).isNotEmpty() && Dock.INPUTS !in dock) items += GlassMenu.Item(tr("Eingänge")) {
+            prefs.dock = (prefs.dock ?: dock) + Dock.INPUTS
+            toast(tr("{0} ist jetzt im Dock", tr("Eingänge")))
+            render()
+        }
+        if (items.isEmpty()) return toast(tr("Alle Kacheln sind im Dock. Apps fügst du unter „Alle Apps“ wieder hinzu."))
+        GlassMenu.show(this, tr("Ausgeblendete Kacheln"), items, footer = tr("Wähle eine Kachel, um sie wieder ins Dock zu holen. Apps fügst du unter „Alle Apps“ wieder hinzu."))
+    }
+
     // ---- Remote keys ----
 
     private fun keyList() {
@@ -703,7 +726,7 @@ class SettingsActivity : Activity() {
                 setPadding(0, dp(10), 0, 0)
             })
         })
-        dialog.window?.setBackgroundDrawable(Ui.panel(this))
+        Ui.styleDialog(dialog, this)
         dialog.setOnKeyListener { d, code, event ->
             if (event.action != android.view.KeyEvent.ACTION_UP) return@setOnKeyListener true
             if (code == android.view.KeyEvent.KEYCODE_BACK) { d.dismiss(); return@setOnKeyListener true }

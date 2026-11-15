@@ -12,7 +12,10 @@ import android.os.SystemClock
  * goes through the TV's own debugging access, like switching the Google TV home screen.
  */
 object SleepTimer {
-    val choices = listOf(0, 15, 30, 60, 90, 120)
+    val choices = listOf(0, 15, 30, 45, 60, 90, 120)
+
+    /** The length last chosen, to mark it in the list. */
+    fun chosen(ctx: Context) = prefs(ctx).getInt("sleepMinutes", 0)
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("glas", Context.MODE_PRIVATE)
 
@@ -32,7 +35,7 @@ object SleepTimer {
             return
         }
         val at = SystemClock.elapsedRealtime() + minutes * 60_000L
-        prefs(ctx).edit().putLong("sleepAt", at).apply()
+        prefs(ctx).edit().putLong("sleepAt", at).putInt("sleepMinutes", minutes).apply()
         am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, pending(ctx))
     }
 

@@ -40,6 +40,8 @@ class WeatherActivity : Activity() {
         // Opened only once a place has been chosen; leave quietly otherwise
         place = prefs.mainPlace ?: run { finish(); return }
         val root = FrameLayout(this)
+        // Shown until the background of this screen has its first picture
+        Snapshot.drawable(this)?.let { root.background = it }
         backdrop = Backdrops.create(this, prefs)
         root.addView(backdrop, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         glassLayer = GlassLayer(this).also { it.backdrop = backdrop; it.liquid = prefs.glass == Ui.LIQUID }

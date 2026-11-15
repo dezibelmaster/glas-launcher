@@ -62,7 +62,8 @@ class VideoBackdrop(
     private val dst = RectF()
 
     init {
-        setBackgroundColor(Color.BLACK)
+        // Until the first frame: the picture of the home screen's background, not black
+        background = Snapshot.drawable(context) ?: android.graphics.drawable.ColorDrawable(Color.BLACK)
         texture.surfaceTextureListener = this
         addView(texture, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
@@ -223,7 +224,11 @@ class VideoBackdrop(
     override fun drawBackdrop(c: Canvas) {
         val w = width
         val h = height
-        if (w == 0 || !prepared) return
+        if (w == 0) return
+        if (!prepared) {
+            Snapshot.bitmap?.let { c.drawBitmap(it, null, RectF(0f, 0f, w.toFloat(), h.toFloat()), paint) }
+            return
+        }
         val now = SystemClock.uptimeMillis()
         // Rate from the settings; 0 picks up one still picture and keeps it
         val rate = prefs.glassVideoRate

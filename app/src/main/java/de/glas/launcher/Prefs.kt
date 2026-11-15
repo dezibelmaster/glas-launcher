@@ -42,6 +42,16 @@ class Prefs(context: Context) {
     /** Forgets the stored weather, so it is fetched again, e.g. from another source. */
     fun clearWeather() = sp.edit().apply { sp.all.keys.filter { it.startsWith("weather.") }.forEach { remove(it) } }.apply()
 
+    /** Whether the inputs tile was put into the dock once; after that it is the user's to move or remove. */
+    var inputsTileAdded: Boolean
+        get() = sp.getBoolean("inputsTileAdded", false)
+        set(v) = sp.edit().putBoolean("inputsTileAdded", v).apply()
+
+    /** Painted landscape chosen by hand; null lets them follow the time of day. */
+    var landscape: String?
+        get() = sp.getString("landscape", null)
+        set(v) = sp.edit().apply { if (v == null) remove("landscape") else putString("landscape", v) }.apply()
+
     /** Packages that need the PIN to open. */
     var locked: Set<String>
         get() = sp.getStringSet("locked", emptySet())!!.toSet()

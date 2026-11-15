@@ -78,6 +78,7 @@ class MainActivity : Activity() {
     private lateinit var topShade: View
     private lateinit var topRight: LinearLayout
     private lateinit var cloudButton: View
+    private lateinit var panelButton: View
     private val roundGlass = mutableListOf<GlassLayer.Glass>()
     private var weatherLine = ""
 
@@ -209,8 +210,9 @@ class MainActivity : Activity() {
         statusNet = NetworkIcon(this)
         val netItem = statusItem { addView(statusNet, LinearLayout.LayoutParams(dp(24), dp(24))) }
             .apply { setOnClickListener { openNetworkSettings() } }
-        val gearItem = statusItem { addView(Ui.text(this@MainActivity, 21f).apply { text = "⚙" }) }
-            .apply { setOnClickListener { openTvSettings() } }
+        // The control centre takes the place of the gear; the TV settings are inside it
+        val gearItem = statusItem { addView(ImageView(this@MainActivity).apply { setImageDrawable(Glyph(Glyph.Kind.PANEL)) }, LinearLayout.LayoutParams(dp(24), dp(24))) }
+            .apply { setOnClickListener { Actions.run(this@MainActivity, "panel") } }
         // Date and time first, then the controls
         statusDate = Ui.text(this, 19f).apply { setPadding(0, 0, dp(16), 0) }
         val medium = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
@@ -228,7 +230,7 @@ class MainActivity : Activity() {
             clipChildren = false
         }
         cloudButton = roundButton(Glyph.Kind.CLOUD) { weatherDetails() }
-        val panelButton = roundButton(Glyph.Kind.PANEL) { Actions.run(this, "panel") }
+        panelButton = roundButton(Glyph.Kind.PANEL) { Actions.run(this, "panel") }
         cornerTime = Ui.readable(Ui.text(this, 22f, medium))
         corner = statusItem { addView(cornerTime) }.apply { setOnClickListener { setStatusHidden(false) } }
         topRight.addView(cloudButton, LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginEnd = dp(14) })
@@ -429,6 +431,8 @@ class MainActivity : Activity() {
         corner.visibility = if (bar && prefs.statusHidden) View.VISIBLE else View.GONE
         duo.visibility = if (middle) View.VISIBLE else View.GONE
         cloudButton.visibility = if (middle) View.VISIBLE else View.GONE
+        // With the status bar showing, its own switch opens the control centre
+        panelButton.visibility = if (bar && !prefs.statusHidden) View.GONE else View.VISIBLE
         // The dark shade at the top would show as a band behind the landscape in front of the clock
         topShade.visibility = if (middle) View.GONE else View.VISIBLE
         glassLayer.liquid = prefs.glass == Ui.LIQUID
@@ -462,6 +466,8 @@ class MainActivity : Activity() {
     override fun onPause() {
         super.onPause()
         resumed = false
+        // A picture of the background for the screen that opens now, so it doesn't start black
+        if (::backdrop.isInitialized) Snapshot.take(backdrop)
         // Free the video decoder right away: TVs often have only one for 4K, and the app being
         // opened (e.g. YouTube) crashes if the launcher still holds it
         backdrop.pause()
@@ -730,12 +736,14 @@ class MainActivity : Activity() {
                 backdrop.select(row.index, pin = true)
                 if (prefs.background == "extension") backdrop.uriAt(row.index)?.let { prefs.extUri = it; prefs.extType = "video" }
                 if (prefs.background == "video") backdrop.uriAt(row.index)?.let { prefs.videoUri = it }
+                if (prefs.background == "landscape") backdrop.uriAt(row.index)?.let { prefs.landscape = it.removePrefix("landscape:") }
             }
             else -> {
                 prefs.favoritesOnly = row.mode == ROW_FAVORITES
                 backdrop.unpin()
                 if (prefs.background == "extension") prefs.extUri = null
                 if (prefs.background == "video") prefs.videoUri = null
+                if (prefs.background == "landscape") prefs.landscape = null
                 // Switching through favourites: start with one of them
                 if (row.mode == ROW_FAVORITES && !isFavorite(backdrop.current)) backdrop.next()
             }
@@ -805,6 +813,7 @@ class MainActivity : Activity() {
         prefs.statusHidden = hidden
         status.visibility = if (hidden) View.GONE else View.VISIBLE
         corner.visibility = if (hidden) View.VISIBLE else View.GONE
+        panelButton.visibility = if (hidden) View.VISIBLE else View.GONE
         (if (hidden) corner else status.getChildAt(1)).requestFocus()
     }
 
@@ -826,11 +835,6 @@ class MainActivity : Activity() {
         toast(tr("Die Netzwerk-Einstellungen lassen sich nicht öffnen"))
     }
 
-    private fun openTvSettings() {
-        val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
-        if (prefs.protectSettings) Pin.verify(this, prefs, tr("Einstellungen sind gesperrt")) { start(intent, tr("Einstellungen")) }
-        else start(intent, tr("Einstellungen"))
-    }
 
     /** One line per further place below the main weather, e.g. "Palma  24°  Klar". */
     private fun showOtherPlaces(places: List<Place>) {
@@ -861,39 +865,52 @@ class MainActivity : Activity() {
                 prefs.dock = ids
             }
         }
+        // The inputs tile joins the dock once, like an app; it can be moved or removed like one
+        val hasInputs = TvInputs.list(this).isNotEmpty()
+        if (hasInputs && !prefs.inputsTileAdded) {
+            prefs.inputsTileAdded = true
+            if (Dock.INPUTS !in ids) { ids = ids + Dock.INPUTS; prefs.dock = ids }
+        }
         val byComponent = apps.associateBy { it.component }
-        val entries = ids.mapNotNull { byComponent[it] }
-        for (app in entries) dock.addView(appTile(app, inDock = true), dockSlot())
-        if (TvInputs.list(this).isNotEmpty()) {
-            dock.addView(tile(tr("Eingänge"), Glyph(Glyph.Kind.INPUT), null, locked = false, onClick = { Actions.run(this, "inputs") }, onMenu = null), dockSlot())
+        val shown = ids.filter { it in byComponent || (it == Dock.INPUTS && hasInputs) }
+        for (id in shown) {
+            val app = byComponent[id]
+            if (app != null) dock.addView(appTile(app, inDock = true), dockSlot())
+            else dock.addView(tile(tr("Eingänge"), Glyph(Glyph.Kind.INPUT), null, locked = false,
+                onClick = { Actions.run(this, "inputs") }, onMenu = { moveMenu(id, tr("Eingänge"), emptyList()) }), dockSlot())
         }
         dock.addView(tile(tr("Alle Apps"), null, "⋯", locked = prefs.lockAllApps, onClick = { openDrawer() }, onMenu = { allAppsMenu() }), dockSlot())
         dock.addView(tile(tr("Einstellungen"), null, "⚙", locked = prefs.protectSettings, onClick = { openSettings() }, onMenu = null), dockSlot())
-        val index = entries.indexOfFirst { it.component == focus }.coerceAtLeast(0)
+        val index = shown.indexOf(focus).coerceAtLeast(0)
         if (drawer.visibility != View.VISIBLE) dock.getChildAt(index)?.requestFocus()
     }
 
-    private fun dockMenu(app: AppEntry) {
+    private fun dockMenu(app: AppEntry) = moveMenu(app.component, app.label, listOf(
+        lockItem(app) { buildDock(app.component) },
+        timeItem(app) { buildDock(app.component) },
+    ))
+
+    /** Move left or right, or remove from the dock; for apps and the inputs tile alike. */
+    private fun moveMenu(id: String, label: String, extra: List<GlassMenu.Item>) {
         val ids = prefs.dock.orEmpty().toMutableList()
-        val i = ids.indexOf(app.component)
+        val i = ids.indexOf(id)
         val items = mutableListOf<GlassMenu.Item>()
         if (i > 0) items += GlassMenu.Item(tr("Nach links")) {
             ids.add(i - 1, ids.removeAt(i))
             prefs.dock = ids
-            buildDock(app.component)
+            buildDock(id)
         }
         if (i in 0 until ids.size - 1) items += GlassMenu.Item(tr("Nach rechts")) {
             ids.add(i + 1, ids.removeAt(i))
             prefs.dock = ids
-            buildDock(app.component)
+            buildDock(id)
         }
         items += GlassMenu.Item(tr("Aus dem Dock entfernen")) {
-            prefs.dock = ids - app.component
+            prefs.dock = ids - id
             buildDock(ids.getOrNull(i + 1))
         }
-        items += lockItem(app) { buildDock(app.component) }
-        items += timeItem(app) { buildDock(app.component) }
-        GlassMenu.show(this, app.label, items)
+        items += extra
+        GlassMenu.show(this, label, items)
     }
 
     // ---- All apps ----
