@@ -1,5 +1,52 @@
 [
  {
+  "version": "2.48",
+  "notes": {
+   "de": [
+    "Kontrollzentrum: runder Schalter oben rechts mit WLAN, Bluetooth, Arbeitsspeicher, Ton, Schlummertimer, Bildschirm aus und Wetter",
+    "Eingänge (HDMI, TV) direkt wählen, im Dock und im Kontrollzentrum",
+    "Milchglas „Liquid Glass“ wie bei tvOS 26",
+    "Große Uhr in der Mitte im iPhone-Stil, die bei den Wetterfotos hinter Bergen verschwindet",
+    "Tasten der Fernbedienung neu belegen (einmal, zweimal, lange drücken)"
+   ],
+   "en": [
+    "Control centre: round button top right with Wi-Fi, Bluetooth, memory, sound, sleep timer, screen off and weather",
+    "Choose inputs (HDMI, TV) directly, in the dock and the control centre",
+    "“Liquid Glass” frosted glass like tvOS 26",
+    "Large clock in the middle in iPhone style that disappears behind mountains on the weather photos",
+    "Reassign remote keys (press once, twice or long)"
+   ],
+   "fr": [
+    "Centre de contrôle : bouton rond en haut à droite avec Wi-Fi, Bluetooth, mémoire, son, minuterie de veille, écran éteint et météo",
+    "Choisir directement les entrées (HDMI, TV), dans le dock et le centre de contrôle",
+    "Verre dépoli « Liquid Glass » comme tvOS 26",
+    "Grande horloge au centre style iPhone qui disparaît derrière les montagnes sur les photos météo",
+    "Réattribuer les touches de la télécommande (appui simple, double ou long)"
+   ],
+   "es": [
+    "Centro de control: botón redondo arriba a la derecha con wifi, Bluetooth, memoria, sonido, temporizador, apagar pantalla y tiempo",
+    "Elegir entradas (HDMI, TV) directamente, en el dock y en el centro de control",
+    "Cristal esmerilado «Liquid Glass» como tvOS 26",
+    "Reloj grande en el centro estilo iPhone que desaparece detrás de las montañas en las fotos del tiempo",
+    "Reasignar teclas del mando (una vez, dos veces o pulsación larga)"
+   ],
+   "it": [
+    "Centro di controllo: pulsante rotondo in alto a destra con Wi-Fi, Bluetooth, memoria, audio, timer, schermo spento e meteo",
+    "Scegliere direttamente gli ingressi (HDMI, TV), nel dock e nel centro di controllo",
+    "Vetro smerigliato «Liquid Glass» come tvOS 26",
+    "Orologio grande al centro stile iPhone che scompare dietro le montagne nelle foto meteo",
+    "Riassegnare i tasti del telecomando (una, due volte o a lungo)"
+   ],
+   "nl": [
+    "Bedieningscentrum: ronde knop rechtsboven met wifi, Bluetooth, geheugen, geluid, slaaptimer, scherm uit en weer",
+    "Ingangen (HDMI, tv) direct kiezen, in het dock en het bedieningscentrum",
+    "Matglas ‘Liquid Glass’ zoals tvOS 26",
+    "Grote klok in het midden in iPhone-stijl die op de weerfoto's achter bergen verdwijnt",
+    "Toetsen van de afstandsbediening opnieuw toewijzen (één keer, twee keer, lang drukken)"
+   ]
+  }
+ },
+ {
   "version": "2.47",
   "notes": {
    "de": [

@@ -114,6 +114,18 @@
             android:exported="false"
             android:grantUriPermissions="true" />
 
+        <activity
+            android:name=".PanelActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:taskAffinity="de.glas.launcher.panel"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <receiver
+            android:name=".SleepReceiver"
+            android:exported="false" />
+
         <service
             android:name=".ClockDream"
             android:exported="true"

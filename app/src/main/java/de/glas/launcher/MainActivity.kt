@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -66,10 +67,19 @@ class MainActivity : Activity() {
     /** What makes up the home screen: the status bar or the large clock with weather card, plus the dock. */
     private val home: List<View>
         get() = when {
+            prefs.topStyle == "duo" -> listOf(duo, dock)
             prefs.topStyle == "classic" -> listOf(timeBox, card, dock)
             prefs.statusHidden -> listOf(corner, dock)
             else -> listOf(status, dock)
-        } + if (warnings.isNotEmpty()) listOf(warningPill) else emptyList()
+        } + listOf(topRight) + if (warnings.isNotEmpty()) listOf(warningPill) else emptyList()
+
+    // Large clock in the middle (phone lock screen style) and the round buttons top right
+    private lateinit var duo: DuoClock
+    private lateinit var topShade: View
+    private lateinit var topRight: LinearLayout
+    private lateinit var cloudButton: View
+    private val roundGlass = mutableListOf<GlassLayer.Glass>()
+    private var weatherLine = ""
 
     private lateinit var warningPill: LinearLayout
     private lateinit var warningText: TextView
@@ -90,6 +100,8 @@ class MainActivity : Activity() {
             statusTime.text = timeFormat.format(now)
             cornerTime.text = timeFormat.format(now)
             statusDate.text = statusDateFormat.format(now)
+            duo.time = timeFormat.format(now)
+            duo.line = listOf(dateFormat.format(now), weatherLine).filter { it.isNotEmpty() }.joinToString("  ·  ")
             statusNet.set(Network.kind(this@MainActivity), Network.wifiLevel(this@MainActivity))
             handler.postDelayed(this, 10_000)
         }
@@ -123,12 +135,17 @@ class MainActivity : Activity() {
         glassLayer = GlassLayer(this)
         root.addView(glassLayer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         // Slight darkening at the top keeps white text readable on bright backgrounds
-        root.addView(View(this).apply {
+        topShade = View(this).apply {
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(0x66000000, 0x00000000),
             )
-        }, FrameLayout.LayoutParams(MATCH_PARENT, dp(260), Gravity.TOP))
+        }
+        root.addView(topShade, FrameLayout.LayoutParams(MATCH_PARENT, dp(260), Gravity.TOP))
+
+        // Middle: large clock that can disappear behind the landscape of the weather photos
+        duo = DuoClock(this) { if (::backdrop.isInitialized) backdrop else null }
+        root.addView(duo, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
         // Top left: clock and date
         timeBox = LinearLayout(this).apply {
@@ -204,10 +221,20 @@ class MainActivity : Activity() {
         for (v in listOf(timeItem, weatherItem, netItem, gearItem)) status.addView(v, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { setMargins(dp(2), 0, dp(2), 0) })
         root.addView(status, frame(Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { setMargins(0, dp(32), 0, 0) })
 
-        // Only the time, top right, without bar; clicking it brings the bar back
+        // Top right: round glass buttons for the weather and the control centre, and the time when the bar is folded away
+        topRight = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            clipChildren = false
+        }
+        cloudButton = roundButton(Glyph.Kind.CLOUD) { weatherDetails() }
+        val panelButton = roundButton(Glyph.Kind.PANEL) { Actions.run(this, "panel") }
         cornerTime = Ui.readable(Ui.text(this, 22f, medium))
         corner = statusItem { addView(cornerTime) }.apply { setOnClickListener { setStatusHidden(false) } }
-        root.addView(corner, frame(Gravity.TOP or Gravity.END).apply { setMargins(0, dp(32), dp(44), 0) })
+        topRight.addView(cloudButton, LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginEnd = dp(14) })
+        topRight.addView(panelButton, LinearLayout.LayoutParams(dp(56), dp(56)))
+        topRight.addView(corner, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(12) })
+        root.addView(topRight, frame(Gravity.TOP or Gravity.END).apply { setMargins(0, dp(30), dp(44), 0) })
         statusGlass = GlassLayer.Glass(status, dp(26f), 0)
 
         // Bottom: dock
@@ -303,7 +330,7 @@ class MainActivity : Activity() {
         root.addView(warningPill, frame(Gravity.TOP or Gravity.START).apply { setMargins(dp(48), dp(32), 0, 0) })
         warningGlass = GlassLayer.Glass(warningPill, dp(22f), 0)
 
-        glassLayer.glass += listOf(cardGlass, statusGlass, dockGlass, drawerGlass, barGlass, pickerGlass, warningGlass)
+        glassLayer.glass += listOf(cardGlass, statusGlass, dockGlass, drawerGlass, barGlass, pickerGlass, warningGlass) + roundGlass
         // Leaving the bar, e.g. down to the dock, hides it
         root.viewTreeObserver.addOnGlobalFocusChangeListener { _, now ->
             if (bar.visibility == View.VISIBLE && now != null && !isInside(now, bar)) hideBar(focusDock = false)
@@ -311,6 +338,7 @@ class MainActivity : Activity() {
         setContentView(root)
         PhoneRemote.addListener(phoneListener)
         pointOutWhatsNew()
+        handler.post { handleRequest(intent) }
         if (prefs.places.isEmpty()) handler.postDelayed({ welcome() }, 800)
     }
 
@@ -337,6 +365,7 @@ class MainActivity : Activity() {
         cond.text = tr("Ort festlegen")
         extra.text = tr("Für das Wetter einen Ort wählen")
         statusTemp.text = tr("Ort?")
+        weatherLine = ""
     }
 
     /** After an update, once: says where to see what is new. */
@@ -390,10 +419,20 @@ class MainActivity : Activity() {
         statusGlass.tint = Ui.glassTint(prefs.glass)
         // Only the chosen top style is part of the home screen
         val classic = prefs.topStyle == "classic"
+        val middle = prefs.topStyle == "duo"
+        val bar = !classic && !middle
         timeBox.visibility = if (classic) View.VISIBLE else View.GONE
         card.visibility = if (classic) View.VISIBLE else View.GONE
-        status.visibility = if (!classic && !prefs.statusHidden) View.VISIBLE else View.GONE
-        corner.visibility = if (!classic && prefs.statusHidden) View.VISIBLE else View.GONE
+        // The weather card sits below the round buttons
+        card.layoutParams = frame(Gravity.TOP or Gravity.END).apply { setMargins(0, dp(104), dp(56), 0) }
+        status.visibility = if (bar && !prefs.statusHidden) View.VISIBLE else View.GONE
+        corner.visibility = if (bar && prefs.statusHidden) View.VISIBLE else View.GONE
+        duo.visibility = if (middle) View.VISIBLE else View.GONE
+        cloudButton.visibility = if (middle) View.VISIBLE else View.GONE
+        // The dark shade at the top would show as a band behind the landscape in front of the clock
+        topShade.visibility = if (middle) View.GONE else View.VISIBLE
+        glassLayer.liquid = prefs.glass == Ui.LIQUID
+        for (g in roundGlass) g.tint = Ui.glassTint(prefs.glass, -0x10)
         // With the large clock top left, the warning moves to the top centre
         warningPill.layoutParams = frame(if (classic) Gravity.TOP or Gravity.CENTER_HORIZONTAL else Gravity.TOP or Gravity.START).apply {
             setMargins(if (classic) 0 else dp(48), dp(32), 0, 0)
@@ -449,6 +488,44 @@ class MainActivity : Activity() {
         // Home button while the launcher is already showing
         if (picker.visibility == View.VISIBLE) closePicker(keep = false)
         if (drawer.visibility == View.VISIBLE) closeDrawer()
+        handleRequest(intent)
+    }
+
+    /** Requests from a remote key or the control centre: open an app or a screen through the home screen. */
+    private fun handleRequest(intent: Intent?) {
+        val launchPkg = intent?.getStringExtra(Actions.EXTRA_LAUNCH)
+        val open = intent?.getStringExtra(Actions.EXTRA_OPEN)
+        intent?.removeExtra(Actions.EXTRA_LAUNCH)
+        intent?.removeExtra(Actions.EXTRA_OPEN)
+        if (launchPkg != null) {
+            // The app's own lock and time window apply as when it is opened from the dock
+            Apps.installed(this).firstOrNull { it.pkg == launchPkg }?.let { launch(it) } ?: toast(tr("{0} lässt sich nicht öffnen", launchPkg))
+        }
+        when (open) {
+            "settings" -> openSettings()
+            "weather" -> weatherDetails()
+        }
+    }
+
+    /** Small round glass button with a symbol, as in the top right corner of tvOS. */
+    private fun roundButton(kind: Glyph.Kind, onClick: () -> Unit): View {
+        val v = FrameLayout(this).apply {
+            isFocusable = true
+            isClickable = true
+            background = Ui.outline(this@MainActivity, dp(28f))
+            addView(ImageView(this@MainActivity).apply { setImageDrawable(Glyph(kind)) }, FrameLayout.LayoutParams(dp(26), dp(26), Gravity.CENTER))
+            setOnFocusChangeListener { b, f ->
+                b.background = if (f) GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(0x26FFFFFF)
+                    setStroke(dp(3), 0xFFFFFFFF.toInt())
+                } else Ui.outline(this@MainActivity, dp(28f))
+                b.animate().scaleX(if (f) 1.1f else 1f).scaleY(if (f) 1.1f else 1f).setDuration(150).start()
+            }
+            setOnClickListener { onClick() }
+        }
+        roundGlass += GlassLayer.Glass(v, dp(28f), 0)
+        return v
     }
 
     @Deprecated("Launcher handles Back itself")
@@ -701,6 +778,7 @@ class MainActivity : Activity() {
         }
         haveWeather = true
         statusTemp.text = "${w.temp}°"
+        weatherLine = "${w.temp}° ${WeatherApi.describe(w.code)}"
         statusWeather.set(WeatherApi.skyFor(w.code), w.isDay)
         temp.text = "${w.temp}°"
         cond.text = WeatherApi.describe(w.code)
@@ -786,6 +864,9 @@ class MainActivity : Activity() {
         val byComponent = apps.associateBy { it.component }
         val entries = ids.mapNotNull { byComponent[it] }
         for (app in entries) dock.addView(appTile(app, inDock = true), dockSlot())
+        if (TvInputs.list(this).isNotEmpty()) {
+            dock.addView(tile(tr("Eingänge"), Glyph(Glyph.Kind.INPUT), null, locked = false, onClick = { Actions.run(this, "inputs") }, onMenu = null), dockSlot())
+        }
         dock.addView(tile(tr("Alle Apps"), null, "⋯", locked = prefs.lockAllApps, onClick = { openDrawer() }, onMenu = { allAppsMenu() }), dockSlot())
         dock.addView(tile(tr("Einstellungen"), null, "⚙", locked = prefs.protectSettings, onClick = { openSettings() }, onMenu = null), dockSlot())
         val index = entries.indexOfFirst { it.component == focus }.coerceAtLeast(0)

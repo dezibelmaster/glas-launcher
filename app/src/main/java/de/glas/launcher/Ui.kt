@@ -26,10 +26,18 @@ object Ui {
     val thin: Typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
     val light: Typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
 
-    val glassNames get() = listOf(tr("Hell"), tr("Mittel"), tr("Dunkel"))
+    val glassNames get() = listOf(tr("Hell"), tr("Mittel"), tr("Dunkel"), tr("Liquid Glass (wie tvOS 26)"))
 
-    /** Dark glass tint for a strength from the settings; [extra] makes it a bit more or less opaque. */
+    /** The bright, clear glass of tvOS 26 with a light rim, instead of dark frosted glass. */
+    const val LIQUID = 3
+
+    /** Glass tint for a strength from the settings; [extra] makes it a bit more or less opaque. */
     fun glassTint(level: Int, extra: Int = 0): Int {
+        if (level == LIQUID) {
+            // Panels full of text (all apps, picker) get a dark veil so the writing stays readable
+            if (extra > 0) return 0x8C0A0D12.toInt()
+            return ((0x24 + extra / 4).coerceIn(0x10, 0x40) shl 24) or 0xFFFFFF
+        }
         val alpha = (intArrayOf(0x73, 0x9E, 0xC4)[level.coerceIn(0, 2)] + extra).coerceIn(0x20, 0xF2)
         return (alpha shl 24) or 0x080B10
     }

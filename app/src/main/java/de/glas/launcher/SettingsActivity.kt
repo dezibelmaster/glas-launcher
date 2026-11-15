@@ -87,11 +87,18 @@ class SettingsActivity : Activity() {
         row(tr("Milchglas über Videos"), rateLabel(prefs.glassVideoRate)) { chooseGlassRate() }
         row(tr("Eigene Bilder und Videos verwalten")) { manageMedia() }
         row(tr("Heruntergeladene Videos löschen"), megabytes(MediaCache.size(this))) { clearDownloads() }
-        row(tr("Oben anzeigen"), if (prefs.topStyle == "classic") tr("Große Uhr und Wetterkarte") else tr("Statusleiste")) {
+        val styles = listOf("bar", "classic", "duo")
+        row(tr("Oben anzeigen"), when (prefs.topStyle) {
+            "classic" -> tr("Große Uhr und Wetterkarte")
+            "duo" -> tr("Große Uhr in der Mitte (iPhone-Stil)")
+            else -> tr("Statusleiste")
+        }) {
             GlassMenu.show(this, tr("Oben anzeigen"), listOf(
                 GlassMenu.Item(tr("Statusleiste: Wetter, WLAN, Einstellungen, Datum, Uhrzeit")) { prefs.topStyle = "bar"; render() },
                 GlassMenu.Item(tr("Große Uhr und Wetterkarte")) { prefs.topStyle = "classic"; render() },
-            ), focus = if (prefs.topStyle == "classic") 1 else 0)
+                GlassMenu.Item(tr("Große Uhr in der Mitte (iPhone-Stil)")) { prefs.topStyle = "duo"; render() },
+            ), focus = styles.indexOf(prefs.topStyle).coerceAtLeast(0),
+                footer = tr("Bei den eingebauten Wetterfotos (Wetter · Realistisch) verschwindet die große Uhr in der Mitte teilweise hinter Bergen und Wäldern."))
         }
         note(
             tr("Eigene Wetterfotos: Lege Bilder in den Ordner Pictures/GlasLauncher auf dem Fernseher, z. B. clear_day.jpg, partly_day.jpg, overcast_day.jpg, fog_day.jpg, rain_day.jpg, snow_day.jpg, storm_day.jpg und für die Nacht z. B. clear_night.jpg. Sie ersetzen die eingebauten Fotos."),
@@ -144,6 +151,12 @@ class SettingsActivity : Activity() {
         if (GoogleTv.available(this)) {
             row(tr("Google-TV-Oberfläche"), if (GoogleTv.isOn(this)) tr("An") else tr("Aus")) { switchGoogleTv() }
         }
+
+        section(tr("Fernbedienung"))
+        val keys = KeyRemap.all(this).filterValues { !it.empty }
+        row(tr("Tasten neu belegen"), if (keys.isEmpty()) tr("keine") else tr("{0} Tasten", keys.size)) { withPin { keyList() } }
+        if (!redirectOn()) row(tr("Dafür „Home-Taste umleiten“ einschalten"), tr("Aus")) { open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+        note(tr("Gib Tasten der Fernbedienung neue Aufgaben, einmal, zweimal oder lange gedrückt: z. B. eine App öffnen, einen Eingang wählen, das Kontrollzentrum oder den Bildschirm ausschalten. Nicht jede Taste lässt sich abfangen; manche Fernseher behandeln z. B. die Netflix-Taste selbst. Bleibt „einmal drücken“ auf Normal, schickt der Launcher die Taste über den Debugging-Zugang weiter, dafür muss das USB-Debugging an sein."))
         note(
             tr("Google TV bietet keine Auswahl für den Startbildschirm. Zwei Wege:\n1. Home-Taste umleiten: In den Bedienungshilfen „Glas Launcher“ einschalten. Kommt eine Meldung „Eingeschränkte Einstellung“, zuerst unter Apps → Glas Launcher → ⋮ „Eingeschränkte Einstellungen zulassen“ wählen.\n2. Google-Oberfläche abschalten (am zuverlässigsten): oben „Google-TV-Oberfläche“ auf Aus stellen, oder am Computer:\nadb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx"),
         )
@@ -659,6 +672,81 @@ class SettingsActivity : Activity() {
             }
         }, focus = ids.indexOf(prefs.weatherSource).coerceAtLeast(0),
             footer = tr("Antwortet die gewählte Quelle nicht, nimmt der Launcher automatisch eine der anderen. Woher das Wetter gerade kommt, steht oben rechts in der Wetteransicht. Luftqualität und Pollen kommen immer von Open-Meteo."))
+    }
+
+    // ---- Remote keys ----
+
+    private fun keyList() {
+        val keys = KeyRemap.all(this).filterValues { !it.empty }
+        val items = keys.keys.sorted().map { code ->
+            val m = keys.getValue(code)
+            val summary = listOfNotNull(
+                m.press?.let { tr("1×: {0}", Actions.label(this, it)) },
+                m.double?.let { tr("2×: {0}", Actions.label(this, it)) },
+                m.long?.let { tr("lang: {0}", Actions.label(this, it)) },
+            ).joinToString(" · ")
+            GlassMenu.Item(KeyRemap.name(code) + "  ·  " + summary) { keyMenu(code) }
+        } + GlassMenu.Item(tr("Taste hinzufügen …")) { captureKey() }
+        GlassMenu.show(this, tr("Tasten neu belegen"), items, focus = items.size - 1)
+    }
+
+    /** Waits for one key press and takes that key. */
+    private fun captureKey() {
+        val dialog = android.app.Dialog(this)
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dialog.setContentView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(32), dp(28), dp(32), dp(28))
+            addView(Ui.text(this@SettingsActivity, 22f).apply { text = tr("Drücke jetzt die Taste") })
+            addView(Ui.text(this@SettingsActivity, 14f, color = Ui.MUTED).apply {
+                text = tr("Drücke auf der Fernbedienung die Taste, die eine neue Aufgabe bekommen soll. Zurück bricht ab.")
+                setPadding(0, dp(10), 0, 0)
+            })
+        })
+        dialog.window?.setBackgroundDrawable(Ui.panel(this))
+        dialog.setOnKeyListener { d, code, event ->
+            if (event.action != android.view.KeyEvent.ACTION_UP) return@setOnKeyListener true
+            if (code == android.view.KeyEvent.KEYCODE_BACK) { d.dismiss(); return@setOnKeyListener true }
+            d.dismiss()
+            if (!KeyRemap.allowed(code)) toast(tr("Diese Taste wird zum Bedienen gebraucht und lässt sich nicht neu belegen"))
+            else keyMenu(code)
+            true
+        }
+        dialog.show()
+        dialog.window?.setLayout(dp(560), android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
+
+    private fun keyMenu(code: Int) {
+        val m = KeyRemap.get(this, code) ?: KeyRemap.Mapping(null, null, null)
+        GlassMenu.show(this, KeyRemap.name(code), listOf(
+            GlassMenu.Item(tr("Einmal drücken: {0}", Actions.label(this, m.press))) {
+                chooseAction { a -> KeyRemap.put(this, code, KeyRemap.Mapping(a, m.double, m.long)); keyMenu(code) }
+            },
+            GlassMenu.Item(tr("Zweimal drücken: {0}", Actions.label(this, m.double))) {
+                chooseAction { a -> KeyRemap.put(this, code, KeyRemap.Mapping(m.press, a, m.long)); keyMenu(code) }
+            },
+            GlassMenu.Item(tr("Lange drücken: {0}", Actions.label(this, m.long))) {
+                chooseAction { a -> KeyRemap.put(this, code, KeyRemap.Mapping(m.press, m.double, a)); keyMenu(code) }
+            },
+            GlassMenu.Item(tr("Belegung entfernen")) { KeyRemap.put(this, code, null); render(); keyList() },
+            GlassMenu.Item(tr("Fertig")) { render() },
+        ), footer = tr("„Normal“ lässt die Taste tun, was sie sonst auch tut."))
+    }
+
+    /** Picks what a key should do; null means its normal job. */
+    private fun chooseAction(done: (String?) -> Unit) {
+        val items = mutableListOf(GlassMenu.Item(tr("Normal")) { done(null) })
+        items += Actions.builtIn().map { (id, label) -> GlassMenu.Item(label) { done(id) } }
+        items += GlassMenu.Item(tr("App öffnen …")) {
+            GlassMenu.show(this, tr("App öffnen"), Apps.installed(this).map { app ->
+                GlassMenu.Item(app.label) { done("app:" + app.pkg) }
+            })
+        }
+        val inputs = TvInputs.list(this)
+        if (inputs.isNotEmpty()) items += GlassMenu.Item(tr("Eingang wählen …")) {
+            GlassMenu.show(this, tr("Eingänge"), inputs.map { input -> GlassMenu.Item(input.label) { done("input:" + input.id) } })
+        }
+        GlassMenu.show(this, tr("Neue Aufgabe"), items)
     }
 
     private fun idleLabel(min: Int) = if (min == 0) tr("Aus") else tr("{0} Minuten", min)

@@ -5,7 +5,7 @@
 Werbefreie Startseite für den TCL Google TV: Statusleiste mit Wetter, WLAN, Datum und Uhrzeit, wechselnde Hintergründe
 und Apps in einem Dock aus dunklem Milchglas.
 
-Aktuelle Versionen: **Glas Launcher 2.47**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
+Aktuelle Versionen: **Glas Launcher 2.48**, **Glas Browser 1.3**, **Glas Natur-Videos 1.2**.
 
 ![Startbildschirm mit Video-Hintergrund, Statusleiste und Dock](docs/screenshots/startbildschirm-video.jpg)
 
@@ -44,10 +44,17 @@ Aktuelle Versionen: **Glas Launcher 2.47**, **Glas Browser 1.3**, **Glas Natur-V
   modern (gezeichnet) oder abstrakt (Farbverläufe), eigenes Bild,
   eigene Videos (einzeln oder abwechselnd, mit Schnellauswahl und Favoriten), Erweiterungen wie „Glas Natur-Videos“ und Projectivy-Plugins.
 - **Hintergrund-Leiste:** weiterschalten und mit Live-Vorschau auswählen.
-- **Milchglas:** hell, mittel oder dunkel; über Videos einstellbar, wie oft es das Bild übernimmt (Standbild bis 15× pro Sekunde).
+- **Milchglas:** hell, mittel, dunkel oder **Liquid Glass** wie bei tvOS 26 (heller, klarer, mit leuchtendem Rand); über Videos einstellbar, wie oft es das Bild übernimmt (Standbild bis 15× pro Sekunde).
 - **Bildschirmschoner:** große Uhr mit Datum und Wetter, wandert gegen Einbrennen.
 - **Wetter:** beliebige Orte; beim ersten Start fragt der Launcher nach der eigenen Stadt. Hohe Schleierwolken werden herausgerechnet.
 - **Startbildschirm:** ersetzt die Google-TV-Oberfläche, auch nach einem Neustart.
+- **Große Uhr in der Mitte (iPhone-Stil):** runde Glas-Ziffern mit Begrüßung, Datum und Wetter. Bei den eingebauten
+  Wetterfotos verschwindet die Uhr teilweise hinter Bergen und Wäldern; auf hellem Himmel werden die Ziffern grau.
+- **Kontrollzentrum:** runder Schalter oben rechts. Öffnet ein Glas-Menü mit WLAN, Bluetooth, Arbeitsspeicher, Ton,
+  Schlummertimer, Bildschirmschoner, Bildschirm aus, Einstellen per Handy, Eingängen, Suche und dem Wetter von heute und morgen.
+- **Eingänge:** HDMI-Anschlüsse und TV-Empfang direkt wählen, über die Kachel „Eingänge“ im Dock oder das Kontrollzentrum.
+- **Tasten neu belegen:** Tasten der Fernbedienung bekommen neue Aufgaben, einmal, zweimal oder lange gedrückt
+  (App, Eingang, Kontrollzentrum, Bildschirm aus …). Braucht „Home-Taste umleiten“.
 - **Glas Browser:** eigene App mit der Firefox-Engine für Videoseiten, mit Firefox-Erweiterungen wie uBlock Origin; Mauszeiger auf der Fernbedienung, Adressen und Text tippst du auf dem Handy ein.
 
 ## Bedienung auf dem Fernseher
@@ -406,6 +413,16 @@ Die Texte stehen auf Deutsch im Code und laufen durch `tr("…")`. Die Übersetz
 heißen `{0}`, `{1}`. Fehlt ein Eintrag, erscheint der deutsche Text. Eine neue Sprache braucht eine solche Datei
 und einen Eintrag in `I18n.languages`. Amtliche Unwetterwarnungen gibt der Deutsche Wetterdienst nur auf Deutsch
 und Englisch heraus; in den anderen Sprachen erscheinen sie auf Englisch.
+
+## Große Uhr hinter den Bergen
+
+Für die eingebauten Wetterfotos liegen unter `app/src/main/assets/weather/mask/` Graustufen-Masken (weiß = Landschaft).
+Der Launcher schneidet damit die Landschaft aus dem Foto und zeichnet sie über die Ziffern, genau dort, wo das Foto
+liegt (auch beim langsamen Schwenk). Die Uhr steht so, dass die Landschaft etwa ein Viertel der Ziffern verdeckt.
+Eigene Fotos haben keine Maske, dort steht die Uhr frei. Die Masken wurden einmalig mit OpenCV (GrabCut) erzeugt.
+
+Schrift der großen Uhr: Nunito SemiBold, © The Nunito Project Authors, SIL Open Font License 1.1
+(`app/src/main/assets/fonts/NOTICE.txt`).
 
 ## Quellen
 

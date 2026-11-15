@@ -42,7 +42,7 @@ class WeatherActivity : Activity() {
         val root = FrameLayout(this)
         backdrop = Backdrops.create(this, prefs)
         root.addView(backdrop, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        glassLayer = GlassLayer(this).also { it.backdrop = backdrop }
+        glassLayer = GlassLayer(this).also { it.backdrop = backdrop; it.liquid = prefs.glass == Ui.LIQUID }
         root.addView(glassLayer, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         // Slightly darker overall, so the cards read well on any background
         root.addView(View(this).apply { setBackgroundColor(0x33000000) }, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))

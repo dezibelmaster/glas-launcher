@@ -157,9 +157,9 @@ object PhoneApi {
     private fun settings(ctx: Context, prefs: Prefs, req: Request, o: JSONObject) {
         for (key in o.keys()) {
             when (key) {
-                "glass" -> prefs.glass = o.getInt(key).takeIf { it in 0..2 } ?: bad(key)
+                "glass" -> prefs.glass = o.getInt(key).takeIf { it in 0..Ui.LIQUID } ?: bad(key)
                 "glassVideoRate" -> prefs.glassVideoRate = o.getInt(key).takeIf { it in glassRates } ?: bad(key)
-                "topStyle" -> prefs.topStyle = o.getString(key).takeIf { it == "bar" || it == "classic" } ?: bad(key)
+                "topStyle" -> prefs.topStyle = o.getString(key).takeIf { it == "bar" || it == "classic" || it == "duo" } ?: bad(key)
                 "statusHidden" -> prefs.statusHidden = o.getBoolean(key)
                 "idleMinutes" -> prefs.idleMinutes = o.getInt(key).takeIf { it in idleOptions } ?: bad(key)
                 "saverClock" -> prefs.saverClock = o.getBoolean(key)

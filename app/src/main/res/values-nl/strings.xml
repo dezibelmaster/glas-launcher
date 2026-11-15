@@ -3,5 +3,5 @@
     <string name="settings_label">Glas Launcher-instellingen</string>
     <string name="weather_label">Weer</string>
     <string name="home_redirect_label">Glas Launcher: Home-knop omleiden</string>
-    <string name="home_redirect_description">Opent Glas Launcher in plaats van de Google TV- of Fire TV-interface wanneer je op de Home-knop drukt. Er wordt geen inhoud gelezen.</string>
+    <string name="home_redirect_description">Opent Glas Launcher in plaats van de Google TV- of Fire TV-interface wanneer je op de Home-knop drukt. Er wordt geen inhoud gelezen. Desgewenst geeft hij ook toetsen van de afstandsbediening nieuwe taken (Instellingen → Afstandsbediening).</string>
 </resources>

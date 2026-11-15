@@ -4,9 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Shader
 import android.net.Uri
 import android.os.SystemClock
 import android.view.View
@@ -66,6 +71,18 @@ abstract class Backdrop(context: Context) : FrameLayout(context) {
         }
     }
 
+    /** For the clock that disappears behind the landscape; null for backgrounds without one. */
+    open val depth: Depth? get() = null
+
+    interface Depth {
+        /** Height on screen where the landscape begins, or null if the current picture has no mask. */
+        fun horizonY(): Float?
+        /** Draws the landscape in front of the sky, over whatever was drawn before. */
+        fun drawForeground(c: Canvas)
+        /** Brightness of the sky behind the clock (0–1), or null if unknown. */
+        fun skyLight(): Float?
+    }
+
     /** Called on the main thread whenever [titles] or [current] change. */
     var onChange: (() -> Unit)? = null
 }
@@ -103,6 +120,14 @@ class SceneBackdrop(context: Context, private val scene: Scene) : Backdrop(conte
     }
 
     override fun drawBackdrop(c: Canvas) = scene.draw(c, now, true)
+
+    override val depth: Depth? = (scene as? PhotoScene)?.let { photo ->
+        object : Depth {
+            override fun horizonY() = photo.horizonY()
+            override fun drawForeground(c: Canvas) = photo.drawForeground(c, now)
+            override fun skyLight() = photo.skyLight()
+        }
+    }
 
     override fun release() = scene.release()
 }
@@ -184,6 +209,21 @@ class GlassLayer(context: Context) : View(context) {
     var backdrop: Backdrop? = null
     val glass = mutableListOf<Glass>()
 
+    /** Liquid Glass: livelier colours behind the glass, a sheen at the top and a bright rim. */
+    var liquid = false
+        set(v) {
+            field = v
+            blurPaint.colorFilter = if (v) ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(1.45f) }) else null
+        }
+    private val sheenPaint = Paint().apply {
+        shader = LinearGradient(0f, 0f, 0f, 1f, intArrayOf(0x40FFFFFF, 0x0DFFFFFF, 0x00FFFFFF), floatArrayOf(0f, .45f, 1f), Shader.TileMode.CLAMP)
+    }
+    private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        shader = LinearGradient(0f, 0f, 1f, 1f, intArrayOf(0xCCFFFFFF.toInt(), 0x33FFFFFF, 0x80FFFFFF.toInt()), floatArrayOf(0f, .55f, 1f), Shader.TileMode.CLAMP)
+    }
+    private val unit = Matrix()
+
     private var small: Bitmap? = null
     private var smallCanvas: Canvas? = null
     private val blurPaint = Paint(Paint.FILTER_BITMAP_FLAG)
@@ -226,7 +266,21 @@ class GlassLayer(context: Context) : View(context) {
                 canvas.drawBitmap(sb, null, full, blurPaint)
                 tintPaint.color = g.tint
                 canvas.drawRect(rect, tintPaint)
+                if (liquid) {
+                    // Gradients are drawn on a 1×1 square and stretched over each pane
+                    unit.setScale(rect.width(), rect.height())
+                    unit.postTranslate(rect.left, rect.top)
+                    sheenPaint.shader.setLocalMatrix(unit)
+                    canvas.drawRect(rect, sheenPaint)
+                }
                 canvas.restore()
+                if (liquid) {
+                    rimPaint.strokeWidth = resources.displayMetrics.density * 1.5f
+                    rimPaint.shader.setLocalMatrix(unit)
+                    val inset = rimPaint.strokeWidth / 2
+                    rect.inset(inset, inset)
+                    canvas.drawRoundRect(rect, g.radius - inset, g.radius - inset, rimPaint)
+                }
             }
         }
         postInvalidateOnAnimation()
