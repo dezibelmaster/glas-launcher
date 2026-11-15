@@ -68,7 +68,7 @@ AUFNAHMEN = {
     "schnattern": ("Geese Honking (loud).ogg", 3.5),
     "papagei": ("parrot-sound.mp3", 4.0),
     "adler": ("Buteo jamaicensis - Red-tailed Hawk XC71575.mp3", 2.5),
-    "wal": ("whale-sound.mp3", 5.5),
+    "wal": ("Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga", 5.5),
     "fiepen": ("guinea-pig-noises.mp3", 3.5),
     "robbe": ("seal-barking-sound.mp3", 4.0),
     "zischen": ("snake-hiss-sound-effect.mp3", 3.5),
@@ -102,7 +102,7 @@ AUFNAHMEN = {
 _FSL = {"urheber": "Free Sounds Library (freesoundslibrary.com)", "lizenz": "CC BY 4.0",
         "seite": "https://www.freesoundslibrary.com/"}
 LOKAL = {name: _FSL for name in [
-    "pig-sound-effect.mp3", "parrot-sound.mp3", "whale-sound.mp3", "guinea-pig-noises.mp3", "seal-barking-sound.mp3",
+    "pig-sound-effect.mp3", "parrot-sound.mp3", "guinea-pig-noises.mp3", "seal-barking-sound.mp3",
     "snake-hiss-sound-effect.mp3", "pool-bubbles-sound-effect.mp3", "water-splash-sound.mp3",
     "boat-horn-sound-effect.mp3", "tugboat-horn-sound-effect-near-harbor.mp3", "spaceship-launching-sound-effect.mp3",
     "realistic-fighter-jet-flyby-sound-effect.mp3", "ferry-boat-engine-sound-effects.mp3",
