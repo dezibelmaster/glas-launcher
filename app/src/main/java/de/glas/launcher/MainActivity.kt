@@ -426,6 +426,7 @@ class MainActivity : Activity() {
         applyBackdrop()
         // Own videos may have been deleted or added in the meantime
         if (prefs.background == "video") (backdrop as? VideoBackdrop)?.refresh()
+        if (prefs.background == "image") (backdrop as? OwnPhotosBackdrop)?.refresh()
         cardGlass.tint = Ui.glassTint(prefs.glass, -0x18)
         statusGlass.tint = Ui.glassTint(prefs.glass)
         // Only the chosen top style is part of the home screen

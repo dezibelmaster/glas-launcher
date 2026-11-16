@@ -361,7 +361,10 @@ object PhoneApi {
     /** After a file is gone: if it was the background, the weather comes back, as on the TV. */
     fun deleted(ctx: Context, uri: String) {
         val prefs = Prefs(ctx)
-        if ((prefs.background == "image" && prefs.imageUri == uri) || (prefs.background == "video" && prefs.videoUri == uri)) {
+        if (prefs.background == "image" && prefs.imageUri == uri && Media.list(ctx, video = false).isNotEmpty()) {
+            // Other pictures are left: they take turns instead
+            prefs.imageUri = null
+        } else if ((prefs.background == "image" && prefs.imageUri == uri) || (prefs.background == "video" && prefs.videoUri == uri)) {
             prefs.background = "weather"
         }
         PhoneRemote.changed()

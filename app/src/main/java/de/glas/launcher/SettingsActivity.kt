@@ -872,7 +872,10 @@ class SettingsActivity : Activity() {
         val name = item.name
         val usedAsImage = prefs.background == "image" && prefs.imageUri?.let { it == item.uri || it.endsWith(name) } == true
         val usedAsVideo = prefs.background == "video" && prefs.videoUri?.let { it == item.uri || it.endsWith(name) } == true
-        if (usedAsImage || usedAsVideo) {
+        if (usedAsImage && Media.list(this, video = false).isNotEmpty()) {
+            // Other pictures are left: they take turns instead
+            prefs.imageUri = null
+        } else if (usedAsImage || usedAsVideo) {
             prefs.background = "weather"
             toast(tr("Der Hintergrund zeigt wieder das Wetter"))
         }

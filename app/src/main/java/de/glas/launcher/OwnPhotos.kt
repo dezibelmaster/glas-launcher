@@ -11,7 +11,7 @@ import android.os.Looper
  */
 class OwnPhotosBackdrop private constructor(context: Context, private val state: State) :
     SceneBackdrop(context, PhotoScene(context, withFx = false, key = { _, _ -> state.key() }) { _, _ ->
-        state.uri()?.let { PhotoLoader.fromUri(context, it) }
+        state.uri()?.let { uri -> PhotoLoader.fromUri(context, uri) ?: run { state.missing?.invoke(); null } }
     }) {
 
     constructor(context: Context) : this(context, State(Prefs(context)))
@@ -22,6 +22,8 @@ class OwnPhotosBackdrop private constructor(context: Context, private val state:
         @Volatile var index = if (chosen != null) 0 else -1
         var pinned = chosen != null
         fun uri() = items.getOrNull(index)?.uri
+        /** Called when the picture to show can't be opened any more, e.g. because it was deleted. */
+        var missing: (() -> Unit)? = null
         fun key() = uri() ?: "none"
         fun title(uri: String) = Uri.parse(uri).lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: tr("Bild")
     }
@@ -38,28 +40,67 @@ class OwnPhotosBackdrop private constructor(context: Context, private val state:
     }
 
     init {
+        state.missing = { main.post { refresh() } }
         Thread {
-            val found = Media.list(context, video = false).map { MediaItem(it.uri, it.name.substringBeforeLast('.')) }
+            val found = merged(context)
             main.post {
                 if (found.isEmpty()) {
-                    if (state.items.isEmpty()) context.toast(tr("Keine eigenen Bilder gefunden"))
+                    context.toast(tr("Keine eigenen Bilder gefunden"))
                     return@post
                 }
-                val chosen = state.chosen
-                // The chosen file may be listed under another address (file:// or content://)
-                val name = chosen?.let { state.title(it) }
-                val at = found.indexOfFirst { it.uri == chosen }.takeIf { it >= 0 } ?: found.indexOfFirst { it.title == name }
-                state.items = if (at >= 0 && chosen != null) found.toMutableList().apply { set(at, MediaItem(chosen, found[at].title)) }
-                    else if (chosen != null) listOf(MediaItem(chosen, state.title(chosen))) + found else found
-                if (chosen != null) {
+                val keep = found.indexOfFirst { it.uri == state.chosen }
+                state.items = found
+                if (keep >= 0) {
                     // Already showing; only the list became longer
-                    state.index = if (at >= 0) at else 0
+                    state.index = keep
                     onChange?.invoke()
                 } else {
+                    state.pinned = false
                     val favs = state.items.indices.filter { uriAt(it) in state.prefs.favorites }
                     show(if (state.prefs.favoritesOnly && favs.isNotEmpty()) favs.random() else state.items.indices.random())
                 }
                 main.postDelayed(change, state.prefs.pluginMinutes * 60_000L)
+            }
+        }.start()
+    }
+
+    /**
+     * The pictures on the TV now. The chosen one may be listed under another address (file:// or
+     * content://); once it has been deleted it is left out like any other.
+     */
+    private fun merged(ctx: Context): List<MediaItem> {
+        val found = Media.list(ctx, video = false).map { MediaItem(it.uri, it.name.substringBeforeLast('.')) }
+        val chosen = state.chosen ?: return found
+        val name = state.title(chosen)
+        val at = found.indexOfFirst { it.uri == chosen }.takeIf { it >= 0 } ?: found.indexOfFirst { it.title == name }
+        return when {
+            at >= 0 -> found.toMutableList().apply { set(at, MediaItem(chosen, found[at].title)) }
+            Media.exists(ctx, chosen) -> listOf(MediaItem(chosen, name)) + found
+            else -> found
+        }
+    }
+
+    /** Pictures deleted or added in the meantime: the list follows, and a deleted one is no longer shown. */
+    fun refresh() {
+        Thread {
+            val found = merged(context)
+            main.post {
+                if (found.map { it.uri } == state.items.map { it.uri }) return@post
+                val showing = state.uri()
+                val keep = found.indexOfFirst { it.uri == showing }
+                state.items = found
+                if (keep >= 0) {
+                    state.index = keep
+                    onChange?.invoke()
+                } else if (found.isNotEmpty()) {
+                    // The picture on screen is gone: on to another one, changing by itself again
+                    if (state.pinned) state.prefs.imageUri = null
+                    state.pinned = false
+                    show(found.indices.random())
+                } else {
+                    state.index = -1
+                    onChange?.invoke()
+                }
             }
         }.start()
     }

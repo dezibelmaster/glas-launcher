@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.58",
+  "notes": {
+   "de": [
+    "Eigene Bilder: Gelöschte Bilder verschwinden aus der Schnellauswahl; war eines gerade zu sehen, kommt das nächste",
+    "Wird das gewählte Bild gelöscht, wechseln die übrigen eigenen Bilder ab, statt dass das Wetter zurückkommt"
+   ],
+   "en": [
+    "Own pictures: deleted pictures disappear from the quick selection; if one was showing, the next one comes",
+    "If the chosen picture is deleted, the remaining own pictures take turns instead of the weather coming back"
+   ],
+   "fr": [
+    "Mes images : les images supprimées disparaissent de la sélection rapide ; si l'une était affichée, la suivante apparaît",
+    "Si l'image choisie est supprimée, les autres images alternent au lieu du retour de la météo"
+   ],
+   "es": [
+    "Imágenes propias: las imágenes borradas desaparecen de la selección rápida; si se estaba mostrando una, aparece la siguiente",
+    "Si se borra la imagen elegida, las demás imágenes propias se alternan en lugar de volver el tiempo"
+   ],
+   "it": [
+    "Immagini personali: le immagini eliminate spariscono dalla selezione rapida; se ne era visibile una, arriva la successiva",
+    "Se l'immagine scelta viene eliminata, le altre immagini personali si alternano invece di tornare al meteo"
+   ],
+   "nl": [
+    "Eigen afbeeldingen: verwijderde afbeeldingen verdwijnen uit de snelkeuze; stond er net een, dan komt de volgende",
+    "Wordt de gekozen afbeelding verwijderd, dan wisselen de overige eigen afbeeldingen elkaar af in plaats van het weer"
+   ]
+  }
+ },
+ {
   "version": "2.57",
   "notes": {
    "de": [

@@ -184,6 +184,8 @@ object Media {
         return if (ms > 0) frames / (ms / 1000f) else 0f
     }
 
+    fun exists(ctx: Context, uri: String) = exists(ctx, Uri.parse(uri))
+
     private fun exists(ctx: Context, uri: Uri) =
         runCatching { ctx.contentResolver.openFileDescriptor(uri, "r")?.use { true } ?: false }.getOrDefault(false)
 
