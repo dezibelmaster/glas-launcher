@@ -75,8 +75,10 @@ abstract class Backdrop(context: Context) : FrameLayout(context) {
     open val depth: Depth? get() = null
 
     interface Depth {
-        /** Height on screen where the landscape begins, or null if the current picture has no mask. */
+        /** Height on screen where the landscape begins, or null if unknown. */
         fun horizonY(): Float?
+        /** Whether the landscape can be drawn in front (with a mask); otherwise the clock stays above it. */
+        fun covers(): Boolean
         /** Draws the landscape in front of the sky, over whatever was drawn before. */
         fun drawForeground(c: Canvas)
         /** Brightness of the sky behind the clock (0–1), or null if unknown. */
@@ -124,6 +126,7 @@ open class SceneBackdrop(context: Context, protected val scene: Scene) : Backdro
     override val depth: Depth? = (scene as? PhotoScene)?.let { photo ->
         object : Depth {
             override fun horizonY() = photo.horizonY()
+            override fun covers() = photo.hasFront()
             override fun drawForeground(c: Canvas) = photo.drawForeground(c, now)
             override fun skyLight() = photo.skyLight()
         }

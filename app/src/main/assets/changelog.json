@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.56",
+  "notes": {
+   "de": [
+    "Große Uhr passt sich jedem Foto an: Auch bei Wolkenmeer, Meer oder Nebel steht sie jetzt im Himmel direkt über dem Horizont",
+    "Beim Bildwechsel gleitet die Uhr sanft an ihre neue Höhe"
+   ],
+   "en": [
+    "Big clock adapts to every photo: with a sea of clouds, the sea or fog it now stands in the sky right above the horizon",
+    "When the picture changes, the clock glides smoothly to its new height"
+   ],
+   "fr": [
+    "La grande horloge s'adapte à chaque photo : avec une mer de nuages, la mer ou du brouillard, elle se place dans le ciel juste au-dessus de l'horizon",
+    "Au changement d'image, l'horloge glisse en douceur vers sa nouvelle hauteur"
+   ],
+   "es": [
+    "El reloj grande se adapta a cada foto: con mar de nubes, mar o niebla se sitúa en el cielo justo sobre el horizonte",
+    "Al cambiar de imagen, el reloj se desliza suavemente a su nueva altura"
+   ],
+   "it": [
+    "L'orologio grande si adatta a ogni foto: con mare di nuvole, mare o nebbia ora sta nel cielo appena sopra l'orizzonte",
+    "Al cambio d'immagine l'orologio scorre dolcemente alla nuova altezza"
+   ],
+   "nl": [
+    "De grote klok past zich aan elke foto aan: bij een wolkenzee, de zee of mist staat hij nu in de lucht net boven de horizon",
+    "Bij een andere afbeelding glijdt de klok rustig naar zijn nieuwe hoogte"
+   ]
+  }
+ },
+ {
   "version": "2.55",
   "notes": {
    "de": [

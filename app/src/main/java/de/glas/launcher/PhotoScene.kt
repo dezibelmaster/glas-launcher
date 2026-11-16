@@ -75,9 +75,11 @@ class PhotoScene(
         Thread {
             val photo = loader(sky, day)
             // Photos without a prepared mask get one found automatically, when the skyline is clear
-            val mask = photo?.mask ?: if (photo?.autoMask == true) SkyDetector.mask(photo.bitmap) else null
+            val found = if (photo != null && photo.mask == null && photo.autoMask) SkyDetector.analyse(photo.bitmap) else null
+            val mask = photo?.mask ?: found?.mask
             val front = if (photo != null && mask != null) runCatching { front(photo.bitmap, mask) }.getOrNull() else null
-            val horizon = mask?.let { horizon(it) }
+            // Without a usable mask the horizon still tells where the sky is, so the clock can stand there
+            val horizon = mask?.let { horizon(it) } ?: found?.horizon
             val light = if (photo != null && horizon != null) skyLight(photo.bitmap, horizon) else null
             main.post {
                 if (mine != token) return@post
@@ -146,11 +148,14 @@ class PhotoScene(
     /** Brightness of the sky behind the clock for the current photo, or null if unknown. */
     fun skyLight(): Float? = current?.let { cur -> cur.skyLight?.let { if (cur.photo.dim) it * .41f else it } }
 
-    /** Height on screen where the landscape of the current photo begins, or null without a mask. */
+    /** Whether the landscape of the current photo can be drawn in front of the clock. */
+    fun hasFront() = current?.front != null
+
+    /** Height on screen where the landscape of the current photo begins, or null if unknown. */
     fun horizonY(): Float? {
         val cur = current ?: return null
         val hz = cur.horizon ?: return null
-        if (cur.front == null || w == 0f) return null
+        if (w == 0f) return null
         val full = cur.photo.bitmap
         val scale = max(w / full.width, h / full.height) * 1.08f
         return h / 2 + (hz * full.height - full.height / 2f) * scale

@@ -36,6 +36,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
     private val bounds = Rect()
     private val clip = RectF()
     private var shaderTop = Float.NaN
+    private var shownTop = Float.NaN
     private var shaderBright = false
 
     override fun onDraw(c: Canvas) {
@@ -46,15 +47,14 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         digits.getTextBounds("0", 0, 1, bounds)
         val digitH = bounds.height().toFloat()
 
-        // Where the digits go: by default in the upper half; on a photo with a mask so that the
-        // landscape covers about a third of them, as long as they stay clear of the dock
         val depth = backdrop()?.depth
-        val horizon = depth?.horizonY()
-        var top = h * .19f
-        if (horizon != null && horizon in h * .30f..h * .80f) {
-            top = (horizon + digitH * .24f - digitH).coerceIn(h * .17f, h * .64f - digitH)
-        }
-        manualTop?.let { top = (it * h).coerceIn(minTop(h), maxTop(h, digitH)) }
+        val covers = depth?.covers() == true
+        // A new picture moves the clock; it glides there instead of jumping
+        val target = place(h, digitH)
+        if (shownTop.isNaN() || manualTop != null) shownTop = target
+        else if (kotlin.math.abs(target - shownTop) > .5f) { shownTop += (target - shownTop) * .08f; postInvalidateOnAnimation() }
+        else shownTop = target
+        val top = shownTop
         val baseline = top + digitH
         // On a bright sky (snow, fog) the glass turns grey so the clock stays readable
         val bright = (depth?.skyLight() ?: 0f) > .75f
@@ -81,7 +81,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         edge.color = if (bright) 0x59FFFFFF else 0x4DFFFFFF
         c.drawText(time, w / 2, baseline, edge)
 
-        if (depth != null && horizon != null) {
+        if (depth != null && covers) {
             // Landscape over the digits, only inside the clock so nothing else changes
             val half = digits.measureText(time) / 2
             clip.set(w / 2 - half - h * .02f, top - h * .03f, w / 2 + half + h * .02f, baseline + h * .03f)
@@ -91,6 +91,9 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
             c.restore()
             // The photo moves slowly, so the landscape in front has to follow
             postInvalidateOnAnimation()
+        } else if (depth != null) {
+            // A newly loaded photo may move the clock
+            postInvalidateDelayed(1000)
         }
     }
 
@@ -100,10 +103,20 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         digits.textSize = h * .30f
         digits.getTextBounds("0", 0, 1, bounds)
         val digitH = bounds.height().toFloat()
-        manualTop?.let { return (it * h).coerceIn(minTop(h), maxTop(h, digitH)) / h }
-        val horizon = backdrop()?.depth?.horizonY()
-        if (horizon != null && horizon in h * .30f..h * .80f) return (horizon + digitH * .24f - digitH).coerceIn(h * .17f, h * .64f - digitH) / h
-        return .19f
+        return place(h, digitH) / h
+    }
+
+    /**
+     * Where the top of the digits goes: as chosen by hand, otherwise following the picture. With a
+     * mask the landscape covers about a quarter of the digits; when only the horizon is known (a sea
+     * of clouds, the sea) the clock stands in the sky just above it. Always clear of the dock.
+     */
+    private fun place(h: Float, digitH: Float): Float {
+        manualTop?.let { return (it * h).coerceIn(minTop(h), maxTop(h, digitH)) }
+        val depth = backdrop()?.depth ?: return h * .19f
+        val horizon = depth.horizonY()?.takeIf { it in h * .30f..h * .86f } ?: return h * .19f
+        val top = if (depth.covers()) horizon + digitH * .24f - digitH else horizon - h * .04f - digitH
+        return top.coerceIn(h * .17f, maxTop(h, digitH))
     }
 
     /** Range for the clock: below the greeting's room at the top, above the dock at the bottom. */

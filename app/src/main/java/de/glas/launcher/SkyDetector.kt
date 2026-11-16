@@ -19,10 +19,17 @@ object SkyDetector {
     private const val W = 320
     private const val H = 180
 
-    /** A mask like the prepared ones (white = landscape), at the photo's size; null when unsure. Blocking. */
-    fun mask(photo: Bitmap): Bitmap? = runCatching { detect(photo) }.getOrNull()
+    /**
+     * [mask] like the prepared ones (white = landscape), at the photo's size, only when the skyline is
+     * clear. [horizon] (fraction of the height) also when it is less sure, e.g. a sea of clouds or the
+     * sea: good enough to place the clock in the sky above it, but not to cut the landscape out.
+     */
+    class Result(val mask: Bitmap?, val horizon: Float?)
 
-    private fun detect(photo: Bitmap): Bitmap? {
+    /** Blocking. */
+    fun analyse(photo: Bitmap): Result = runCatching { detect(photo) }.getOrElse { Result(null, null) }
+
+    private fun detect(photo: Bitmap): Result {
         val small = Bitmap.createScaledBitmap(photo, W, H, true)
         val px = IntArray(W * H)
         small.getPixels(px, 0, W, 0, 0, W, H)
@@ -82,7 +89,11 @@ object SkyDetector {
             still = if (d == 0) still + 1 else 0
             wall = maxOf(wall, run); flat = maxOf(flat, still)
         }
-        if (strength < .32f || skyTex > .055f || wall > 3 || flat > 60 || horizon !in .30f..0.80f) return null
+        // Some edge across the picture is enough to keep the clock above it
+        // (the highest points behind the clock count, so it doesn't cover a peak)
+        val high = line.copyOfRange(W * 27 / 100, W * 73 / 100).sorted().let { it[it.size / 10] } / H.toFloat()
+        val hint = high.takeIf { strength >= .22f && horizon in .30f..0.85f }
+        if (strength < .32f || skyTex > .055f || wall > 3 || flat > 60 || horizon !in .30f..0.80f) return Result(null, hint)
 
         // Sharpen the line on the full photo: the strongest change within a few rows, every other column
         val fw = photo.width
@@ -119,7 +130,7 @@ object SkyDetector {
             close()
         }
         c.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
-        return mask
+        return Result(mask, horizon)
     }
 
     /** Mean colour change from row to row in one column, between [y0] and [y1]. */
