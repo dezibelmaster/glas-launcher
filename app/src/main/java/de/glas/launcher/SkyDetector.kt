@@ -12,8 +12,8 @@ import kotlin.math.sqrt
  * Finds where the sky ends in a photo without a prepared mask (e.g. from Reddit), so the large
  * clock can disappear behind the landscape there too. It looks for the line with the strongest
  * colour change from left to right, held together so it can't jump around, and accepts it only
- * when the part above is calm like a sky and the part below has more structure. In doubt it
- * gives up and the clock simply stands free.
+ * when the part above is calm like a sky and the line itself looks like mountains, trees or
+ * hills rather than cloud banks or the sea. In doubt it gives up and the clock simply stands free.
  */
 object SkyDetector {
     private const val W = 320
@@ -64,17 +64,25 @@ object SkyDetector {
         val line = IntArray(W)
         for (x in W - 1 downTo 0) { line[x] = y; y = from[y][x] }
 
-        // Is it really a skyline? Strong enough, calm above, more structure below, in the middle band
-        var strength = 0f; var skyTex = 0f; var landTex = 0f
+        // Is it really a skyline? Strong enough, a fairly calm sky above, in a sensible band
+        var strength = 0f; var skyTex = 0f
         for (x in 0 until W) {
             strength += e[line[x]][x]
             skyTex += texture(r, g, b, x, 0, (line[x] - 2).coerceAtLeast(1))
-            landTex += texture(r, g, b, x, (line[x] + 2).coerceAtMost(H - 1), H)
         }
-        strength /= W; skyTex /= W; landTex /= W
+        strength /= W; skyTex /= W
         val middle = line.copyOfRange(W / 4, W * 3 / 4).sorted()
         val horizon = middle[middle.size / 4] / H.toFloat()
-        if (strength < .35f || skyTex > .03f || landTex < skyTex * 1.4f || horizon !in .32f..0.70f) return null
+        // A line that runs straight up for several columns or lies flat across half the picture
+        // has usually followed clouds, fog or the sea rather than mountains
+        var wall = 0; var flat = 0; var run = 0; var still = 0
+        for (x in 1 until W) {
+            val d = abs(line[x] - line[x - 1])
+            run = if (d >= 3) run + 1 else 0
+            still = if (d == 0) still + 1 else 0
+            wall = maxOf(wall, run); flat = maxOf(flat, still)
+        }
+        if (strength < .32f || skyTex > .055f || wall > 3 || flat > 60 || horizon !in .30f..0.80f) return null
 
         // Sharpen the line on the full photo: the strongest change within a few rows, every other column
         val fw = photo.width

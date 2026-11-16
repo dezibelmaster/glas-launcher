@@ -48,7 +48,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         val depth = backdrop()?.depth
         val horizon = depth?.horizonY()
         var top = h * .19f
-        if (horizon != null && horizon in h * .30f..h * .70f) {
+        if (horizon != null && horizon in h * .30f..h * .80f) {
             top = (horizon + digitH * .24f - digitH).coerceIn(h * .17f, h * .64f - digitH)
         }
         val baseline = top + digitH

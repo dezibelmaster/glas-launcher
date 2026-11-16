@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.54",
+  "notes": {
+   "de": [
+    "Große Uhr: Die Bergkante wird auf eigenen Fotos und Reddit-Bildern viel öfter erkannt, auch bei Wolken oder Abendrot",
+    "Wolkenmeere, Meereshorizonte und Nebelbänke werden nicht mehr fälschlich als Berge genommen"
+   ],
+   "en": [
+    "Big clock: the mountain edge is found much more often on your own photos and Reddit pictures, even with clouds or sunset skies",
+    "Seas of cloud, sea horizons and fog banks are no longer mistaken for mountains"
+   ],
+   "fr": [
+    "Grande horloge : la ligne des montagnes est reconnue bien plus souvent sur vos photos et les images Reddit, même avec des nuages ou un coucher de soleil",
+    "Mers de nuages, horizons marins et bancs de brouillard ne sont plus pris pour des montagnes"
+   ],
+   "es": [
+    "Reloj grande: la línea de las montañas se detecta mucho más a menudo en tus fotos y en imágenes de Reddit, incluso con nubes o atardecer",
+    "Los mares de nubes, horizontes marinos y bancos de niebla ya no se confunden con montañas"
+   ],
+   "it": [
+    "Orologio grande: il profilo delle montagne viene riconosciuto molto più spesso nelle tue foto e nelle immagini di Reddit, anche con nuvole o tramonto",
+    "Mari di nuvole, orizzonti marini e banchi di nebbia non vengono più scambiati per montagne"
+   ],
+   "nl": [
+    "Grote klok: de bergrand wordt veel vaker herkend op eigen foto's en Reddit-afbeeldingen, ook bij wolken of avondrood",
+    "Wolkenzeeën, zeehorizonten en mistbanken worden niet meer voor bergen aangezien"
+   ]
+  }
+ },
+ {
   "version": "2.53",
   "notes": {
    "de": [
