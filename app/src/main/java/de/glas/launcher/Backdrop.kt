@@ -138,10 +138,7 @@ object Backdrops {
 
     fun create(ctx: Context, p: Prefs): Backdrop {
         val backdrop = when (p.background) {
-            "image" -> {
-                val uri = p.imageUri
-                SceneBackdrop(ctx, PhotoScene(ctx, withFx = false, key = { _, _ -> "image" }) { _, _ -> PhotoLoader.fromUri(ctx, uri) })
-            }
+            "image" -> OwnPhotosBackdrop(ctx)
             "video" -> ownVideos(ctx, p.videoUri)
             "extension" -> extension(ctx, p)
             "landscape" -> LandscapeBackdrop(ctx)

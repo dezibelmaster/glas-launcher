@@ -569,5 +569,12 @@
  "Durchsichtig": "Trasparente",
  "Leicht milchig": "Leggermente lattiginoso",
  "Milchig": "Lattiginoso",
- "Sehr milchig": "Molto lattiginoso"
+ "Sehr milchig": "Molto lattiginoso",
+ "Eigene Bilder · alle": "Immagini personali · tutte",
+ "Alle eigenen Bilder abwechselnd": "Tutte le immagini personali a rotazione",
+ "Keine eigenen Bilder gefunden": "Nessuna immagine personale trovata",
+ "Bild": "Immagine",
+ "Uhr": "Orologio",
+ "▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig": "▲ ▼ sposta orologio  ·  ◀ automatico  ·  OK fatto",
+ "Uhr steht wieder automatisch": "L'orologio torna a essere posizionato automaticamente"
 }

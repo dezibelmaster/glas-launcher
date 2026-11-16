@@ -46,6 +46,8 @@ class MainActivity : Activity() {
     private lateinit var others: LinearLayout
     private lateinit var bar: LinearLayout
     private lateinit var barTitle: TextView
+    private val barBrowse = ArrayList<View>()
+    private lateinit var barClock: View
     private lateinit var barGlass: GlassLayer.Glass
     private lateinit var picker: LinearLayout
     private lateinit var pickerList: LinearLayout
@@ -294,9 +296,13 @@ class MainActivity : Activity() {
             ellipsize = TextUtils.TruncateAt.END
             maxWidth = dp(520)
         }
-        bar.addView(barButton(Ui.text(this, 18f).apply { text = "◀" }) { backdrop.previous() })
-        bar.addView(barButton(barTitle) { openPicker() })
-        bar.addView(barButton(Ui.text(this, 18f).apply { text = "▶" }) { backdrop.next() })
+        barBrowse += barButton(Ui.text(this, 18f).apply { text = "◀" }) { backdrop.previous() }
+        barBrowse += barButton(barTitle) { openPicker() }
+        barBrowse += barButton(Ui.text(this, 18f).apply { text = "▶" }) { backdrop.next() }
+        barBrowse.forEach { bar.addView(it) }
+        // Move the large clock up or down for this picture
+        barClock = barButton(Ui.text(this, 15f).apply { text = "↕  " + tr("Uhr") }) { startClockMove() }
+        bar.addView(barClock)
         root.addView(bar, frame(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { setMargins(0, 0, 0, dp(44 + 124 + 16)) })
         barGlass = GlassLayer.Glass(bar, dp(22f), 0)
 
@@ -469,6 +475,7 @@ class MainActivity : Activity() {
     override fun onPause() {
         super.onPause()
         resumed = false
+        endClockMove(keep = true)
         // A picture of the background for the screen that opens now, so it doesn't start black
         if (::backdrop.isInitialized) Snapshot.take(backdrop)
         Snapshot.homeBehind = true
@@ -605,7 +612,7 @@ class MainActivity : Activity() {
     }
 
     /** The bar can only appear when the background has several items and nothing covers the home screen. */
-    private fun barAvailable() = ::backdrop.isInitialized && backdrop.titles.size > 1 &&
+    private fun barAvailable() = ::backdrop.isInitialized && (backdrop.titles.size > 1 || prefs.topStyle == "duo") &&
         drawer.visibility != View.VISIBLE && picker.visibility != View.VISIBLE
 
     private val hideBar = Runnable { hideBar(focusDock = true) }
@@ -613,13 +620,14 @@ class MainActivity : Activity() {
     /** Shows the bar above the dock; it hides again after 5 seconds without a key press. */
     private fun showBar() {
         bar.visibility = View.VISIBLE
-        bar.getChildAt(1).requestFocus()
+        (if (barBrowse[1].visibility == View.VISIBLE) barBrowse[1] else barClock).requestFocus()
         handler.removeCallbacks(hideBar)
         handler.postDelayed(hideBar, 5_000)
     }
 
     private fun hideBar(focusDock: Boolean) {
         handler.removeCallbacks(hideBar)
+        if (clockMove != null) return
         if (bar.visibility != View.VISIBLE) return
         val hadFocus = bar.hasFocus()
         bar.visibility = View.GONE
@@ -636,7 +644,61 @@ class MainActivity : Activity() {
             else -> ""
         }
         if (i in titles.indices) barTitle.text = mark + titles[i]
+        barBrowse.forEach { it.visibility = if (titles.size > 1) View.VISIBLE else View.GONE }
+        barClock.visibility = if (prefs.topStyle == "duo") View.VISIBLE else View.GONE
+        if (clockMove == null) duo.manualTop = prefs.clockSpots[clockSpot()]
         if (picker.visibility == View.VISIBLE) markPicker()
+    }
+
+    // ---- Moving the large clock ----
+
+    /** While moving the clock: its height so far; null otherwise. */
+    private var clockMove: Float? = null
+    private var clockBefore: Float? = null
+
+    /** The clock's height is remembered for each picture (or for the background as a whole). */
+    private fun clockSpot() = backdrop.uriAt(backdrop.current) ?: ("bg:" + prefs.background + "/" + prefs.weatherStyle)
+
+    private fun startClockMove() {
+        clockBefore = duo.manualTop
+        clockMove = duo.currentTop()
+        handler.removeCallbacks(hideBar)
+        barBrowse.forEach { it.visibility = View.GONE }
+        barClock.visibility = View.GONE
+        barBrowse[1].visibility = View.VISIBLE
+        barTitle.text = tr("▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig")
+        barBrowse[1].requestFocus()
+    }
+
+    /** OK keeps the new height, Back the old one; ◀ hands the clock back to the automatic placement. */
+    private fun endClockMove(keep: Boolean, auto: Boolean = false) {
+        val f = clockMove ?: return
+        clockMove = null
+        val spots = prefs.clockSpots
+        if (auto) prefs.clockSpots = spots - clockSpot()
+        else if (keep) prefs.clockSpots = spots + (clockSpot() to f)
+        duo.manualTop = if (keep || auto) prefs.clockSpots[clockSpot()] else clockBefore
+        if (auto) toast(tr("Uhr steht wieder automatisch"))
+        updateBar()
+        barClock.requestFocus()
+        handler.postDelayed(hideBar, 5_000)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val f = clockMove ?: return super.dispatchKeyEvent(event)
+        if (event.action != KeyEvent.ACTION_DOWN) return true
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                val moved = (f + if (event.keyCode == KeyEvent.KEYCODE_DPAD_UP) -.015f else .015f).coerceIn(.10f, .60f)
+                duo.manualTop = moved
+                // The clock stops below the top and above the dock; carry on from where it really is
+                clockMove = duo.currentTop()
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> endClockMove(keep = false, auto = true)
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> endClockMove(keep = true)
+            KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> endClockMove(keep = false)
+        }
+        return true
     }
 
     /** One line of the picker: switch through all, switch through favourites, or one item. */
@@ -743,6 +805,7 @@ class MainActivity : Activity() {
                 if (prefs.background == "video") backdrop.uriAt(row.index)?.let { prefs.videoUri = it }
                 if (prefs.background == "landscape") backdrop.uriAt(row.index)?.let { prefs.landscape = it.removePrefix("landscape:") }
                 if (prefs.background == "reddit") backdrop.uriAt(row.index)?.let { prefs.redditPost = it.removePrefix("reddit:") }
+                if (prefs.background == "image") backdrop.uriAt(row.index)?.let { prefs.imageUri = it }
             }
             else -> {
                 prefs.favoritesOnly = row.mode == ROW_FAVORITES
@@ -751,6 +814,7 @@ class MainActivity : Activity() {
                 if (prefs.background == "video") prefs.videoUri = null
                 if (prefs.background == "landscape") prefs.landscape = null
                 if (prefs.background == "reddit") prefs.redditPost = null
+                if (prefs.background == "image") prefs.imageUri = null
                 // Switching through favourites: start with one of them
                 if (row.mode == ROW_FAVORITES && !isFavorite(backdrop.current)) backdrop.next()
             }

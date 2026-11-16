@@ -569,5 +569,12 @@
  "Durchsichtig": "Doorzichtig",
  "Leicht milchig": "Licht melkachtig",
  "Milchig": "Melkachtig",
- "Sehr milchig": "Zeer melkachtig"
+ "Sehr milchig": "Zeer melkachtig",
+ "Eigene Bilder · alle": "Eigen afbeeldingen · alle",
+ "Alle eigenen Bilder abwechselnd": "Alle eigen afbeeldingen afwisselend",
+ "Keine eigenen Bilder gefunden": "Geen eigen afbeeldingen gevonden",
+ "Bild": "Afbeelding",
+ "Uhr": "Klok",
+ "▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig": "▲ ▼ klok verplaatsen  ·  ◀ automatisch  ·  OK klaar",
+ "Uhr steht wieder automatisch": "De klok staat weer automatisch"
 }

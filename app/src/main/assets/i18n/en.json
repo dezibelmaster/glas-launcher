@@ -569,5 +569,12 @@
  "Durchsichtig": "Clear",
  "Leicht milchig": "Slightly milky",
  "Milchig": "Milky",
- "Sehr milchig": "Very milky"
+ "Sehr milchig": "Very milky",
+ "Eigene Bilder · alle": "Own pictures · all",
+ "Alle eigenen Bilder abwechselnd": "All own pictures in turn",
+ "Keine eigenen Bilder gefunden": "No own pictures found",
+ "Bild": "Picture",
+ "Uhr": "Clock",
+ "▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig": "▲ ▼ move clock  ·  ◀ automatic  ·  OK done",
+ "Uhr steht wieder automatisch": "The clock is placed automatically again"
 }

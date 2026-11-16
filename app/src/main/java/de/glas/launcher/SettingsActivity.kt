@@ -269,7 +269,7 @@ class SettingsActivity : Activity() {
     // ---- Appearance ----
 
     private fun backgroundLabel() = when (prefs.background) {
-        "image" -> tr("Eigenes Bild")
+        "image" -> if (prefs.imageUri == null) tr("Eigene Bilder · alle") else tr("Eigenes Bild")
         "reddit" -> "Reddit · r/" + prefs.redditSub
         "landscape" -> if (prefs.landscape == null) tr("Landschaften · nach Tageszeit") else tr("Landschaft")
         "video" -> if (prefs.videoUri == null) tr("Eigene Videos · alle") else tr("Eigenes Video")
@@ -397,9 +397,9 @@ class SettingsActivity : Activity() {
             )
             return@withPermission
         }
-        val all = if (video && items.size > 1) listOf(GlassMenu.Item(tr("Alle eigenen Videos abwechselnd")) {
-            prefs.videoUri = null
-            prefs.background = "video"
+        val all = if (items.size > 1) listOf(GlassMenu.Item(if (video) tr("Alle eigenen Videos abwechselnd") else tr("Alle eigenen Bilder abwechselnd")) {
+            if (video) prefs.videoUri = null else prefs.imageUri = null
+            prefs.background = if (video) "video" else "image"
             render()
         }) else emptyList()
         GlassMenu.show(this, if (video) tr("Video wählen") else tr("Bild wählen"), all + items.map { item ->

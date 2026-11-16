@@ -569,5 +569,12 @@
  "Durchsichtig": "Transparente",
  "Leicht milchig": "Ligeramente esmerilado",
  "Milchig": "Esmerilado",
- "Sehr milchig": "Muy esmerilado"
+ "Sehr milchig": "Muy esmerilado",
+ "Eigene Bilder · alle": "Imágenes propias · todas",
+ "Alle eigenen Bilder abwechselnd": "Todas las imágenes propias alternando",
+ "Keine eigenen Bilder gefunden": "No se encontraron imágenes propias",
+ "Bild": "Imagen",
+ "Uhr": "Reloj",
+ "▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig": "▲ ▼ mover reloj  ·  ◀ automático  ·  OK listo",
+ "Uhr steht wieder automatisch": "El reloj vuelve a colocarse automáticamente"
 }

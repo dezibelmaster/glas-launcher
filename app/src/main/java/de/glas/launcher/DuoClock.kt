@@ -21,6 +21,9 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         set(v) { if (field != v) { field = v; invalidate() } }
     var line = ""
         set(v) { if (field != v) { field = v; invalidate() } }
+    /** Height chosen by hand (top of the digits as a fraction of the screen), or null to place it by itself. */
+    var manualTop: Float? = null
+        set(v) { if (field != v) { field = v; invalidate() } }
 
     private val font = runCatching { Typeface.createFromAsset(context.assets, "fonts/clock.ttf") }.getOrDefault(Typeface.DEFAULT_BOLD)
     private val digits = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = font; textAlign = Paint.Align.CENTER }
@@ -51,6 +54,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         if (horizon != null && horizon in h * .30f..h * .80f) {
             top = (horizon + digitH * .24f - digitH).coerceIn(h * .17f, h * .64f - digitH)
         }
+        manualTop?.let { top = (it * h).coerceIn(minTop(h), maxTop(h, digitH)) }
         val baseline = top + digitH
         // On a bright sky (snow, fog) the glass turns grey so the clock stays readable
         val bright = (depth?.skyLight() ?: 0f) > .75f
@@ -89,6 +93,22 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
             postInvalidateOnAnimation()
         }
     }
+
+    /** Where the top of the digits is now, as a fraction of the height (for moving it by hand). */
+    fun currentTop(): Float {
+        val h = height.toFloat().takeIf { it > 0 } ?: return .19f
+        digits.textSize = h * .30f
+        digits.getTextBounds("0", 0, 1, bounds)
+        val digitH = bounds.height().toFloat()
+        manualTop?.let { return (it * h).coerceIn(minTop(h), maxTop(h, digitH)) / h }
+        val horizon = backdrop()?.depth?.horizonY()
+        if (horizon != null && horizon in h * .30f..h * .80f) return (horizon + digitH * .24f - digitH).coerceIn(h * .17f, h * .64f - digitH) / h
+        return .19f
+    }
+
+    /** Range for the clock: below the greeting's room at the top, above the dock at the bottom. */
+    private fun minTop(h: Float) = h * .14f
+    private fun maxTop(h: Float, digitH: Float) = h * .64f - digitH
 
     private fun greeting(): String = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
         in 5..10 -> tr("Guten Morgen")

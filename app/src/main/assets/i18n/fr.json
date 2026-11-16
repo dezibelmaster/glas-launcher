@@ -569,5 +569,12 @@
  "Durchsichtig": "Transparent",
  "Leicht milchig": "Légèrement dépoli",
  "Milchig": "Dépoli",
- "Sehr milchig": "Très dépoli"
+ "Sehr milchig": "Très dépoli",
+ "Eigene Bilder · alle": "Mes images · toutes",
+ "Alle eigenen Bilder abwechselnd": "Toutes mes images à tour de rôle",
+ "Keine eigenen Bilder gefunden": "Aucune image personnelle trouvée",
+ "Bild": "Image",
+ "Uhr": "Horloge",
+ "▲ ▼ Uhr verschieben  ·  ◀ automatisch  ·  OK fertig": "▲ ▼ déplacer l'horloge  ·  ◀ automatique  ·  OK terminé",
+ "Uhr steht wieder automatisch": "L'horloge est de nouveau placée automatiquement"
 }

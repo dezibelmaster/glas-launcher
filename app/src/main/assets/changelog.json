@@ -1,5 +1,34 @@
 [
  {
+  "version": "2.55",
+  "notes": {
+   "de": [
+    "Eigene Bilder: Schnellauswahl wie bei den Videos (vom Dock nach oben), mit Favoriten und „Alle eigenen Bilder abwechselnd“",
+    "Große Uhr verschiebbar: in der Leiste über dem Dock „↕ Uhr“ wählen, mit ▲ ▼ hoch und runter; die Höhe wird für jedes Bild gemerkt"
+   ],
+   "en": [
+    "Own pictures: quick selection like the videos (up from the dock), with favourites and “All own pictures in turn”",
+    "Big clock can be moved: choose “↕ Clock” in the bar above the dock, then ▲ ▼; the height is remembered for each picture"
+   ],
+   "fr": [
+    "Mes images : sélection rapide comme pour les vidéos (vers le haut depuis le dock), avec favoris et « Toutes mes images à tour de rôle »",
+    "Grande horloge déplaçable : choisir « ↕ Horloge » dans la barre au-dessus du dock, puis ▲ ▼ ; la hauteur est mémorisée pour chaque image"
+   ],
+   "es": [
+    "Imágenes propias: selección rápida como con los vídeos (hacia arriba desde el dock), con favoritos y «Todas las imágenes propias alternando»",
+    "Reloj grande desplazable: elige «↕ Reloj» en la barra sobre el dock y luego ▲ ▼; la altura se recuerda para cada imagen"
+   ],
+   "it": [
+    "Immagini personali: selezione rapida come per i video (verso l'alto dal dock), con preferiti e «Tutte le immagini personali a rotazione»",
+    "Orologio grande spostabile: scegli «↕ Orologio» nella barra sopra il dock, poi ▲ ▼; l'altezza viene ricordata per ogni immagine"
+   ],
+   "nl": [
+    "Eigen afbeeldingen: snelkeuze zoals bij de video's (vanaf het dock omhoog), met favorieten en „Alle eigen afbeeldingen afwisselend”",
+    "Grote klok verplaatsbaar: kies „↕ Klok” in de balk boven het dock en dan ▲ ▼; de hoogte wordt per afbeelding onthouden"
+   ]
+  }
+ },
+ {
   "version": "2.54",
   "notes": {
    "de": [

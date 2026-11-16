@@ -70,6 +70,14 @@ class Prefs(context: Context) {
         }.getOrDefault(emptyMap())
         set(v) = sp.edit().putString("names", org.json.JSONObject(v).toString()).apply()
 
+    /** Height of the large clock chosen by hand, per background picture (fraction of the screen from the top). */
+    var clockSpots: Map<String, Float>
+        get() = runCatching {
+            val o = org.json.JSONObject(sp.getString("clockSpots", "{}")!!)
+            o.keys().asSequence().associateWith { o.getDouble(it).toFloat() }
+        }.getOrDefault(emptyMap())
+        set(v) = sp.edit().putString("clockSpots", org.json.JSONObject(v.mapValues { it.value.toDouble() }).toString()).apply()
+
     /** How milky the glass of windows (control centre, menus) is: 0 clear … 3 very milky. */
     var windowFrost: Int
         get() = sp.getInt("windowFrost", 1)
