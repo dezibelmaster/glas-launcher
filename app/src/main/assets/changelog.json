@@ -1,5 +1,40 @@
 [
  {
+  "version": "2.57",
+  "notes": {
+   "de": [
+    "Große Uhr: Fehler behoben, durch den Berge und Waldkanten auf dem Fernseher fast nie erkannt wurden",
+    "Uhr von Hand verschoben: An der neuen Stelle wird die Landschaft noch einmal gesucht, damit die Uhr dahinter verschwinden kann",
+    "Keine kleinen Dreiecke mehr im Rand der Ziffern"
+   ],
+   "en": [
+    "Big clock: fixed a bug that kept mountains and tree lines from being found on the TV almost every time",
+    "Clock moved by hand: the landscape is looked for again at the new spot, so the clock can disappear behind it",
+    "No more small triangles in the rim of the digits"
+   ],
+   "fr": [
+    "Grande horloge : correction d'un bug qui empêchait presque toujours de reconnaître montagnes et lisières sur le téléviseur",
+    "Horloge déplacée à la main : le paysage est recherché à nouveau au nouvel endroit pour que l'horloge puisse disparaître derrière",
+    "Plus de petits triangles dans le contour des chiffres"
+   ],
+   "es": [
+    "Reloj grande: corregido un error por el que en el televisor casi nunca se reconocían montañas ni bordes de bosque",
+    "Reloj movido a mano: se vuelve a buscar el paisaje en el nuevo lugar para que el reloj pueda desaparecer detrás",
+    "Ya no hay pequeños triángulos en el borde de los dígitos"
+   ],
+   "it": [
+    "Orologio grande: corretto un errore per cui sul televisore montagne e margini di bosco non venivano quasi mai riconosciuti",
+    "Orologio spostato a mano: il paesaggio viene cercato di nuovo nella nuova posizione, così l'orologio può sparire dietro",
+    "Niente più piccoli triangoli nel bordo delle cifre"
+   ],
+   "nl": [
+    "Grote klok: fout verholpen waardoor bergen en bosranden op de tv bijna nooit werden herkend",
+    "Klok met de hand verplaatst: op de nieuwe plek wordt opnieuw naar het landschap gezocht, zodat de klok erachter kan verdwijnen",
+    "Geen kleine driehoekjes meer in de rand van de cijfers"
+   ]
+  }
+ },
+ {
   "version": "2.56",
   "notes": {
    "de": [

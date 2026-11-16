@@ -26,22 +26,56 @@ object SkyDetector {
      */
     class Result(val mask: Bitmap?, val horizon: Float?)
 
-    /** Blocking. */
-    fun analyse(photo: Bitmap): Result = runCatching { detect(photo) }.getOrElse { Result(null, null) }
+    /**
+     * Blocking. With [band] (top and bottom as fractions of the photo's height) the skyline is only
+     * looked for there and taken more readily: the clock was put there by hand, so the user expects
+     * the landscape in front of it.
+     */
+    fun analyse(photo: Bitmap, band: ClosedFloatingPointRange<Float>? = null): Result =
+        runCatching { detect(photo, band) }.getOrElse { Result(null, null) }
 
-    private fun detect(photo: Bitmap): Result {
-        val small = Bitmap.createScaledBitmap(photo, W, H, true)
-        val px = IntArray(W * H)
-        small.getPixels(px, 0, W, 0, 0, W, H)
-        val r = FloatArray(W * H) { Color.red(px[it]) / 255f }
-        val g = FloatArray(W * H) { Color.green(px[it]) / 255f }
-        val b = FloatArray(W * H) { Color.blue(px[it]) / 255f }
+    /**
+     * The photo at 320×180, each point the average of all pixels it covers. Android's own scaling
+     * only looks at a few pixels, which makes a calm sky look grainy and spoils the check.
+     */
+    private fun shrink(photo: Bitmap, r: FloatArray, g: FloatArray, b: FloatArray) {
+        val fw = photo.width
+        val fh = photo.height
+        val col = IntArray(fw) { (it * W / fw).coerceAtMost(W - 1) }
+        val perCol = IntArray(W).also { n -> col.forEach { n[it]++ } }
+        val row = IntArray(fw)
+        val n = IntArray(H)
+        for (y in 0 until fh) {
+            val ty = (y * H / fh).coerceAtMost(H - 1)
+            n[ty]++
+            photo.getPixels(row, 0, fw, 0, y, fw, 1)
+            val base = ty * W
+            for (x in 0 until fw) {
+                val p = row[x]
+                val i = base + col[x]
+                r[i] += Color.red(p); g[i] += Color.green(p); b[i] += Color.blue(p)
+            }
+        }
+        for (ty in 0 until H) for (tx in 0 until W) {
+            val i = ty * W + tx
+            val count = 255f * n[ty] * perCol[tx]
+            r[i] /= count; g[i] /= count; b[i] /= count
+        }
+    }
+
+    private fun detect(photo: Bitmap, band: ClosedFloatingPointRange<Float>?): Result {
+        val r = FloatArray(W * H)
+        val g = FloatArray(W * H)
+        val b = FloatArray(W * H)
+        shrink(photo, r, g, b)
 
         // Colour change between the 6 rows above and below each point
         val k = 6
         val e = Array(H) { FloatArray(W) }
         for (x in 0 until W) {
-            for (y in (H * .18f).toInt() until (H * .88f).toInt()) {
+            val from = if (band != null) (band.start * H).toInt().coerceAtLeast(k) else (H * .18f).toInt()
+            val to = if (band != null) (band.endInclusive * H).toInt().coerceAtMost(H - k) else (H * .88f).toInt()
+            for (y in from until to) {
                 var dr = 0f; var dg = 0f; var db = 0f
                 for (i in 1..k) {
                     val a = (y - i) * W + x
@@ -89,12 +123,21 @@ object SkyDetector {
             still = if (d == 0) still + 1 else 0
             wall = maxOf(wall, run); flat = maxOf(flat, still)
         }
+        if (band != null) {
+            // Placed by hand: only a clear edge and no wild jumps are needed
+            if (strength < .18f || wall > 6) return Result(null, null)
+            return Result(sharpen(photo, line), horizon)
+        }
         // Some edge across the picture is enough to keep the clock above it
         // (the highest points behind the clock count, so it doesn't cover a peak)
         val high = line.copyOfRange(W * 27 / 100, W * 73 / 100).sorted().let { it[it.size / 10] } / H.toFloat()
         val hint = high.takeIf { strength >= .22f && horizon in .30f..0.85f }
         if (strength < .32f || skyTex > .055f || wall > 3 || flat > 60 || horizon !in .30f..0.80f) return Result(null, hint)
+        return Result(sharpen(photo, line), horizon)
+    }
 
+    /** The line made exact on the full photo, as a mask: white below it. */
+    private fun sharpen(photo: Bitmap, line: IntArray): Bitmap {
         // Sharpen the line on the full photo: the strongest change within a few rows, every other column
         val fw = photo.width
         val fh = photo.height
@@ -130,7 +173,7 @@ object SkyDetector {
             close()
         }
         c.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
-        return Result(mask, horizon)
+        return mask
     }
 
     /** Mean colour change from row to row in one column, between [y0] and [y1]. */

@@ -662,6 +662,7 @@ class MainActivity : Activity() {
     private fun startClockMove() {
         clockBefore = duo.manualTop
         clockMove = duo.currentTop()
+        duo.moving = true
         handler.removeCallbacks(hideBar)
         barBrowse.forEach { it.visibility = View.GONE }
         barClock.visibility = View.GONE
@@ -674,6 +675,7 @@ class MainActivity : Activity() {
     private fun endClockMove(keep: Boolean, auto: Boolean = false) {
         val f = clockMove ?: return
         clockMove = null
+        duo.moving = false
         val spots = prefs.clockSpots
         if (auto) prefs.clockSpots = spots - clockSpot()
         else if (keep) prefs.clockSpots = spots + (clockSpot() to f)

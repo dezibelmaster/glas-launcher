@@ -38,7 +38,7 @@ class PhotoScene(
     class Photo(val bitmap: Bitmap, val dim: Boolean, val mask: Bitmap? = null, val autoMask: Boolean = false)
 
     /** [front] is the photo with only the landscape kept; [horizon] where it begins, as a fraction of the height. */
-    private class Layer(val photo: Photo, val small: Bitmap, val start: Long, val front: Bitmap?, val horizon: Float?, val skyLight: Float?)
+    internal class Layer(val photo: Photo, val small: Bitmap, val start: Long, val front: Bitmap?, val horizon: Float?, val skyLight: Float?)
 
     private val main = Handler(Looper.getMainLooper())
     private val fallback = ModernScene()
@@ -74,20 +74,54 @@ class PhotoScene(
         val mine = ++token
         Thread {
             val photo = loader(sky, day)
-            // Photos without a prepared mask get one found automatically, when the skyline is clear
-            val found = if (photo != null && photo.mask == null && photo.autoMask) SkyDetector.analyse(photo.bitmap) else null
-            val mask = photo?.mask ?: found?.mask
-            val front = if (photo != null && mask != null) runCatching { front(photo.bitmap, mask) }.getOrNull() else null
-            // Without a usable mask the horizon still tells where the sky is, so the clock can stand there
-            val horizon = mask?.let { horizon(it) } ?: found?.horizon
-            val light = if (photo != null && horizon != null) skyLight(photo.bitmap, horizon) else null
+            val ready = photo?.let { prepare(it) }
             main.post {
                 if (mine != token) return@post
                 loaded = true
                 previous = current
-                current = photo?.let { Layer(it, shrink(it.bitmap), SystemClock.uptimeMillis(), front, horizon, light) }
+                current = ready
             }
         }.start()
+    }
+
+    /** Everything needed to show [photo]: the landscape cut out for the clock, where it begins, how bright the sky is. */
+    internal fun prepare(photo: Photo, start: Long = SystemClock.uptimeMillis()): Layer {
+        // Photos without a prepared mask get one found automatically: where the clock was put by
+        // hand, or else when the skyline is clear
+        val band = focus?.let { band(photo.bitmap, it) }
+        val found = if (photo.mask == null && photo.autoMask) {
+            band?.let { SkyDetector.analyse(photo.bitmap, it).takeIf { r -> r.mask != null } } ?: SkyDetector.analyse(photo.bitmap)
+        } else null
+        val mask = photo.mask ?: found?.mask
+        val front = mask?.let { runCatching { front(photo.bitmap, it) }.getOrNull() }
+        // Without a usable mask the horizon still tells where the sky is, so the clock can stand there
+        val horizon = mask?.let { horizon(it) } ?: found?.horizon
+        val light = horizon?.let { skyLight(photo.bitmap, it) }
+        return Layer(photo, shrink(photo.bitmap), start, front, horizon, light)
+    }
+
+    /** The clock's digits on screen (fractions of the height) when it was placed by hand, or null. */
+    @Volatile private var focus: ClosedFloatingPointRange<Float>? = null
+
+    /** Looks again for the landscape where the clock now stands, so it can disappear behind it there. */
+    fun focus(digits: ClosedFloatingPointRange<Float>?) {
+        if (digits == focus) return
+        focus = digits
+        val cur = current ?: return
+        if (cur.photo.mask != null || !cur.photo.autoMask) return
+        val mine = token
+        Thread {
+            val again = prepare(cur.photo, cur.start)
+            main.post { if (mine == token && current === cur) current = again }
+        }.start()
+    }
+
+    /** The screen range [digits] as rows of the photo (the slow zoom is ignored), with some room below. */
+    private fun band(bmp: Bitmap, digits: ClosedFloatingPointRange<Float>): ClosedFloatingPointRange<Float>? {
+        if (w == 0f || h == 0f) return null
+        val scale = max(w / bmp.width, h / bmp.height) * 1.08f
+        fun row(f: Float) = ((f * h - h / 2) / scale + bmp.height / 2f) / bmp.height
+        return (row(digits.start) - .02f).coerceIn(0f, 1f)..(row(digits.endInclusive) + .08f).coerceIn(0f, 1f)
     }
 
     /** Halves the photo step by step down to 1/16, which keeps the glass blur smooth. */
@@ -268,7 +302,7 @@ object PhotoLoader {
     }
 
     /** Decodes at roughly screen size so large photos don't run out of memory. */
-    private fun decode(ctx: Context, open: () -> InputStream?): Bitmap? = try {
+    internal fun decode(ctx: Context, open: () -> InputStream?): Bitmap? = try {
         val dm = ctx.resources.displayMetrics
         val maxW = max(dm.widthPixels, dm.heightPixels)
         val maxH = minOf(dm.widthPixels, dm.heightPixels)

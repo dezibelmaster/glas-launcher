@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
@@ -23,6 +24,9 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         set(v) { if (field != v) { field = v; invalidate() } }
     /** Height chosen by hand (top of the digits as a fraction of the screen), or null to place it by itself. */
     var manualTop: Float? = null
+        set(v) { if (field != v) { field = v; invalidate() } }
+    /** While the clock is being moved, the landscape is only looked for again once it stands still. */
+    var moving = false
         set(v) { if (field != v) { field = v; invalidate() } }
 
     private val font = runCatching { Typeface.createFromAsset(context.assets, "fonts/clock.ttf") }.getOrDefault(Typeface.DEFAULT_BOLD)
@@ -56,6 +60,7 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         else shownTop = target
         val top = shownTop
         val baseline = top + digitH
+        if (!moving) depth?.focus(if (manualTop != null) top / h..baseline / h else null)
         // On a bright sky (snow, fog) the glass turns grey so the clock stays readable
         val bright = (depth?.skyLight() ?: 0f) > .75f
 
@@ -76,10 +81,11 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
         }
         digits.setShadowLayer(h * .012f, 0f, h * .004f, 0x40000000)
         c.drawText(time, w / 2, baseline, digits)
-        edge.textSize = digits.textSize
+        // The rim follows the merged outline: the font's strokes overlap inside each digit, and
+        // drawing their own outlines would show small triangles where they cross
         edge.strokeWidth = h * .002f
         edge.color = if (bright) 0x59FFFFFF else 0x4DFFFFFF
-        c.drawText(time, w / 2, baseline, edge)
+        c.drawPath(outline(w / 2, baseline), edge)
 
         if (depth != null && covers) {
             // Landscape over the digits, only inside the clock so nothing else changes
@@ -95,6 +101,21 @@ class DuoClock(context: Context, private val backdrop: () -> Backdrop?) : View(c
             // A newly loaded photo may move the clock
             postInvalidateDelayed(1000)
         }
+    }
+
+    private var outlineKey = ""
+    private val outlinePath = Path()
+
+    private fun outline(x: Float, baseline: Float): Path {
+        val key = "$time/${digits.textSize}/$x/$baseline"
+        if (key != outlineKey) {
+            outlineKey = key
+            val raw = Path()
+            digits.getTextPath(time, 0, time.length, x, baseline, raw)
+            outlinePath.reset()
+            if (!outlinePath.op(raw, Path.Op.UNION)) outlinePath.set(raw)
+        }
+        return outlinePath
     }
 
     /** Where the top of the digits is now, as a fraction of the height (for moving it by hand). */

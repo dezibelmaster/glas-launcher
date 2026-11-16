@@ -79,6 +79,8 @@ abstract class Backdrop(context: Context) : FrameLayout(context) {
         fun horizonY(): Float?
         /** Whether the landscape can be drawn in front (with a mask); otherwise the clock stays above it. */
         fun covers(): Boolean
+        /** The clock was put here by hand (screen fractions of the digits), or null: look for the landscape there. */
+        fun focus(digits: ClosedFloatingPointRange<Float>?)
         /** Draws the landscape in front of the sky, over whatever was drawn before. */
         fun drawForeground(c: Canvas)
         /** Brightness of the sky behind the clock (0–1), or null if unknown. */
@@ -127,6 +129,7 @@ open class SceneBackdrop(context: Context, protected val scene: Scene) : Backdro
         object : Depth {
             override fun horizonY() = photo.horizonY()
             override fun covers() = photo.hasFront()
+            override fun focus(digits: ClosedFloatingPointRange<Float>?) = photo.focus(digits)
             override fun drawForeground(c: Canvas) = photo.drawForeground(c, now)
             override fun skyLight() = photo.skyLight()
         }
