@@ -1,5 +1,28 @@
 [
  {
+  "version": "2.59",
+  "notes": {
+   "de": [
+    "Video-Hintergrund: Beim Öffnen und Schließen des Wetters blitzt kein früherer Hintergrund mehr auf; bis das Video weiterläuft, steht sein letztes Bild"
+   ],
+   "en": [
+    "Video background: opening and closing the weather no longer flashes an earlier background; its last frame stays until the video runs again"
+   ],
+   "fr": [
+    "Arrière-plan vidéo : à l'ouverture et à la fermeture de la météo, un ancien arrière-plan n'apparaît plus ; sa dernière image reste jusqu'à la reprise de la vidéo"
+   ],
+   "es": [
+    "Fondo de vídeo: al abrir y cerrar el tiempo ya no aparece un fondo anterior; su último fotograma se mantiene hasta que el vídeo vuelve a reproducirse"
+   ],
+   "it": [
+    "Sfondo video: aprendo e chiudendo il meteo non compare più uno sfondo precedente; l'ultimo fotogramma resta finché il video riparte"
+   ],
+   "nl": [
+    "Video-achtergrond: bij het openen en sluiten van het weer flitst geen eerdere achtergrond meer op; het laatste beeld blijft staan tot de video weer loopt"
+   ]
+  }
+ },
+ {
   "version": "2.58",
   "notes": {
    "de": [

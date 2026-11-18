@@ -58,6 +58,8 @@ class VideoBackdrop(
     private var small: Bitmap? = null
     private var smallCanvas: Canvas? = null
     private var lastCapture = 0L
+    /** The last frame before a pause, shown until the video runs again (instead of an older picture). */
+    private var held: Bitmap? = null
     private val prefs = Prefs(context)
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val src = Rect()
@@ -234,7 +236,7 @@ class VideoBackdrop(
         val h = height
         if (w == 0) return
         if (!prepared || !showing) {
-            Snapshot.bitmap?.let { c.drawBitmap(it, null, RectF(0f, 0f, w.toFloat(), h.toFloat()), paint) }
+            (held ?: Snapshot.bitmap)?.let { c.drawBitmap(it, null, RectF(0f, 0f, w.toFloat(), h.toFloat()), paint) }
             return
         }
         val now = SystemClock.uptimeMillis()
@@ -267,6 +269,16 @@ class VideoBackdrop(
     override fun pause() {
         paused = true
         val p = player ?: return
+        // Keep the frame on screen now, so coming back shows this video and not an older background
+        if (prepared && showing && width > 0) runCatching {
+            // Half size is sharp enough for the moment until the video runs again
+            val g = texture.getBitmap(width / 2, height / 2) ?: return@runCatching
+            val cw = (g.width / sx).toInt()
+            val ch = (g.height / sy).toInt()
+            val b = Bitmap.createBitmap(g, (g.width - cw) / 2, (g.height - ch) / 2, cw, ch)
+            held = b
+            background = android.graphics.drawable.BitmapDrawable(resources, b).apply { isFilterBitmap = true }
+        }
         // Remember the position of a looping video to carry on there later
         resumeAt = if (prepared) runCatching { p.currentPosition }.getOrDefault(0) else 0
         runCatching { p.release() }
